@@ -100,6 +100,36 @@ advanced cases (custom layouts).
 Slots: default = the window **body**; `actions` (`{ win }`) = extra header
 buttons (what `<Plancia>`'s `window-actions` forwards into).
 
+## `<PlanciaLayout>`
+
+A generic edge-and-center layout shell, independent of the window manager. It
+arranges up to four edge regions around a content area: `top`/`bottom` span the
+full width, `left`/`right` flank the centre (the default slot). Drop a
+[`<PlanciaSidebar>`](./sidebar.md) — or any content (a toolbar, a status bar) —
+into an edge slot. The shell and its middle band are `position: relative`, so
+`overlay`/`floating` sidebars anchor correctly. Fills its parent (give it a
+height).
+
+```vue
+<PlanciaLayout>
+  <template #top><header>…</header></template>
+  <template #left><PlanciaSidebar position="left">…</PlanciaSidebar></template>
+  <template #right><PlanciaSidebar position="right">…</PlanciaSidebar></template>
+
+  <Plancia :registry="registry" /> <!-- centre = default slot -->
+</PlanciaLayout>
+```
+
+| Slot | Purpose |
+|---|---|
+| default | Centre content (e.g. a `<Plancia>` or your app). |
+| `top` / `bottom` | Full-width regions above / below the centre band. |
+| `left` / `right` | Regions flanking the centre. |
+
+> `<Plancia>` also has its own `sidebar-*` slots. Use those when the sidebar is
+> part of the window manager; reach for `<PlanciaLayout>` when you want a sidebar
+> (or toolbar/status bar) around **arbitrary** content.
+
 ## Injection
 
 For window content rendered inside `<Plancia>`:

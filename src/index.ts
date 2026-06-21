@@ -34,6 +34,7 @@ export type {
 
 // --- sidebar ---------------------------------------------------------------
 export { default as PlanciaSidebar } from './components/PlanciaSidebar.vue'
+export { default as PlanciaLayout } from './components/PlanciaLayout.vue'
 
 export {
   useSidebarController,

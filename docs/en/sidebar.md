@@ -266,8 +266,9 @@ To use it standalone (outside `<Plancia>`), arrange it yourself:
 
 ## Layout recipe
 
-The library ships the sidebar as a leaf; you arrange it. `inline` is just flex;
-`overlay`/`floating` need a `position: relative` wrapper.
+For a ready-made shell that arranges up to four edges + a centre, use
+[`<PlanciaLayout>`](./components.md#plancialayout). To arrange it by hand instead:
+`inline` is just flex; `overlay`/`floating` need a `position: relative` wrapper.
 
 ```vue
 <template>

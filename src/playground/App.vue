@@ -1,9 +1,10 @@
 <script setup lang="ts">
 // Dev playground: drives the library components to iterate locally / in the
 // Docker webui. NOT part of the published bundle.
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 import {
   Plancia,
+  PlanciaLayout,
   PlanciaSidebar,
   useWindowsStore,
   type PlanciaLabels,
@@ -45,12 +46,11 @@ function openSettings() {
   store.open({ type: 'settings', key: 'settings', title: 'Impostazioni' })
 }
 
-/* --- sidebar demo (mounted inside <Plancia> via the edge slot) ------------- */
+/* --- sidebar demo (arranged around <Plancia> by <PlanciaLayout>) ----------- */
 const sbPosition = ref<SidebarPosition>('left')
 const sbMode = ref<SidebarMode>('inline')
 const sbState = ref<SidebarState>('expanded')
 const sbResizable = ref(true)
-const sidebarSlot = computed(() => `sidebar-${sbPosition.value}` as const)
 
 const sidebarLabels: Partial<SidebarLabels> = {
   expand: 'Espandi',
@@ -101,14 +101,8 @@ const links = Array.from({ length: 20 }, (_, i) => `Collegamento ${i + 1}`)
     </header>
 
     <main class="stage">
-      <Plancia
-        :registry="registry"
-        native-type="note"
-        :labels="labels"
-        :width-cycle="widthCycle"
-        :resolve-tone="resolveTone"
-      >
-        <template #[sidebarSlot]>
+      <PlanciaLayout>
+        <template #[sbPosition]>
           <PlanciaSidebar
             v-model:state="sbState"
             :position="sbPosition"
@@ -143,7 +137,15 @@ const links = Array.from({ length: 20 }, (_, i) => `Collegamento ${i + 1}`)
             </template>
           </PlanciaSidebar>
         </template>
-      </Plancia>
+
+        <Plancia
+          :registry="registry"
+          native-type="note"
+          :labels="labels"
+          :width-cycle="widthCycle"
+          :resolve-tone="resolveTone"
+        />
+      </PlanciaLayout>
     </main>
   </div>
 </template>

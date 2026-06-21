@@ -55,6 +55,10 @@ products-dc) into a standalone, content-agnostic library.
   strip (top/bottom full width, left/right flanking; the middle band is
   `position: relative` for overlay/floating anchoring). Slot content lives inside
   `<Plancia>`, so a menu there opens windows via `useOpenWindow()`.
+- **`<PlanciaLayout>`** — generic edge-and-center layout shell (slots `top`/`bottom`/
+  `left`/`right` + default centre), independent of the window manager. Arranges a
+  `<PlanciaSidebar>` (or any content) around arbitrary content; the shell + middle
+  band are `position: relative` so overlay/floating sidebars anchor correctly.
 - TypeScript types for the full public API; ships prebuilt **ESM + `.d.ts`**.
 - English usage documentation under `docs/en/` (incl. `sidebar.md`).
 
