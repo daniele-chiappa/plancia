@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // Dev playground: drives the library components to iterate locally / in the
 // Docker webui. NOT part of the published bundle.
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import {
   Plancia,
   PlanciaSidebar,
@@ -45,11 +45,12 @@ function openSettings() {
   store.open({ type: 'settings', key: 'settings', title: 'Impostazioni' })
 }
 
-/* --- sidebar demo --------------------------------------------------------- */
+/* --- sidebar demo (mounted inside <Plancia> via the edge slot) ------------- */
 const sbPosition = ref<SidebarPosition>('left')
 const sbMode = ref<SidebarMode>('inline')
 const sbState = ref<SidebarState>('expanded')
 const sbResizable = ref(true)
+const sidebarSlot = computed(() => `sidebar-${sbPosition.value}` as const)
 
 const sidebarLabels: Partial<SidebarLabels> = {
   expand: 'Espandi',
@@ -99,44 +100,50 @@ const links = Array.from({ length: 20 }, (_, i) => `Collegamento ${i + 1}`)
       <label class="ctl"><input v-model="sbResizable" type="checkbox" /> resize</label>
     </header>
 
-    <main class="stage" :class="`stage--${sbPosition}`">
-      <PlanciaSidebar
-        v-model:state="sbState"
-        :position="sbPosition"
-        :mode="sbMode"
-        :resizable="sbResizable"
-        :labels="sidebarLabels"
-        :default-size="240"
-        :responsive="640"
-        landmark="navigation"
+    <main class="stage">
+      <Plancia
+        :registry="registry"
+        native-type="note"
+        :labels="labels"
+        :width-cycle="widthCycle"
+        :resolve-tone="resolveTone"
       >
-        <template #header="{ contentVisible }">
-          <strong v-if="contentVisible" class="sb-title">Menu</strong>
+        <template #[sidebarSlot]>
+          <PlanciaSidebar
+            v-model:state="sbState"
+            :position="sbPosition"
+            :mode="sbMode"
+            :resizable="sbResizable"
+            :labels="sidebarLabels"
+            :default-size="240"
+            :responsive="640"
+            landmark="navigation"
+          >
+            <template #header="{ contentVisible }">
+              <strong v-if="contentVisible" class="sb-title">Menu</strong>
+            </template>
+            <template #default="{ contentVisible, orientation }">
+              <nav class="sb-menu" :class="orientation === 'horizontal' ? 'sb-menu--row' : ''">
+                <button
+                  v-for="m in menu"
+                  :key="m.label"
+                  type="button"
+                  class="sb-item"
+                  @click="m.run"
+                >
+                  <span class="sb-ico">{{ m.icon }}</span>
+                  <span v-if="contentVisible" class="sb-label">{{ m.label }}</span>
+                </button>
+                <hr v-if="contentVisible && orientation === 'vertical'" class="sb-sep" />
+                <button v-for="l in links" :key="l" type="button" class="sb-item">
+                  <span class="sb-ico">•</span>
+                  <span v-if="contentVisible" class="sb-label">{{ l }}</span>
+                </button>
+              </nav>
+            </template>
+          </PlanciaSidebar>
         </template>
-        <template #default="{ contentVisible, orientation }">
-          <nav class="sb-menu" :class="orientation === 'horizontal' ? 'sb-menu--row' : ''">
-            <button v-for="m in menu" :key="m.label" type="button" class="sb-item" @click="m.run">
-              <span class="sb-ico">{{ m.icon }}</span>
-              <span v-if="contentVisible" class="sb-label">{{ m.label }}</span>
-            </button>
-            <hr v-if="contentVisible && orientation === 'vertical'" class="sb-sep" />
-            <button v-for="l in links" :key="l" type="button" class="sb-item">
-              <span class="sb-ico">•</span>
-              <span v-if="contentVisible" class="sb-label">{{ l }}</span>
-            </button>
-          </nav>
-        </template>
-      </PlanciaSidebar>
-
-      <div class="stage-content">
-        <Plancia
-          :registry="registry"
-          native-type="note"
-          :labels="labels"
-          :width-cycle="widthCycle"
-          :resolve-tone="resolveTone"
-        />
-      </div>
+      </Plancia>
     </main>
   </div>
 </template>
@@ -182,28 +189,9 @@ body,
 }
 
 .stage {
-  position: relative;
   flex: 1;
   min-height: 0;
-  display: flex;
   background: #f1f5f9;
-}
-.stage--left {
-  flex-direction: row;
-}
-.stage--right {
-  flex-direction: row-reverse;
-}
-.stage--top {
-  flex-direction: column;
-}
-.stage--bottom {
-  flex-direction: column-reverse;
-}
-.stage-content {
-  flex: 1 1 0;
-  min-width: 0;
-  min-height: 0;
 }
 
 /* demo sidebar content */

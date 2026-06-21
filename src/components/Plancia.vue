@@ -84,58 +84,73 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
 
 <template>
   <div class="plancia">
-    <div ref="stripEl" class="plancia__strip">
-      <WindowFrame
-        v-for="w in store.visible"
-        :key="w.id"
-        :win="w"
-        :foreign-label="foreignLabel(w)"
-        :labels="labels"
-        :resolve-tone="resolveTone"
-      >
-        <template #actions="slotProps">
-          <slot name="window-actions" v-bind="slotProps" />
-        </template>
+    <!-- Edge sidebar slots. Drop a <PlanciaSidebar position="…"> (or anything)
+         in the matching slot; top/bottom span the full width, left/right flank
+         the strip. Slot content is inside <Plancia>, so it can `useOpenWindow()`. -->
+    <slot name="sidebar-top" />
 
-        <component
-          :is="registry[w.type]"
-          v-if="registry[w.type]"
-          v-bind="w.props"
-          @title="store.setTitle(w.id, $event)"
-          @dirty="store.setDirty(w.id, $event)"
-          @identify="store.identify(w.id, $event.key, $event.props)"
-          @changed="store.touch()"
-          @tags="store.setTags(w.id, $event)"
-          @close="store.close(w.id)"
-        />
-        <div v-else style="padding: 1rem; font-size: 0.875rem; color: var(--plancia-danger)">
-          {{ labels.unknownType(w.type) }}
-        </div>
-      </WindowFrame>
+    <div class="plancia__mid">
+      <slot name="sidebar-left" />
 
-      <div v-if="!store.visible.length" class="plancia__empty">
-        <slot name="empty">
-          <div>
-            <p>{{ labels.empty }}</p>
-            <p v-if="store.minimizedList.length">
-              {{ labels.minimizedHint(store.minimizedList.length) }}
-            </p>
-            <p v-else>{{ labels.openHint }}</p>
+      <div class="plancia__main">
+        <div ref="stripEl" class="plancia__strip">
+          <WindowFrame
+            v-for="w in store.visible"
+            :key="w.id"
+            :win="w"
+            :foreign-label="foreignLabel(w)"
+            :labels="labels"
+            :resolve-tone="resolveTone"
+          >
+            <template #actions="slotProps">
+              <slot name="window-actions" v-bind="slotProps" />
+            </template>
+
+            <component
+              :is="registry[w.type]"
+              v-if="registry[w.type]"
+              v-bind="w.props"
+              @title="store.setTitle(w.id, $event)"
+              @dirty="store.setDirty(w.id, $event)"
+              @identify="store.identify(w.id, $event.key, $event.props)"
+              @changed="store.touch()"
+              @tags="store.setTags(w.id, $event)"
+              @close="store.close(w.id)"
+            />
+            <div v-else style="padding: 1rem; font-size: 0.875rem; color: var(--plancia-danger)">
+              {{ labels.unknownType(w.type) }}
+            </div>
+          </WindowFrame>
+
+          <div v-if="!store.visible.length" class="plancia__empty">
+            <slot name="empty">
+              <div>
+                <p>{{ labels.empty }}</p>
+                <p v-if="store.minimizedList.length">
+                  {{ labels.minimizedHint(store.minimizedList.length) }}
+                </p>
+                <p v-else>{{ labels.openHint }}</p>
+              </div>
+            </slot>
           </div>
-        </slot>
+        </div>
+
+        <footer v-if="store.minimizedList.length" class="plancia__footer">
+          <span class="plancia__footer-label">{{ labels.minimizedLabel }}</span>
+          <span v-for="w in store.minimizedList" :key="w.id" class="plancia__chip">
+            <button type="button" class="plancia__chip-name" :title="labels.restore" @click="store.restore(w.id)">
+              {{ w.title || '—' }}
+            </button>
+            <button type="button" class="plancia__chip-close" :title="labels.close" :aria-label="labels.close" @click="store.close(w.id)">
+              ✕
+            </button>
+          </span>
+        </footer>
       </div>
+
+      <slot name="sidebar-right" />
     </div>
 
-    <footer v-if="store.minimizedList.length" class="plancia__footer">
-      <span class="plancia__footer-label">{{ labels.minimizedLabel }}</span>
-      <span v-for="w in store.minimizedList" :key="w.id" class="plancia__chip">
-        <button type="button" class="plancia__chip-name" :title="labels.restore" @click="store.restore(w.id)">
-          {{ w.title || '—' }}
-        </button>
-        <button type="button" class="plancia__chip-close" :title="labels.close" :aria-label="labels.close" @click="store.close(w.id)">
-          ✕
-        </button>
-      </span>
-    </footer>
+    <slot name="sidebar-bottom" />
   </div>
 </template>

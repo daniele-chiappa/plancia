@@ -35,6 +35,7 @@ ones. Fills its parent, so give the parent a height.
 |---|---|---|
 | `window-actions` | `{ win: WindowInstance }` | Extra buttons in **every** window header (before the resize button). This is where app-specific, per-window actions live — e.g. a "show links" button gated on `win.props.path`. |
 | `empty` | — | Replaces the default "no window open" placeholder. |
+| `sidebar-left` / `sidebar-right` / `sidebar-top` / `sidebar-bottom` | — | Mount a [`<PlanciaSidebar>`](./sidebar.md) (or any content) on that edge. `top`/`bottom` span the full width; `left`/`right` flank the strip + footer. The middle band is `position: relative`, so `overlay`/`floating` sidebars anchor correctly. Slot content lives **inside** `<Plancia>`, so it can `useOpenWindow()` to open windows. |
 
 ```vue
 <Plancia :registry="registry">
@@ -46,6 +47,20 @@ ones. Fills its parent, so give the parent a height.
 
   <template #empty>
     <p>Pick something from the sidebar.</p>
+  </template>
+</Plancia>
+```
+
+A sidebar whose menu opens windows — the `openHint` made real. The menu is its own
+component rendered inside `<Plancia>`, so `useOpenWindow()` resolves (see
+[Sidebar → Inside `<Plancia>`](./sidebar.md#inside-plancia)):
+
+```vue
+<Plancia :registry="registry">
+  <template #sidebar-left>
+    <PlanciaSidebar position="left" :responsive="768">
+      <SidebarMenu />
+    </PlanciaSidebar>
   </template>
 </Plancia>
 ```

@@ -50,6 +50,11 @@ products-dc) into a standalone, content-agnostic library.
   (exported for advanced use). **`usePlanciaSidebarStore`** — optional Pinia
   store for sharing one sidebar's state across the app.
 - **Sidebar CSS-variable theming** (`--plancia-sidebar-*`).
+- **`<Plancia>` edge sidebar slots** — `sidebar-top`/`sidebar-bottom`/`sidebar-left`/
+  `sidebar-right` arrange a `<PlanciaSidebar>` (or any content) around the window
+  strip (top/bottom full width, left/right flanking; the middle band is
+  `position: relative` for overlay/floating anchoring). Slot content lives inside
+  `<Plancia>`, so a menu there opens windows via `useOpenWindow()`.
 - TypeScript types for the full public API; ships prebuilt **ESM + `.d.ts`**.
 - English usage documentation under `docs/en/` (incl. `sidebar.md`).
 

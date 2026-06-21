@@ -44,12 +44,30 @@
 }
 
 .plancia {
+  position: relative;
   display: flex;
   flex-direction: column;
   height: 100%;
   background: var(--plancia-bg);
   color: var(--plancia-text);
   font-family: inherit;
+}
+
+/* Middle band between top/bottom sidebars; flanks the strip with left/right
+   sidebars. `position: relative` so overlay/floating sidebars anchor here. */
+.plancia__mid {
+  position: relative;
+  display: flex;
+  flex: 1 1 0%;
+  flex-direction: row;
+  min-height: 0;
+}
+.plancia__main {
+  display: flex;
+  flex: 1 1 0%;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
 }
 
 .plancia__strip {

@@ -226,6 +226,44 @@ Pass `:labels="{ collapse: 'Comprimi', … }"` (merged over the English defaults
 - Size transitions are disabled under `prefers-reduced-motion`.
 - The resize handle is a focusable `separator` with arrow-key support.
 
+## Inside `<Plancia>`
+
+`<Plancia>` exposes edge slots — `sidebar-left`, `sidebar-right`, `sidebar-top`,
+`sidebar-bottom` — that arrange the sidebar around the window strip for you
+(`top`/`bottom` full width, `left`/`right` flanking; the middle band is already
+`position: relative`, so `overlay`/`floating` anchor correctly). Because the slot
+content lives inside `<Plancia>`, a menu **component** placed there can open
+windows via `useOpenWindow()` with no wiring. (Call it from a component rendered
+*inside* `<Plancia>` — the menu is its own component, not the parent that renders
+`<Plancia>` — since that's where the injection resolves.)
+
+```vue
+<!-- SidebarMenu.vue — rendered in the slot, so it's a <Plancia> descendant -->
+<script setup lang="ts">
+import { useOpenWindow } from 'plancia'
+const open = useOpenWindow()
+</script>
+
+<template>
+  <nav>
+    <button @click="open({ type: 'note', key: 'note:new' })">New note</button>
+  </nav>
+</template>
+```
+
+```vue
+<!-- App.vue -->
+<Plancia :registry="registry">
+  <template #sidebar-left>
+    <PlanciaSidebar position="left" :responsive="768">
+      <SidebarMenu />
+    </PlanciaSidebar>
+  </template>
+</Plancia>
+```
+
+To use it standalone (outside `<Plancia>`), arrange it yourself:
+
 ## Layout recipe
 
 The library ships the sidebar as a leaf; you arrange it. `inline` is just flex;
