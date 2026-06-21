@@ -9,12 +9,22 @@ import dts from 'vite-plugin-dts'
 export default defineConfig({
   plugins: [
     vue(),
-    dts({ include: ['src'], rollupTypes: true }),
+    dts({
+      include: ['src'],
+      exclude: ['src/**/*.test.ts', 'src/playground/**'],
+      rollupTypes: true,
+    }),
   ],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
+  },
+  // Dev server (playground) — host:true so it's reachable from the Docker
+  // container / LAN (see docker-compose.yml).
+  server: {
+    host: true,
+    port: 5173,
   },
   build: {
     lib: {
@@ -24,9 +34,9 @@ export default defineConfig({
       formats: ['es'],
     },
     rollupOptions: {
-      external: ['vue', 'pinia'],
+      external: ['vue', 'pinia', 'vue-router'],
       output: {
-        globals: { vue: 'Vue', pinia: 'Pinia' },
+        globals: { vue: 'Vue', pinia: 'Pinia', 'vue-router': 'VueRouter' },
       },
     },
   },

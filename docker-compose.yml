@@ -1,0 +1,29 @@
+# plancia — dev/test stack.
+#
+#   docker compose up playground        → webui at http://172.16.0.80:5180 (HMR)
+#   docker compose run --rm test        → run the vitest suite once
+#   docker compose --profile test up    → start the test service
+#
+# Source is bind-mounted for hot reload; an anonymous volume keeps the
+# container's own node_modules (so the host's are never used inside the image).
+
+services:
+  playground:
+    build: .
+    container_name: plancia-playground
+    command: ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]
+    ports:
+      - "172.16.0.80:5180:5173"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    restart: unless-stopped
+
+  test:
+    build: .
+    container_name: plancia-test
+    command: ["npm", "run", "test"]
+    volumes:
+      - .:/app
+      - /app/node_modules
+    profiles: ["test"]

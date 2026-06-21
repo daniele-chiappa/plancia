@@ -1,0 +1,251 @@
+/**
+ * plancia — base theme + layout.
+ *
+ * Dependency-free: no Tailwind, no design-token assumptions. Every visual knob
+ * is a CSS custom property with a sane default; override the `--plancia-*`
+ * variables (on `:root` or any ancestor) to match the host app's theme.
+ *
+ * Consumers must import this once:  import 'plancia/style.css'
+ */
+:root {
+  --plancia-w-s: 32rem;
+  --plancia-w-m: 44rem;
+  --plancia-gap: 0.75rem;
+  --plancia-padding: 0.75rem;
+  --plancia-radius: 0.5rem;
+
+  --plancia-bg: transparent;
+  --plancia-surface: #ffffff;
+  --plancia-header-bg: rgba(0, 0, 0, 0.03);
+  --plancia-footer-bg: rgba(0, 0, 0, 0.03);
+  --plancia-border: #e2e8f0;
+  --plancia-accent: #3b82f6;
+  --plancia-accent-soft: rgba(59, 130, 246, 0.12);
+  --plancia-text: #0f172a;
+  --plancia-text-muted: #64748b;
+  --plancia-danger: #dc2626;
+  --plancia-warning: #d97706;
+  --plancia-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+
+  --plancia-tag-bg: rgba(100, 116, 139, 0.14);
+  --plancia-tag-fg: var(--plancia-text-muted);
+}
+
+.plancia {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--plancia-bg);
+  color: var(--plancia-text);
+  font-family: inherit;
+}
+
+.plancia__strip {
+  display: flex;
+  flex: 1 1 0%;
+  min-height: 0;
+  flex-direction: row;
+  gap: var(--plancia-gap);
+  padding: var(--plancia-padding);
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+}
+
+.plancia__empty {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  text-align: center;
+  color: var(--plancia-text-muted);
+  font-size: 0.875rem;
+}
+.plancia__empty p + p {
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+}
+
+.plancia__footer {
+  display: flex;
+  flex-shrink: 0;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.5rem;
+  overflow-x: auto;
+  border-top: 1px solid var(--plancia-border);
+  background: var(--plancia-footer-bg);
+  padding: 0.5rem 0.75rem;
+}
+.plancia__footer-label {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--plancia-text-muted);
+}
+.plancia__chip {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.375rem;
+  border: 1px solid var(--plancia-border);
+  border-radius: 0.375rem;
+  background: var(--plancia-surface);
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+}
+.plancia__chip-name {
+  max-width: 14rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  padding: 0;
+}
+.plancia__chip-name:hover {
+  color: var(--plancia-accent);
+}
+.plancia__chip-close {
+  background: none;
+  border: 0;
+  cursor: pointer;
+  color: var(--plancia-text-muted);
+  padding: 0;
+  line-height: 1;
+}
+.plancia__chip-close:hover {
+  color: var(--plancia-danger);
+}
+
+/* --- single window --------------------------------------------------------- */
+.plancia-window {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  height: 100%;
+  width: var(--plancia-w-m);
+  overflow: hidden;
+  border: 1px solid var(--plancia-border);
+  border-radius: var(--plancia-radius);
+  background: var(--plancia-surface);
+  box-shadow: var(--plancia-shadow);
+  scroll-snap-align: start;
+  transition: box-shadow 0.15s ease;
+}
+.plancia-window[data-width='s'] {
+  width: var(--plancia-w-s);
+}
+.plancia-window[data-width='full'] {
+  width: 100%;
+}
+.plancia-window--focused {
+  border-color: var(--plancia-accent);
+  box-shadow: 0 0 0 2px var(--plancia-accent-soft);
+}
+
+.plancia-window__header {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  gap: 0.25rem;
+  border-bottom: 1px solid var(--plancia-border);
+  background: var(--plancia-header-bg);
+  padding: 0.5rem 0.75rem;
+}
+.plancia-window--focused .plancia-window__header {
+  background: var(--plancia-accent-soft);
+}
+.plancia-window__titlerow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.plancia-window__title {
+  flex: 1 1 0%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--plancia-text);
+}
+.plancia-window__badge {
+  display: inline-block;
+  margin-right: 0.25rem;
+  vertical-align: middle;
+  border-radius: 0.25rem;
+  padding: 0 0.25rem;
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  background: var(--plancia-tag-bg);
+  color: var(--plancia-tag-fg);
+}
+.plancia-window__dirty {
+  color: var(--plancia-warning);
+}
+
+.plancia-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 0.25rem;
+  background: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  color: var(--plancia-text-muted);
+  line-height: 0;
+}
+.plancia-btn:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--plancia-text);
+}
+.plancia-btn--danger:hover {
+  background: rgba(220, 38, 38, 0.12);
+  color: var(--plancia-danger);
+}
+.plancia-btn svg {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+.plancia-window__tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+}
+.plancia-tag {
+  border: 0;
+  border-radius: 0.25rem;
+  padding: 0 0.25rem;
+  font-size: 0.66rem;
+  vertical-align: middle;
+  background: var(--plancia-tag-bg);
+  color: var(--plancia-tag-fg);
+}
+button.plancia-tag {
+  cursor: pointer;
+  font: inherit;
+}
+button.plancia-tag:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.plancia-window__body {
+  flex: 1 1 0%;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* Narrow viewports: a window never exceeds the viewport width. */
+@media (max-width: 768px) {
+  .plancia-window,
+  .plancia-window[data-width='s'] {
+    width: calc(100vw - 3rem);
+  }
+}
