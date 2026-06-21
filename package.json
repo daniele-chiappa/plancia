@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "description": "Tiling window-manager component (niri-style) for Vue 3 — abstracted from gosidian and products-dc.",
   "type": "module",
+  "license": "MIT",
   "files": [
     "dist"
   ],

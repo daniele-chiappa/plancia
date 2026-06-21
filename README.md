@@ -166,4 +166,4 @@ parallel.
 
 ## License
 
-To be decided before the public release.
+[MIT](LICENSE) © 2026 plancia contributors.

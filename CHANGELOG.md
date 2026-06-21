@@ -1,0 +1,47 @@
+# Changelog
+
+All notable changes to this project are documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+First release candidate. plancia abstracts the niri-style tiling window manager
+that had been built in parallel in two production Vue apps (gosidian and
+products-dc) into a standalone, content-agnostic library.
+
+### Added
+
+- **`<Plancia>`** — tiling window-manager component: a scroll-snapping strip of
+  tiled windows plus a footer of minimized ones, driven by a `type → component`
+  registry. Props: `registry`, `nativeType`, `moduleLabel`, `labels`,
+  `widthCycle`, `defaultWidth`, `resolveTone`. Slots: `window-actions`, `empty`.
+  Keyboard: `Alt + ←/→` to move focus; the focused window is scrolled into view.
+- **`<WindowFrame>`** — per-window chrome (resize / minimize / close, header
+  tags, dirty marker, `actions` slot) with dependency-free inline SVG icons.
+- **`useWindowsStore`** (Pinia) — pure window store. Actions: `open`, `close`,
+  `minimize`, `restore`, `focus`, `focusAdjacent`, `cycleWidth`, `setTitle`,
+  `setDirty`, `setTags`, `identify`, `touch`, `reset`, `configure`. Getters:
+  `visible`, `minimizedList`, `focused`. Configurable `widthCycle` /
+  `defaultWidth`; de-duplication by window `key`.
+- **`usePlanciaSync(codec, options)`** — opt-in URL (`?w=&f=`) + optional
+  `localStorage` synchronisation with back/forward support. Requires
+  `vue-router` (an optional peer dependency).
+- **`createArgCodec(config)`** — ready-made token codec covering both numeric-id
+  and path-string URL schemes (`bareToken: 'type' | 'nativeArg'`).
+- **`useOpenWindow()` / `useCanOpenWindowType()`** + injection keys
+  (`OPEN_WINDOW`, `CAN_OPEN_TYPE`) for window content to open siblings.
+- **CSS-variable theming** (`--plancia-*`) via `plancia/style.css` — no Tailwind
+  or design-token dependency.
+- **Overridable UI strings** via the `labels` prop (`DEFAULT_LABELS`); no i18n
+  dependency.
+- TypeScript types for the full public API; ships prebuilt **ESM + `.d.ts`**.
+- English usage documentation under `docs/en/`.
+
+### Notes
+
+- Zero runtime dependencies. Peers: `vue ^3.5`, `pinia ^2.2 || ^3`,
+  `vue-router ^4` (optional).
+
+[Unreleased]: https://git97.dccomunicazione.com/DCcomunicazione/plancia
