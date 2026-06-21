@@ -108,6 +108,24 @@ windows.open({ type, key, props })   // open or focus-if-exists (deduped by key)
 useOpenWindow()(spec)                // open a sibling from inside window content
 ```
 
+## Sidebar
+
+The library also ships **`<PlanciaSidebar>`** — a standalone, content-agnostic
+panel for any of the four edges, with `closed` / `collapsed` / `expanded` states,
+`inline` / `overlay` / `floating` modes, an independently-scrolling body, optional
+drag-resize, hover-peek and a responsive drawer. Themeable with the same
+`--plancia-*` CSS variables; zero runtime deps.
+
+![PlanciaSidebar demo](docs/assets/plancia-sidebar-demo.gif)
+
+```vue
+<PlanciaSidebar position="left" :responsive="768" resizable>
+  <nav><!-- menu / list / anything --></nav>
+</PlanciaSidebar>
+```
+
+See **[Sidebar](docs/en/sidebar.md)** for the full reference.
+
 ## Documentation
 
 Full usage guide (English) under **[`docs/en/`](docs/en/README.md)**:
@@ -121,6 +139,7 @@ Full usage guide (English) under **[`docs/en/`](docs/en/README.md)**:
 | [URL & state sync](docs/en/url-sync.md) | `usePlanciaSync` + `createArgCodec` |
 | [Theming](docs/en/theming.md) | CSS variables, labels / i18n |
 | [Recipes](docs/en/recipes.md) | Cross-window links, tags, per-window actions… |
+| [Sidebar](docs/en/sidebar.md) | `<PlanciaSidebar>` — edges, states, modes, peek, resize, drawer |
 
 ## Compatibility
 

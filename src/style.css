@@ -29,6 +29,18 @@
 
   --plancia-tag-bg: rgba(100, 116, 139, 0.14);
   --plancia-tag-fg: var(--plancia-text-muted);
+
+  /* sidebar */
+  --plancia-sidebar-expanded-size: 16rem;
+  --plancia-sidebar-rail: 3rem;
+  --plancia-sidebar-bg: var(--plancia-surface);
+  --plancia-sidebar-border: var(--plancia-border);
+  --plancia-sidebar-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  --plancia-sidebar-radius: var(--plancia-radius);
+  --plancia-sidebar-gap: 0.75rem;
+  --plancia-sidebar-backdrop: rgba(0, 0, 0, 0.32);
+  --plancia-sidebar-z: 40;
+  --plancia-sidebar-transition: 160ms;
 }
 
 .plancia {
@@ -248,4 +260,268 @@ button.plancia-tag:hover {
   .plancia-window[data-width='s'] {
     width: calc(100vw - 3rem);
   }
+}
+
+/* --- sidebar --------------------------------------------------------------- */
+.plancia-sidebar {
+  --_size: var(--plancia-sidebar-size, var(--plancia-sidebar-expanded-size, 16rem));
+  --_rail: var(--plancia-sidebar-rail, 3rem);
+  position: relative;
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  display: flex;
+  background: var(--plancia-sidebar-bg);
+  color: var(--plancia-text);
+  font-family: inherit;
+  transition:
+    width var(--plancia-sidebar-transition) ease,
+    height var(--plancia-sidebar-transition) ease;
+}
+
+/* vertical (left / right) */
+.plancia-sidebar[data-orientation='vertical'] {
+  width: var(--_size);
+  height: 100%;
+  border-inline-end: 1px solid var(--plancia-sidebar-border);
+}
+.plancia-sidebar[data-position='right'] {
+  border-inline-end: 0;
+  border-inline-start: 1px solid var(--plancia-sidebar-border);
+}
+.plancia-sidebar[data-orientation='vertical'][data-state='collapsed'] {
+  width: var(--_rail);
+}
+.plancia-sidebar[data-orientation='vertical'][data-state='closed'] {
+  width: 0;
+  border-inline: 0;
+}
+
+/* horizontal (top / bottom) */
+.plancia-sidebar[data-orientation='horizontal'] {
+  width: 100%;
+  height: var(--_size);
+  border-block-end: 1px solid var(--plancia-sidebar-border);
+}
+.plancia-sidebar[data-position='bottom'] {
+  border-block-end: 0;
+  border-block-start: 1px solid var(--plancia-sidebar-border);
+}
+.plancia-sidebar[data-orientation='horizontal'][data-state='collapsed'] {
+  height: var(--_rail);
+}
+.plancia-sidebar[data-orientation='horizontal'][data-state='closed'] {
+  height: 0;
+  border-block: 0;
+}
+
+.plancia-sidebar__panel {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.plancia-sidebar__header {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+}
+.plancia-sidebar__toggle {
+  margin-inline-start: auto;
+}
+.plancia-sidebar__toggle svg {
+  transition: transform var(--plancia-sidebar-transition) ease;
+}
+
+.plancia-sidebar__body {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  padding: 0 0.25rem 0.5rem;
+}
+.plancia-sidebar[data-orientation='vertical'] .plancia-sidebar__body {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+.plancia-sidebar[data-orientation='horizontal'] .plancia-sidebar__body {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.plancia-sidebar__footer {
+  flex: 0 0 auto;
+  border-top: 1px solid var(--plancia-sidebar-border);
+  padding: 0.5rem;
+}
+
+/* reveal tab (closed) — sticks out from the collapsed edge */
+.plancia-sidebar__reveal {
+  position: absolute;
+  z-index: 1;
+  background: var(--plancia-sidebar-bg);
+  border: 1px solid var(--plancia-sidebar-border);
+  box-shadow: var(--plancia-shadow);
+}
+.plancia-sidebar[data-position='left'] .plancia-sidebar__reveal {
+  inset-inline-start: 0;
+  inset-block-start: 0.5rem;
+}
+.plancia-sidebar[data-position='right'] .plancia-sidebar__reveal {
+  inset-inline-end: 0;
+  inset-block-start: 0.5rem;
+}
+.plancia-sidebar[data-position='top'] .plancia-sidebar__reveal {
+  inset-block-start: 0;
+  inset-inline-start: 0.5rem;
+}
+.plancia-sidebar[data-position='bottom'] .plancia-sidebar__reveal {
+  inset-block-end: 0;
+  inset-inline-start: 0.5rem;
+}
+
+/* chevron orientation: toggle points toward its action, reveal toward content */
+.plancia-sidebar[data-position='left'][data-state='collapsed'] .plancia-sidebar__toggle svg,
+.plancia-sidebar[data-position='right'][data-state='expanded'] .plancia-sidebar__toggle svg {
+  transform: rotate(180deg);
+}
+.plancia-sidebar[data-position='top'][data-state='expanded'] .plancia-sidebar__toggle svg {
+  transform: rotate(90deg);
+}
+.plancia-sidebar[data-position='top'][data-state='collapsed'] .plancia-sidebar__toggle svg {
+  transform: rotate(-90deg);
+}
+.plancia-sidebar[data-position='bottom'][data-state='expanded'] .plancia-sidebar__toggle svg {
+  transform: rotate(-90deg);
+}
+.plancia-sidebar[data-position='bottom'][data-state='collapsed'] .plancia-sidebar__toggle svg {
+  transform: rotate(90deg);
+}
+
+.plancia-sidebar[data-position='right'] .plancia-sidebar__reveal svg {
+  transform: rotate(180deg);
+}
+.plancia-sidebar[data-position='top'] .plancia-sidebar__reveal svg {
+  transform: rotate(90deg);
+}
+.plancia-sidebar[data-position='bottom'] .plancia-sidebar__reveal svg {
+  transform: rotate(-90deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .plancia-sidebar,
+  .plancia-sidebar__toggle svg {
+    transition: none;
+  }
+}
+
+/* overlay / floating: lift the sidebar out of flow, over the content. The host
+   container must be `position: relative` for these to anchor correctly. */
+.plancia-sidebar--overlay,
+.plancia-sidebar--floating {
+  position: absolute;
+  z-index: var(--plancia-sidebar-z);
+}
+.plancia-sidebar--overlay[data-position='left'],
+.plancia-sidebar--floating[data-position='left'] {
+  inset-block: 0;
+  inset-inline-start: 0;
+}
+.plancia-sidebar--overlay[data-position='right'],
+.plancia-sidebar--floating[data-position='right'] {
+  inset-block: 0;
+  inset-inline-end: 0;
+}
+.plancia-sidebar--overlay[data-position='top'],
+.plancia-sidebar--floating[data-position='top'] {
+  inset-inline: 0;
+  inset-block-start: 0;
+}
+.plancia-sidebar--overlay[data-position='bottom'],
+.plancia-sidebar--floating[data-position='bottom'] {
+  inset-inline: 0;
+  inset-block-end: 0;
+}
+
+/* floating: detached card — gap on all sides (padding), full border on panel */
+.plancia-sidebar--floating[data-orientation='vertical'] {
+  border-inline: 0;
+}
+.plancia-sidebar--floating[data-orientation='horizontal'] {
+  border-block: 0;
+}
+.plancia-sidebar--floating:not([data-state='closed']) {
+  padding: var(--plancia-sidebar-gap);
+}
+.plancia-sidebar--floating .plancia-sidebar__panel {
+  border: 1px solid var(--plancia-sidebar-border);
+  border-radius: var(--plancia-sidebar-radius);
+  box-shadow: var(--plancia-sidebar-shadow);
+  background: var(--plancia-sidebar-bg);
+}
+
+/* peek: render at expanded size while the committed state stays 'collapsed' */
+.plancia-sidebar[data-peeking][data-orientation='vertical'] {
+  width: var(--_size);
+}
+.plancia-sidebar[data-peeking][data-orientation='horizontal'] {
+  height: var(--_size);
+}
+
+/* drag-resize handle on the inner edge */
+.plancia-sidebar__resize {
+  position: absolute;
+  z-index: 2;
+  background: transparent;
+  touch-action: none;
+}
+.plancia-sidebar__resize:hover,
+.plancia-sidebar__resize:focus-visible {
+  background: var(--plancia-accent-soft);
+  outline: none;
+}
+.plancia-sidebar[data-orientation='vertical'] .plancia-sidebar__resize {
+  inset-block: 0;
+  width: 6px;
+  cursor: col-resize;
+}
+.plancia-sidebar[data-position='left'] .plancia-sidebar__resize {
+  inset-inline-end: 0;
+}
+.plancia-sidebar[data-position='right'] .plancia-sidebar__resize {
+  inset-inline-start: 0;
+}
+.plancia-sidebar[data-orientation='horizontal'] .plancia-sidebar__resize {
+  inset-inline: 0;
+  height: 6px;
+  cursor: row-resize;
+}
+.plancia-sidebar[data-position='top'] .plancia-sidebar__resize {
+  inset-block-end: 0;
+}
+.plancia-sidebar[data-position='bottom'] .plancia-sidebar__resize {
+  inset-block-start: 0;
+}
+.plancia-sidebar[data-resizing] {
+  transition: none;
+  user-select: none;
+}
+
+/* responsive drawer: pin to the viewport so it stacks above the backdrop */
+.plancia-sidebar[data-drawer] {
+  position: fixed;
+}
+
+/* backdrop behind a drawer / opt-in overlay */
+.plancia-sidebar__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--plancia-sidebar-z) - 1);
+  background: var(--plancia-sidebar-backdrop);
+  border: 0;
 }

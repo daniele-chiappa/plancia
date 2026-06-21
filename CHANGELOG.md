@@ -36,8 +36,22 @@ products-dc) into a standalone, content-agnostic library.
   or design-token dependency.
 - **Overridable UI strings** via the `labels` prop (`DEFAULT_LABELS`); no i18n
   dependency.
+- **`<PlanciaSidebar>`** — standalone, content-agnostic sidebar for the four
+  edges (`top`/`bottom`/`left`/`right`) with `closed`/`collapsed`/`expanded`
+  states and an independently-scrolling body. Modes: `inline` (content reflows),
+  `overlay`, `floating` (detached card). Optional **drag-resize** (keyboard-
+  operable), **hover-peek** (transient expand while collapsed), and a
+  **responsive drawer** with backdrop. Scoped slots (`header`/`footer`/default/
+  `collapsed`/`toggle`/`reveal`) carry the state signal so content adapts.
+  `v-model:state` / `v-model:size`, injectable `labels`, configurable ARIA
+  landmark, `prefers-reduced-motion` aware.
+- **`usePlanciaSidebar()`** + injection key `SIDEBAR_CONTROL` — drive the sidebar
+  from within its content. **`useSidebarController`** — the pure state machine
+  (exported for advanced use). **`usePlanciaSidebarStore`** — optional Pinia
+  store for sharing one sidebar's state across the app.
+- **Sidebar CSS-variable theming** (`--plancia-sidebar-*`).
 - TypeScript types for the full public API; ships prebuilt **ESM + `.d.ts`**.
-- English usage documentation under `docs/en/`.
+- English usage documentation under `docs/en/` (incl. `sidebar.md`).
 
 ### Notes
 

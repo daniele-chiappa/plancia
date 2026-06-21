@@ -26,6 +26,7 @@ import 'plancia/style.css'
 | [URL & state sync](./url-sync.md) | `usePlanciaSync` + `createArgCodec` |
 | [Theming](./theming.md) | CSS variables, window sizing, labels / i18n |
 | [Recipes](./recipes.md) | Cross-window links, clickable tags, per-window actions, foreign windows |
+| [Sidebar](./sidebar.md) | `<PlanciaSidebar>` — 4 edges, states, modes, hover-peek, drag-resize, responsive drawer |
 
 ## At a glance
 

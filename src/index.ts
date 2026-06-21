@@ -31,3 +31,31 @@ export type {
   WindowRegistry,
   PlanciaLabels,
 } from './types'
+
+// --- sidebar ---------------------------------------------------------------
+export { default as PlanciaSidebar } from './components/PlanciaSidebar.vue'
+
+export {
+  useSidebarController,
+  DEFAULT_EXPANDED_SIZE,
+  DEFAULT_MIN_SIZE,
+  DEFAULT_MAX_SIZE,
+} from './sidebar/useSidebarController'
+export type { SidebarController, SidebarControllerOptions } from './sidebar/useSidebarController'
+
+export { usePlanciaSidebar, SIDEBAR_CONTROL } from './sidebar/usePlanciaSidebar'
+export type { SidebarControl } from './sidebar/usePlanciaSidebar'
+
+export { usePlanciaSidebarStore } from './sidebar/sidebarStore'
+export type { SidebarStoreEntry } from './sidebar/sidebarStore'
+
+export { DEFAULT_SIDEBAR_LABELS } from './sidebar/types'
+export type {
+  SidebarPosition,
+  SidebarOrientation,
+  SidebarMode,
+  SidebarState,
+  SidebarEventType,
+  SidebarLabels,
+  SidebarSlotProps,
+} from './sidebar/types'
