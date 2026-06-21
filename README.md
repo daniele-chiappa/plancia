@@ -15,7 +15,11 @@ Vue 3.5 · TypeScript · Pinia (peer dep) · Vite (build in library mode).
 
 ## Stato
 
-🚧 **Scaffold.** È presente il contratto dei tipi condiviso (`WindowInstance`, `OpenSpec`, `WindowTag`, `WindowWidth`) e l'ossatura dello store. Il porting di `WindowManager`/`WindowFrame`, delle azioni e della sync URL è in corso — vedi il piano nel vault gosidian (`plancia/plans/20260621-abstract-plancia-from-two-sources`).
+Libreria funzionante: store + `Plancia`/`WindowFrame` + `usePlanciaSync`, build ESM + `.d.ts`, test verdi. Pre-go-live (repo ancora privato; le dipendenze sono già state verificate compatibili con gosidian e products-dc).
+
+## Documentazione
+
+Guida d'uso (in inglese): **[`docs/en/`](docs/en/README.md)** — getting started, concetti, componenti, store, sync URL, theming, recipes.
 
 ## Sviluppo
 
