@@ -1,0 +1,38 @@
+# --- Regole git di progetto (vedi CLAUDE.md / ADR) ---
+# CLAUDE.md non si condivide: istruzioni agent locali, mai sul remote.
+CLAUDE.md
+.claude/
+
+# --- Node / Vite / Vue ---
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Build / cache
+.vite/
+coverage/
+*.tsbuildinfo
+
+# Env & secrets
+.env
+.env.*
+!.env.example
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*

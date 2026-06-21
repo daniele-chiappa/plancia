@@ -1,0 +1,33 @@
+import { fileURLToPath, URL } from 'node:url'
+import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+import dts from 'vite-plugin-dts'
+
+// Library build: emits an ESM bundle + bundled .d.ts. `vue` and `pinia` are
+// peer deps, kept external so the consumer app dedupes them. The dev server
+// (`npm run dev`) serves the playground in src/playground/.
+export default defineConfig({
+  plugins: [
+    vue(),
+    dts({ include: ['src'], rollupTypes: true }),
+  ],
+  resolve: {
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+    },
+  },
+  build: {
+    lib: {
+      entry: fileURLToPath(new URL('./src/index.ts', import.meta.url)),
+      name: 'Plancia',
+      fileName: 'plancia',
+      formats: ['es'],
+    },
+    rollupOptions: {
+      external: ['vue', 'pinia'],
+      output: {
+        globals: { vue: 'Vue', pinia: 'Pinia' },
+      },
+    },
+  },
+})
