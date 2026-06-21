@@ -68,6 +68,7 @@ last non-closed state.
 | `resizable` | `boolean` | `false` | Show a drag handle on the inner edge. |
 | `peek` | `boolean` | `true` for overlay/floating | Hover-peek when collapsed. |
 | `peekDelay` | `{ open: number; close: number }` | `{ 120, 240 }` | Hover-intent delays (ms). |
+| `draggable` | `boolean` | `false` | In `floating` mode, drag the panel by its header. |
 | `responsive` | `number \| false` | `false` | Below this viewport width (px), become an overlay drawer. |
 | `backdrop` | `boolean` | only while a responsive drawer is open | Scrim behind the panel. |
 | `labels` | `Partial<SidebarLabels>` | English defaults | UI strings, merged over defaults. |
@@ -96,6 +97,7 @@ in control.
 | `expand` / `collapse` / `close` / `open` | — | The matching transition fired. |
 | `peek-start` / `peek-end` | — | A hover preview began / ended. |
 | `resize` | `number` | New size (px) during/after a drag. |
+| `move` | `{ x: number; y: number }` | The floating panel was dragged (px in the offset parent). |
 
 ## Slots
 
@@ -159,6 +161,19 @@ content); override with the `peek` prop.
 width: it switches to `overlay`, pins to the viewport, and (by default) shows a
 `backdrop` that closes it on click. Above the breakpoint it returns to its
 declared `mode`.
+
+## Draggable floating
+
+In `floating` mode, set `draggable` to let the user reposition the panel by
+dragging its **header** — it becomes a compact, scrollable palette. The drag is
+clamped to the positioned ancestor, and a `move` event reports the new `{ x, y }`
+(px, relative to that ancestor). Drags that start on an interactive control
+(`button`/`a`/`input`/`select`/`textarea`) — or any element you mark `data-no-drag`
+— are ignored, so the toggle and your menu items keep working.
+
+```vue
+<PlanciaSidebar position="left" mode="floating" draggable @move="onMove" />
+```
 
 ## External control & optional store
 

@@ -39,9 +39,9 @@ products-dc) into a standalone, content-agnostic library.
 - **`<PlanciaSidebar>`** — standalone, content-agnostic sidebar for the four
   edges (`top`/`bottom`/`left`/`right`) with `closed`/`collapsed`/`expanded`
   states and an independently-scrolling body. Modes: `inline` (content reflows),
-  `overlay`, `floating` (detached card). Optional **drag-resize** (keyboard-
-  operable), **hover-peek** (transient expand while collapsed), and a
-  **responsive drawer** with backdrop. Scoped slots (`header`/`footer`/default/
+  `overlay`, `floating` (detached card, optionally **draggable** by its header,
+  emitting `move`). Optional **drag-resize** (keyboard-operable), **hover-peek**
+  (transient expand while collapsed), and a **responsive drawer** with backdrop. Scoped slots (`header`/`footer`/default/
   `collapsed`/`toggle`/`reveal`) carry the state signal so content adapts.
   `v-model:state` / `v-model:size`, injectable `labels`, configurable ARIA
   landmark, `prefers-reduced-motion` aware.

@@ -6,11 +6,11 @@
  * lucide), injectable strings (no i18n lock-in), a11y-aware.
  *
  * Modes: `inline` (takes layout space, content reflows), `overlay` (sits over
- * the content), `floating` (overlay + detached card). Optional drag-resize,
- * hover-peek, and a responsive drawer (auto-overlay + backdrop under a
- * breakpoint). State lives in a pure controller (`useSidebarController`) and is
- * exposed as `v-model:state` / `v-model:size` and via provide/inject
- * (`usePlanciaSidebar`).
+ * the content), `floating` (detached card — optionally `draggable` by its
+ * header). Optional drag-resize, hover-peek, and a responsive drawer
+ * (auto-overlay + backdrop under a breakpoint). State lives in a pure controller
+ * (`useSidebarController`) and is exposed as `v-model:state` / `v-model:size` and
+ * via provide/inject (`usePlanciaSidebar`).
  */
 import { computed, onBeforeUnmount, onMounted, provide, ref, useId, watch } from 'vue'
 import '../style.css'
@@ -45,6 +45,8 @@ const props = withDefaults(
      *  overlay/floating, false for inline. */
     peek?: boolean
     peekDelay?: { open: number; close: number }
+    /** In `floating` mode, let the panel be dragged by its header. */
+    draggable?: boolean
     /** Below this viewport width (px) the sidebar becomes an overlay drawer. */
     responsive?: number | false
     /** Backdrop behind the panel. Default: only while a responsive drawer is open. */
@@ -67,6 +69,7 @@ const props = withDefaults(
     resizable: false,
     peek: undefined,
     peekDelay: () => ({ open: 120, close: 240 }),
+    draggable: false,
     responsive: false,
     backdrop: undefined,
     labels: undefined,
@@ -85,6 +88,7 @@ const emit = defineEmits<{
   'peek-start': []
   'peek-end': []
   resize: [number]
+  move: [{ x: number; y: number }]
 }>()
 
 /* --- responsive drawer ---------------------------------------------------- */
@@ -296,6 +300,60 @@ function onResizeKey(e: KeyboardEvent) {
   e.preventDefault()
 }
 
+/* --- drag move (floating only) -------------------------------------------- */
+const floatPos = ref<{ x: number; y: number } | null>(null)
+const dragging = ref(false)
+const floatingDraggable = computed(() => props.draggable && effectiveMode.value === 'floating')
+const canDrag = computed(() => floatingDraggable.value && ctrl.state.value !== 'closed')
+const floatStyle = computed<Record<string, string>>(() => {
+  const s: Record<string, string> = {}
+  if (canDrag.value && floatPos.value) {
+    s.left = `${floatPos.value.x}px`
+    s.top = `${floatPos.value.y}px`
+    s.right = 'auto'
+    s.bottom = 'auto'
+  }
+  return s
+})
+let movePointer = { x: 0, y: 0 }
+let moveBox = { x: 0, y: 0 }
+
+function onDragMove(e: PointerEvent) {
+  const el = asideRef.value
+  if (!el) return
+  const parent = el.offsetParent as HTMLElement | null
+  const pw = parent?.clientWidth ?? el.offsetWidth
+  const ph = parent?.clientHeight ?? el.offsetHeight
+  const x = Math.max(0, Math.min(moveBox.x + (e.clientX - movePointer.x), pw - el.offsetWidth))
+  const y = Math.max(0, Math.min(moveBox.y + (e.clientY - movePointer.y), ph - el.offsetHeight))
+  floatPos.value = { x, y }
+}
+function onDragEnd() {
+  dragging.value = false
+  window.removeEventListener('pointermove', onDragMove)
+  window.removeEventListener('pointerup', onDragEnd)
+  if (floatPos.value) emit('move', floatPos.value)
+}
+function onHeaderPointerDown(e: PointerEvent) {
+  if (!canDrag.value) return
+  // don't start a drag from interactive header content (toggle, etc.)
+  if ((e.target as HTMLElement).closest('button, a, input, select, textarea, [data-no-drag]')) return
+  const el = asideRef.value
+  if (!el) return
+  movePointer = { x: e.clientX, y: e.clientY }
+  moveBox = { x: el.offsetLeft, y: el.offsetTop }
+  floatPos.value = { x: el.offsetLeft, y: el.offsetTop }
+  dragging.value = true
+  window.addEventListener('pointermove', onDragMove)
+  window.addEventListener('pointerup', onDragEnd)
+  e.preventDefault()
+}
+
+// Forget the free position when we're no longer a draggable floating panel.
+watch(floatingDraggable, (ok) => {
+  if (!ok) floatPos.value = null
+})
+
 /* --- backdrop (responsive drawer / opt-in) -------------------------------- */
 const showBackdrop = computed(() => {
   if (effectiveMode.value === 'inline') return false
@@ -314,6 +372,8 @@ onBeforeUnmount(() => {
   teardownMql()
   window.removeEventListener('pointermove', onResizeMove)
   window.removeEventListener('pointerup', onResizeEnd)
+  window.removeEventListener('pointermove', onDragMove)
+  window.removeEventListener('pointerup', onDragEnd)
 })
 
 provide(SIDEBAR_CONTROL, {
@@ -344,8 +404,10 @@ provide(SIDEBAR_CONTROL, {
     :data-state="ctrl.state.value"
     :data-peeking="ctrl.peeking.value ? '' : undefined"
     :data-resizing="resizing ? '' : undefined"
+    :data-draggable="canDrag ? '' : undefined"
+    :data-dragging="dragging ? '' : undefined"
     :data-drawer="isNarrow ? '' : undefined"
-    :style="rootStyle"
+    :style="[rootStyle, floatStyle]"
     :role="landmarkRole"
     :aria-label="ariaLabel ?? labels.sidebar"
     @pointerenter="onPointerEnter"
@@ -379,7 +441,7 @@ provide(SIDEBAR_CONTROL, {
     </button>
 
     <div v-show="ctrl.state.value !== 'closed'" :id="panelId" class="plancia-sidebar__panel">
-      <header class="plancia-sidebar__header">
+      <header class="plancia-sidebar__header" @pointerdown="onHeaderPointerDown">
         <slot name="header" v-bind="slotProps" />
         <slot name="toggle" v-bind="slotProps">
           <button

@@ -568,3 +568,26 @@ button.plancia-tag:hover {
   min-width: 0;
   min-height: 0;
 }
+
+/* draggable floating: a compact, repositionable palette (header = drag handle) */
+.plancia-sidebar--floating[data-draggable][data-orientation='vertical'] {
+  inset-block-end: auto;
+  height: auto;
+  max-height: calc(100% - 2 * var(--plancia-sidebar-gap));
+}
+.plancia-sidebar--floating[data-draggable][data-orientation='horizontal'] {
+  inset-inline-end: auto;
+  width: auto;
+  max-width: calc(100% - 2 * var(--plancia-sidebar-gap));
+}
+.plancia-sidebar[data-draggable] .plancia-sidebar__header {
+  cursor: grab;
+  touch-action: none;
+}
+.plancia-sidebar[data-dragging] .plancia-sidebar__header {
+  cursor: grabbing;
+}
+.plancia-sidebar[data-dragging] {
+  transition: none;
+  user-select: none;
+}

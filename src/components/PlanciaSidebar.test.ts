@@ -174,4 +174,28 @@ describe('PlanciaSidebar', () => {
     expect(w.emitted('update:state')?.at(-1)).toEqual(['collapsed'])
     expect(aside(w).attributes('data-state')).toBe('collapsed')
   })
+
+  it('marks a draggable panel only in floating mode', () => {
+    const floating = mount(PlanciaSidebar, { props: { mode: 'floating', draggable: true } })
+    expect(aside(floating).attributes('data-draggable')).toBe('')
+    const inline = mount(PlanciaSidebar, { props: { mode: 'inline', draggable: true } })
+    expect(aside(inline).attributes('data-draggable')).toBeUndefined()
+  })
+
+  it('drags the floating panel by its header and emits move', async () => {
+    const w = mount(PlanciaSidebar, { props: { mode: 'floating', draggable: true } })
+    await w.get('.plancia-sidebar__header').trigger('pointerdown', { clientX: 0, clientY: 0 })
+    expect(aside(w).attributes('data-dragging')).toBe('')
+    window.dispatchEvent(new MouseEvent('pointermove', { clientX: 30, clientY: 20 }))
+    window.dispatchEvent(new MouseEvent('pointerup'))
+    await nextTick()
+    expect(aside(w).attributes('data-dragging')).toBeUndefined()
+    expect(w.emitted('move')).toHaveLength(1)
+  })
+
+  it('does not start a drag from an interactive header control', async () => {
+    const w = mount(PlanciaSidebar, { props: { mode: 'floating', draggable: true } })
+    await w.get('.plancia-sidebar__toggle').trigger('pointerdown', { clientX: 0, clientY: 0 })
+    expect(aside(w).attributes('data-dragging')).toBeUndefined()
+  })
 })

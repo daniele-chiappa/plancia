@@ -51,6 +51,7 @@ const sbPosition = ref<SidebarPosition>('left')
 const sbMode = ref<SidebarMode>('inline')
 const sbState = ref<SidebarState>('expanded')
 const sbResizable = ref(true)
+const sbDraggable = ref(false)
 
 const sidebarLabels: Partial<SidebarLabels> = {
   expand: 'Espandi',
@@ -98,6 +99,7 @@ const links = Array.from({ length: 20 }, (_, i) => `Collegamento ${i + 1}`)
       <button type="button" @click="sbState = 'collapsed'">collapse</button>
       <button type="button" @click="sbState = 'closed'">close</button>
       <label class="ctl"><input v-model="sbResizable" type="checkbox" /> resize</label>
+      <label class="ctl"><input v-model="sbDraggable" type="checkbox" /> drag</label>
     </header>
 
     <main class="stage">
@@ -108,6 +110,7 @@ const links = Array.from({ length: 20 }, (_, i) => `Collegamento ${i + 1}`)
             :position="sbPosition"
             :mode="sbMode"
             :resizable="sbResizable"
+            :draggable="sbDraggable"
             :labels="sidebarLabels"
             :default-size="240"
             :responsive="640"
