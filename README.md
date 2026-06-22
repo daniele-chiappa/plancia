@@ -1,5 +1,7 @@
 # plancia
 
+[![CI](https://github.com/daniele-chiappa/plancia/actions/workflows/ci.yml/badge.svg)](https://github.com/daniele-chiappa/plancia/actions/workflows/ci.yml) [![npm version](https://img.shields.io/npm/v/plancia.svg)](https://www.npmjs.com/package/plancia) [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 > A niri-style **tiling window manager** for Vue 3 — a scrollable strip of
 > resizable, content-agnostic "windows".
 
