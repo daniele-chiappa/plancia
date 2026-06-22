@@ -1,6 +1,7 @@
 # plancia — dev/test stack.
 #
 #   docker compose up playground        → webui at http://172.16.0.80:5180 (HMR)
+#   docker compose up configurator      → configurator at http://172.16.0.80:5181
 #   docker compose run --rm test        → run the vitest suite once
 #   docker compose --profile test up    → start the test service
 #
@@ -14,6 +15,19 @@ services:
     command: ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]
     ports:
       - "172.16.0.80:5180:5173"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    restart: unless-stopped
+
+  # Theme/behavior configurator (dev tool). Bind-mounts plancia.config/ so saved
+  # presets land on the host; reads style.css to auto-derive the appearance knobs.
+  configurator:
+    build: .
+    container_name: plancia-configurator
+    command: ["npx", "vite", "--config", "tools/configurator/vite.config.ts", "--host", "0.0.0.0", "--port", "5173"]
+    ports:
+      - "172.16.0.80:5181:5173"
     volumes:
       - .:/app
       - /app/node_modules

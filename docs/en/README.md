@@ -29,6 +29,7 @@ import 'plancia/style.css'
 | [Sidebar](./sidebar.md) | `<PlanciaSidebar>` — 4 edges, states, modes, hover-peek, drag-resize, responsive drawer |
 | [Dialogs](./dialog.md) | `<PlanciaModal>` / `<PlanciaConfirm>` + the imperative `useDialogs()` service |
 | [Config](./config.md) | `PlanciaConfig` — theme + behavior defaults via `<PlanciaConfigProvider>` |
+| [Configurator](./configurator.md) | dev tool — visual `PlanciaConfig` editor with live preview (container) |
 
 ## At a glance
 

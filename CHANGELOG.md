@@ -79,6 +79,8 @@ products-dc) into a standalone, content-agnostic library.
   `-border` / `-danger` / `-warning`); the rest derive via `color-mix()`, so
   overriding a few re-themes everything and binds cleanly to Tailwind tokens at
   runtime.
+- **`parseThemeManifest(css)`** — derives the appearance-knob list (name, type,
+  group, derived?) from a stylesheet's `:root`; powers the configurator.
 - TypeScript types for the full public API; ships prebuilt **ESM + `.d.ts`**.
 - English usage documentation under `docs/en/` (incl. `sidebar.md`).
 
@@ -90,6 +92,9 @@ products-dc) into a standalone, content-agnostic library.
 
 ### Notes
 
+- A visual **configurator** dev tool (`tools/configurator/`,
+  `docker compose up configurator`) edits theme/behavior with a live preview and
+  writes presets under `plancia.config/`. It is **not** part of the published package.
 - Zero runtime dependencies. Peers: `vue ^3.5`, `pinia ^2.2 || ^3`,
   `vue-router ^4` (optional).
 

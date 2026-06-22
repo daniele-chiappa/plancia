@@ -92,3 +92,5 @@ export type {
   SidebarConfigDefaults,
   ModalConfigDefaults,
 } from './config/types'
+export { parseThemeManifest } from './config/manifest'
+export type { ThemeKnob, ThemeKnobType } from './config/manifest'
