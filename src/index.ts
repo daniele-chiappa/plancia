@@ -60,3 +60,19 @@ export type {
   SidebarLabels,
   SidebarSlotProps,
 } from './sidebar/types'
+
+// --- dialog / modal --------------------------------------------------------
+export { default as PlanciaModal } from './components/PlanciaModal.vue'
+export { default as PlanciaConfirm } from './components/PlanciaConfirm.vue'
+export { default as PlanciaDialogHost } from './components/PlanciaDialogHost.vue'
+
+export { usePlanciaDialogStore, useDialogs } from './dialog/dialogStore'
+
+export { DEFAULT_MODAL_LABELS } from './dialog/types'
+export type {
+  ModalLabels,
+  ModalSlotProps,
+  ConfirmOptions,
+  PromptOptions,
+  DialogRequest,
+} from './dialog/types'

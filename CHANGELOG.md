@@ -59,6 +59,14 @@ products-dc) into a standalone, content-agnostic library.
   `left`/`right` + default centre), independent of the window manager. Arranges a
   `<PlanciaSidebar>` (or any content) around arbitrary content; the shell + middle
   band are `position: relative` so overlay/floating sidebars anchor correctly.
+- **Modal family** — `<PlanciaModal>` (content-agnostic dialog primitive: Teleport,
+  `v-model:open`, focus trap, Esc, ref-counted scroll-lock, focus restore,
+  `aria-labelledby`/`describedby`, `--plancia-dialog-*` theming; zero Pinia) and
+  `<PlanciaConfirm>` (built on it; `danger`/labels/`hideCancel`). Plus an **imperative
+  dialog service** (opt-in, Pinia): `useDialogs()` → `confirm()/alert()/prompt()`,
+  `<PlanciaDialogHost>` (stacking), `usePlanciaDialogStore`. Callable from anywhere,
+  including store actions (`await useDialogs().confirm(...)`); Promise resolvers live
+  outside store state.
 - TypeScript types for the full public API; ships prebuilt **ESM + `.d.ts`**.
 - English usage documentation under `docs/en/` (incl. `sidebar.md`).
 

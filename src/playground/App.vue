@@ -4,8 +4,10 @@
 import { ref } from 'vue'
 import {
   Plancia,
+  PlanciaDialogHost,
   PlanciaLayout,
   PlanciaSidebar,
+  useDialogs,
   useWindowsStore,
   type PlanciaLabels,
   type SidebarLabels,
@@ -46,6 +48,27 @@ function openSettings() {
   store.open({ type: 'settings', key: 'settings', title: 'Impostazioni' })
 }
 
+// Imperative dialogs via the Pinia service (useDialogs).
+const dialogs = useDialogs()
+async function demoReset() {
+  const ok = await dialogs.confirm({
+    message: 'Chiudere tutte le finestre aperte?',
+    title: 'Conferma',
+    danger: true,
+    confirmLabel: 'Chiudi tutte',
+    cancelLabel: 'Annulla',
+  })
+  if (ok) store.reset()
+}
+async function demoPrompt() {
+  const name = await dialogs.prompt({
+    message: 'Nome della nota:',
+    value: 'nuova.md',
+    placeholder: 'nome.md',
+  })
+  if (name) store.open({ type: 'note', key: `note:${name}`, props: { path: name } })
+}
+
 /* --- sidebar demo (arranged around <Plancia> by <PlanciaLayout>) ----------- */
 const sbPosition = ref<SidebarPosition>('left')
 const sbMode = ref<SidebarMode>('inline')
@@ -77,6 +100,8 @@ const links = Array.from({ length: 20 }, (_, i) => `Collegamento ${i + 1}`)
       <button type="button" @click="openNote">+ Nota</button>
       <button type="button" @click="openGraph">+ Grafico</button>
       <button type="button" @click="openSettings">+ Impostazioni</button>
+      <button type="button" @click="demoPrompt">✎ prompt</button>
+      <button type="button" @click="demoReset">🗑 reset</button>
       <span class="spacer" />
       <label class="ctl">
         pos
@@ -150,6 +175,8 @@ const links = Array.from({ length: 20 }, (_, i) => `Collegamento ${i + 1}`)
         />
       </PlanciaLayout>
     </main>
+
+    <PlanciaDialogHost />
   </div>
 </template>
 

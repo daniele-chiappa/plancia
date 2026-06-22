@@ -27,6 +27,7 @@ import 'plancia/style.css'
 | [Theming](./theming.md) | CSS variables, window sizing, labels / i18n |
 | [Recipes](./recipes.md) | Cross-window links, clickable tags, per-window actions, foreign windows |
 | [Sidebar](./sidebar.md) | `<PlanciaSidebar>` — 4 edges, states, modes, hover-peek, drag-resize, responsive drawer |
+| [Dialogs](./dialog.md) | `<PlanciaModal>` / `<PlanciaConfirm>` + the imperative `useDialogs()` service |
 
 ## At a glance
 
