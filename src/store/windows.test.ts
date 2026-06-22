@@ -56,6 +56,33 @@ describe('windows store', () => {
     expect(s._byId(a)?.width).toBe('m')
   })
 
+  it('open defaults widthPx to null; OpenSpec.widthPx pins it', () => {
+    const s = useWindowsStore()
+    const a = s.open({ type: 't', key: 'a' })
+    expect(s._byId(a)?.widthPx).toBeNull()
+    const b = s.open({ type: 't', key: 'b', widthPx: 720 })
+    expect(s._byId(b)?.widthPx).toBe(720)
+  })
+
+  it('setWidthPx pins an explicit px; resetWidth clears it back to null', () => {
+    const s = useWindowsStore()
+    const a = s.open({ type: 't', key: 'a' })
+    s.setWidthPx(a, 640)
+    expect(s._byId(a)?.widthPx).toBe(640)
+    s.resetWidth(a)
+    expect(s._byId(a)?.widthPx).toBeNull()
+  })
+
+  it('cycleWidth also clears widthPx (snap back to the preset)', () => {
+    const s = useWindowsStore()
+    const a = s.open({ type: 't', key: 'a' })
+    s.setWidthPx(a, 800)
+    expect(s._byId(a)?.widthPx).toBe(800)
+    s.cycleWidth(a)
+    expect(s._byId(a)?.widthPx).toBeNull()
+    expect(s._byId(a)?.width).toBe('full') // m → full
+  })
+
   it('close re-focuses the neighbour at the same index', () => {
     const s = useWindowsStore()
     s.open({ type: 't', key: 'a' })

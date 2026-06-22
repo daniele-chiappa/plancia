@@ -8,8 +8,12 @@
  * Consumers must import this once:  import 'plancia/style.css'
  */
 :root {
-  --plancia-w-s: 32rem;
-  --plancia-w-m: 44rem;
+  /* Window preset widths, as a % of the strip's visible width — so they stay
+     responsive and `full` (= 100%) coincides with the drag soft-max threshold.
+     Override with any CSS length (e.g. rem) to pin absolute widths. */
+  --plancia-w-s: 35%;
+  --plancia-w-m: 50%;
+  --plancia-w-full: 100%;
   --plancia-gap: 0.75rem;
   --plancia-padding: 0.75rem;
   --plancia-radius: 0.5rem;
@@ -168,11 +172,16 @@
 
 /* --- single window --------------------------------------------------------- */
 .plancia-window {
+  position: relative;
   display: flex;
   flex-direction: column;
-  flex-shrink: 0;
+  /* Don't let flex shrink the window: the % preset must resolve against the
+     strip's full width and an over-wide (drag-resized) window must overflow the
+     strip (→ horizontal scroll) rather than be squeezed. */
+  flex: 0 0 auto;
   height: 100%;
-  width: var(--plancia-w-m);
+  /* Explicit drag-resize px wins; otherwise the preset (a % of the strip). */
+  width: var(--plancia-window-w, var(--plancia-w-m));
   overflow: hidden;
   border: 1px solid var(--plancia-border);
   border-radius: var(--plancia-radius);
@@ -182,10 +191,10 @@
   transition: box-shadow 0.15s ease;
 }
 .plancia-window[data-width='s'] {
-  width: var(--plancia-w-s);
+  width: var(--plancia-window-w, var(--plancia-w-s));
 }
 .plancia-window[data-width='full'] {
-  width: 100%;
+  width: var(--plancia-window-w, var(--plancia-w-full));
 }
 .plancia-window--focused {
   border-color: var(--plancia-accent);
@@ -289,11 +298,52 @@ button.plancia-tag:hover {
   overflow-y: auto;
 }
 
-/* Narrow viewports: a window never exceeds the viewport width. */
+/* Narrow viewports: a preset window never exceeds the viewport width. An
+   explicit drag-resize px (`--plancia-window-w`) still wins (the strip scrolls). */
 @media (max-width: 768px) {
   .plancia-window,
-  .plancia-window[data-width='s'] {
-    width: calc(100vw - 3rem);
+  .plancia-window[data-width='s'],
+  .plancia-window[data-width='full'] {
+    width: var(--plancia-window-w, calc(100vw - 3rem));
+  }
+}
+
+/* --- window drag-resize handle + soft-max signal --------------------------- */
+.plancia-window__resize {
+  position: absolute;
+  z-index: 2;
+  inset-block: 0;
+  inset-inline-end: 0;
+  width: 6px;
+  background: transparent;
+  cursor: col-resize;
+  touch-action: none;
+}
+.plancia-window__resize:hover,
+.plancia-window__resize:focus-visible {
+  background: var(--plancia-accent-soft);
+  outline: none;
+}
+.plancia-window__resize:focus-visible {
+  outline: 2px solid var(--plancia-accent);
+  outline-offset: -2px;
+}
+
+/* signaling: the drag has reached the viewport-fit soft-max — show a vertical
+   accent guide on the right edge + highlight the handle (dwell, then it unlocks). */
+.plancia-window[data-resize-phase='signaling'] {
+  box-shadow: inset -3px 0 0 0 var(--plancia-accent);
+}
+.plancia-window[data-resize-phase='signaling'] .plancia-window__resize {
+  background: var(--plancia-accent);
+}
+/* beyond: unlocked past the viewport — a subtler, persistent cue. */
+.plancia-window[data-resize-phase='beyond'] .plancia-window__resize {
+  background: var(--plancia-accent-soft);
+}
+@media (prefers-reduced-motion: reduce) {
+  .plancia-window {
+    transition: none;
   }
 }
 

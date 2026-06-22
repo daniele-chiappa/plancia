@@ -27,6 +27,9 @@ export interface OpenSpec {
   props?: Record<string, unknown>
   tags?: WindowTag[]
   width?: WindowWidth
+  /** Explicit pixel width. When set the window renders at these px (continuous
+   *  drag-resize) instead of the `width` preset. */
+  widthPx?: number
   /** If false, opens (right of focus) WITHOUT moving focus. Default true. */
   focus?: boolean
 }
@@ -42,6 +45,9 @@ export interface WindowInstance {
   /** Header tags (associations), updated by the content via the `tags` event. */
   tags: WindowTag[]
   width: WindowWidth
+  /** Explicit pixel width from drag-resize. `null` ⇒ falls back to the `width`
+   *  preset. Cleared (back to the preset) by `cycleWidth` / `resetWidth`. */
+  widthPx?: number | null
   minimized: boolean
   dirty: boolean
 }
@@ -57,6 +63,9 @@ export interface PlanciaLabels {
   minimizedLabel: string
   unknownType: (type: string) => string
   resize: string
+  /** Optional (added in 0.2.0) — falls back to the default, so adding it never
+   *  breaks consumers that type a full `PlanciaLabels`. */
+  resizeWidth?: string
   minimize: string
   close: string
   restore: string
@@ -65,13 +74,14 @@ export interface PlanciaLabels {
   openTag: string
 }
 
-export const DEFAULT_LABELS: PlanciaLabels = {
+export const DEFAULT_LABELS: Required<PlanciaLabels> = {
   empty: 'No window open.',
   openHint: 'Open one from the sidebar.',
   minimizedHint: (n) => `${n} minimized in the footer ↓`,
   minimizedLabel: 'Minimized:',
   unknownType: (type) => `Unknown window type: ${type}`,
   resize: 'Width (click to cycle)',
+  resizeWidth: 'Resize width',
   minimize: 'Minimize',
   close: 'Close',
   restore: 'Restore',

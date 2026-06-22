@@ -5,19 +5,36 @@
  * styling. Extra per-window buttons go through the `actions` slot (this is how
  * domain-specific actions like gosidian's ego-graph button stay OUT of the lib).
  */
-import { computed, inject } from 'vue'
+import { computed, inject, onBeforeUnmount, ref } from 'vue'
 import { useWindowsStore } from '../store/windows'
 import { OPEN_WINDOW, CAN_OPEN_TYPE } from '../composables/openWindow'
+import { DEFAULT_MIN_WIDTH, useWindowResize } from '../composables/useWindowResize'
 import { DEFAULT_LABELS, type PlanciaLabels, type WindowInstance, type WindowTag } from '../types'
 
-const props = defineProps<{
-  win: WindowInstance
-  /** Module label when the window is cross-module: header shows "[label]: title". */
-  foreignLabel?: string | null
-  labels?: PlanciaLabels
-  /** Optional class to add to a tag/badge, derived from its `tone`. */
-  resolveTone?: (tone?: string) => string
-}>()
+const props = withDefaults(
+  defineProps<{
+    win: WindowInstance
+    /** Module label when the window is cross-module: header shows "[label]: title". */
+    foreignLabel?: string | null
+    labels?: PlanciaLabels
+    /** Optional class to add to a tag/badge, derived from its `tone`. */
+    resolveTone?: (tone?: string) => string
+    /** Visible width of the strip (px) — the soft-max threshold for the drag. */
+    maxVisiblePx?: number
+    /** Minimum drag-resize width (px). */
+    minWidthPx?: number
+    /** Dwell (ms) at the soft-max before a drag may exceed the viewport. */
+    softMaxDelayMs?: number
+  }>(),
+  {
+    foreignLabel: null,
+    labels: undefined,
+    resolveTone: undefined,
+    maxVisiblePx: undefined,
+    minWidthPx: undefined,
+    softMaxDelayMs: 300,
+  },
+)
 
 const store = useWindowsStore()
 const labels = computed(() => props.labels ?? DEFAULT_LABELS)
@@ -44,14 +61,140 @@ function onClose() {
   if (props.win.dirty && !window.confirm(labels.value.unsavedClose)) return
   store.close(props.win.id)
 }
+
+/* --- drag-resize (width) -------------------------------------------------- */
+const sectionRef = ref<HTMLElement | null>(null)
+const minWidthPx = computed(() => props.minWidthPx ?? DEFAULT_MIN_WIDTH)
+// Soft-max: the visible strip width; until measured, fall back to a generous
+// value so resizing still works (the strip's real width arrives via the prop).
+const maxVisiblePx = computed(() => props.maxVisiblePx ?? 4096)
+
+// Controlled by the store's `widthPx` (single source of truth, no drift): the
+// controller computes the clamped/phased width and requests it via onUpdate →
+// setWidthPx, which flows back in as the controlled value. While `widthPx` is
+// null (preset width) the controller falls back to `defaultPx` for its math; a
+// drag pins an explicit px first (onResizeStart) so it never reads null.
+const controller = useWindowResize({
+  widthPx: () => props.win.widthPx ?? undefined,
+  defaultPx: minWidthPx.value,
+  minPx: () => minWidthPx.value,
+  maxVisiblePx: () => maxVisiblePx.value,
+  onUpdate: (px) => store.setWidthPx(props.win.id, px),
+})
+
+const renderWidth = computed(() =>
+  props.win.widthPx != null ? `${props.win.widthPx}px` : undefined,
+)
+const rootStyle = computed<Record<string, string>>(() => {
+  const s: Record<string, string> = {}
+  if (renderWidth.value) s['--plancia-window-w'] = renderWidth.value
+  return s
+})
+const ariaNow = computed(() => Math.round(props.win.widthPx ?? 0))
+
+let startX = 0
+let startWidth = 0
+let dwellTimer: ReturnType<typeof setTimeout> | undefined
+// Last candidate width seen while signaling, so the dwell can re-apply it.
+let pendingPx = 0
+
+function clearDwell() {
+  if (dwellTimer) {
+    clearTimeout(dwellTimer)
+    dwellTimer = undefined
+  }
+}
+
+function currentRenderedWidth(): number {
+  if (props.win.widthPx != null) return props.win.widthPx
+  return sectionRef.value?.getBoundingClientRect().width ?? minWidthPx.value
+}
+
+function onPointerMove(e: PointerEvent) {
+  const candidate = startWidth + (e.clientX - startX)
+  pendingPx = candidate
+  controller.dragTo(candidate)
+  if (controller.phase.value === 'signaling') {
+    // Still pushing past the soft-max → arm/keep the dwell timer; once it fires
+    // the window is allowed to exceed the viewport.
+    if (!dwellTimer) {
+      dwellTimer = setTimeout(() => {
+        dwellTimer = undefined
+        controller.unlockBeyond()
+        controller.dragTo(pendingPx)
+      }, props.softMaxDelayMs)
+    }
+  } else {
+    clearDwell()
+  }
+}
+
+function endDrag() {
+  clearDwell()
+  controller.endDrag()
+  window.removeEventListener('pointermove', onPointerMove)
+  window.removeEventListener('pointerup', onPointerUp)
+}
+
+function onPointerUp(e: PointerEvent) {
+  ;(e.target as HTMLElement)?.releasePointerCapture?.(e.pointerId)
+  endDrag()
+}
+
+function onResizeStart(e: PointerEvent) {
+  if (e.button != null && e.button !== 0) return
+  startX = e.clientX
+  startWidth = currentRenderedWidth()
+  controller.reset()
+  // Pin to the currently-rendered px first, so the next drags are relative.
+  store.setWidthPx(props.win.id, Math.round(startWidth))
+  ;(e.currentTarget as HTMLElement)?.setPointerCapture?.(e.pointerId)
+  window.addEventListener('pointermove', onPointerMove)
+  window.addEventListener('pointerup', onPointerUp)
+  e.preventDefault()
+}
+
+function resetWidth() {
+  store.resetWidth(props.win.id)
+  controller.reset()
+}
+
+function onResizeKey(e: KeyboardEvent) {
+  if (e.key === 'Home') {
+    resetWidth()
+    e.preventDefault()
+    return
+  }
+  let dir = 0
+  if (e.key === 'ArrowRight') dir = 1
+  else if (e.key === 'ArrowLeft') dir = -1
+  if (!dir) return
+  const step = e.shiftKey ? 64 : 24
+  const base = currentRenderedWidth()
+  store.setWidthPx(props.win.id, Math.round(base) + dir * step)
+  e.preventDefault()
+}
+
+function onResizeDblClick() {
+  resetWidth()
+}
+
+onBeforeUnmount(() => {
+  clearDwell()
+  window.removeEventListener('pointermove', onPointerMove)
+  window.removeEventListener('pointerup', onPointerUp)
+})
 </script>
 
 <template>
   <section
+    ref="sectionRef"
     :data-win-id="win.id"
     :data-width="win.width"
+    :data-resize-phase="controller.phase.value"
     class="plancia-window"
     :class="{ 'plancia-window--focused': focused }"
+    :style="rootStyle"
     @mousedown="store.focus(win.id)"
   >
     <header class="plancia-window__header">
@@ -126,5 +269,21 @@ function onClose() {
     <div class="plancia-window__body">
       <slot />
     </div>
+
+    <!-- Right-edge drag handle: continuous width resize (coexists with the
+         preset cycle). Keyboard-operable; double-click clears the px width. -->
+    <div
+      class="plancia-window__resize"
+      role="separator"
+      aria-orientation="vertical"
+      :aria-label="labels.resizeWidth ?? DEFAULT_LABELS.resizeWidth"
+      tabindex="0"
+      :aria-valuemin="minWidthPx"
+      :aria-valuemax="Math.round(controller.hardMaxPx.value)"
+      :aria-valuenow="ariaNow"
+      @pointerdown="onResizeStart"
+      @keydown="onResizeKey"
+      @dblclick="onResizeDblClick"
+    />
   </section>
 </template>

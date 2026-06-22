@@ -80,6 +80,7 @@ export const useWindowsStore = defineStore('plancia-windows', {
         props: spec.props ?? {},
         tags: spec.tags ?? [],
         width: spec.width ?? this.defaultWidth,
+        widthPx: spec.widthPx ?? null,
         minimized: false,
         dirty: false,
       }
@@ -132,6 +133,18 @@ export const useWindowsStore = defineStore('plancia-windows', {
       if (!w) return
       const idx = this.widthCycle.indexOf(w.width)
       w.width = this.widthCycle[(idx + 1) % this.widthCycle.length] ?? this.defaultWidth
+      // Cycling the preset snaps back from any continuous drag-resize width.
+      w.widthPx = null
+    },
+    /** Pin an explicit pixel width (continuous drag-resize). */
+    setWidthPx(id: string, px: number): void {
+      const w = this._byId(id)
+      if (w) w.widthPx = px
+    },
+    /** Drop the explicit pixel width → the window falls back to its preset. */
+    resetWidth(id: string): void {
+      const w = this._byId(id)
+      if (w) w.widthPx = null
     },
     setTitle(id: string, title: string): void {
       const w = this._byId(id)

@@ -5,6 +5,30 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-06-23
+
+### Added
+
+- **Window drag-resize** — drag a window's right edge to set a continuous width.
+  The handle is a keyboard-operable `role="separator"` (Arrow keys ±24px, Shift
+  ±64px, Home/double-click resets to the preset). New **`useWindowResize`**
+  controller (pure, like `useSidebarController`) + store actions
+  **`setWidthPx`** / **`resetWidth`**; `widthPx` added to `WindowInstance` /
+  `OpenSpec`. Configurable `minWidthPx` and `softMaxDelayMs`.
+- **Soft-max past the viewport** — at the viewport-fit width the drag holds with a
+  visual signal for a short dwell (`softMaxDelayMs`, default 300ms); keep pushing
+  and the window grows beyond the viewport (the strip scrolls). The maximum visible
+  width is *signalled*, never hard-limited.
+
+### Changed
+
+- **Window width presets are now percentages of the strip** — `--plancia-w-s: 35%`,
+  `--plancia-w-m: 50%`, and the new `--plancia-w-full: 100%` (previously `s`/`m` were
+  fixed rem and `full` was hard-coded). Presets are responsive and `full` is the
+  soft-max threshold. All three are CSS variables (configurable, incl. via the
+  configurator). To keep fixed widths, override `--plancia-w-*` (e.g. `32rem`) via
+  config or CSS.
+
 ## [0.1.0] - 2026-06-22
 
 First public release. plancia abstracts the niri-style tiling window manager
@@ -98,4 +122,5 @@ products-dc) into a standalone, content-agnostic library.
 - Zero runtime dependencies. Peers: `vue ^3.5`, `pinia ^2.2 || ^3`,
   `vue-router ^4` (optional).
 
+[0.2.0]: https://github.com/daniele-chiappa/plancia/releases/tag/v0.2.0
 [0.1.0]: https://github.com/daniele-chiappa/plancia/releases/tag/v0.1.0

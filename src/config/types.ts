@@ -12,6 +12,11 @@ import type { ModalLabels } from '../dialog/types'
 export interface WindowConfigDefaults {
   widthCycle?: WindowWidth[]
   defaultWidth?: WindowWidth
+  /** Minimum drag-resize width in px. Default 240. */
+  minWidthPx?: number
+  /** Dwell (ms) at the viewport-fit soft-max before a drag may exceed it.
+   *  Default 300. */
+  softMaxDelayMs?: number
 }
 export interface SidebarConfigDefaults {
   mode?: SidebarMode

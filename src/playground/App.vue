@@ -33,6 +33,7 @@ const labels: Partial<PlanciaLabels> = {
   minimizedHint: (k) => `${k} ridotte nel footer ↓`,
   minimizedLabel: 'Ridotte:',
   resize: 'Larghezza',
+  resizeWidth: 'Ridimensiona larghezza',
   minimize: 'Riduci',
   close: 'Chiudi',
   restore: 'Ripristina',
@@ -46,6 +47,12 @@ const resolveTone = (tone?: string) => (tone ? `tone-${tone}` : '')
 function openNote() {
   n += 1
   store.open({ type: 'note', key: `note:demo-${n}.md`, props: { path: `demo-${n}.md` } })
+}
+// Seed a few windows so the strip has something to drag-resize on load.
+function openSeveral() {
+  openNote()
+  openNote()
+  openNote()
 }
 function openGraph() {
   store.open({ type: 'graph', key: 'graph', title: 'Grafico' })
@@ -107,6 +114,9 @@ const presets: Record<string, PlanciaConfig> = {
 }
 const themeName = ref<'default' | 'light' | 'dark' | 'compact'>('default')
 const activeConfig = computed(() => presets[themeName.value]!)
+
+// Open a few windows on mount so drag-resize is immediately demonstrable.
+openSeveral()
 </script>
 
 <template>
@@ -114,6 +124,7 @@ const activeConfig = computed(() => presets[themeName.value]!)
     <header class="toolbar">
       <strong>plancia · playground</strong>
       <button type="button" @click="openNote">+ Nota</button>
+      <button type="button" @click="openSeveral">+ 3 Note</button>
       <button type="button" @click="openGraph">+ Grafico</button>
       <button type="button" @click="openSettings">+ Impostazioni</button>
       <button type="button" @click="demoPrompt">✎ prompt</button>

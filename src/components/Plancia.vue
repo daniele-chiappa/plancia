@@ -36,6 +36,11 @@ const props = defineProps<{
   widthCycle?: WindowWidth[]
   /** Width of windows opened without an explicit width. Default 'm'. */
   defaultWidth?: WindowWidth
+  /** Minimum drag-resize width (px). Default 240. */
+  minWidthPx?: number
+  /** Dwell (ms) at the viewport-fit soft-max before a drag may exceed it.
+   *  Default 300. */
+  softMaxDelayMs?: number
   /** Optional class to add to a tag/badge, derived from its `tone`. */
   resolveTone?: (tone?: string) => string
 }>()
@@ -56,12 +61,28 @@ watchEffect(() =>
   }),
 )
 
+// Drag-resize knobs (precedence prop › config › builtin).
+const minWidthPx = computed(
+  () => props.minWidthPx ?? cfg?.value.components?.window?.defaults?.minWidthPx ?? 240,
+)
+const softMaxDelayMs = computed(
+  () => props.softMaxDelayMs ?? cfg?.value.components?.window?.defaults?.softMaxDelayMs ?? 300,
+)
+
 function foreignLabel(w: WindowInstance): string | null {
   if (!props.nativeType || w.type === props.nativeType) return null
   return props.moduleLabel ? props.moduleLabel(w.type) : w.type
 }
 
 const stripEl = ref<HTMLElement | null>(null)
+
+// Visible width of the strip (the soft-max threshold for window drag-resize),
+// kept in sync with the layout via a ResizeObserver.
+const stripWidth = ref(0)
+let ro: ResizeObserver | undefined
+function measureStrip() {
+  if (stripEl.value) stripWidth.value = stripEl.value.clientWidth
+}
 
 // Nested content opens sibling windows without prop-drilling.
 provide(OPEN_WINDOW, (spec) => store.open(spec))
@@ -89,8 +110,19 @@ function onKey(e: KeyboardEvent) {
     store.focusAdjacent(1)
   }
 }
-onMounted(() => document.addEventListener('keydown', onKey))
-onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
+onMounted(() => {
+  document.addEventListener('keydown', onKey)
+  measureStrip()
+  if (typeof ResizeObserver !== 'undefined' && stripEl.value) {
+    ro = new ResizeObserver(measureStrip)
+    ro.observe(stripEl.value)
+  }
+})
+onBeforeUnmount(() => {
+  document.removeEventListener('keydown', onKey)
+  ro?.disconnect()
+  ro = undefined
+})
 </script>
 
 <template>
@@ -112,6 +144,9 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey))
             :foreign-label="foreignLabel(w)"
             :labels="labels"
             :resolve-tone="resolveTone"
+            :max-visible-px="stripWidth"
+            :min-width-px="minWidthPx"
+            :soft-max-delay-ms="softMaxDelayMs"
           >
             <template #actions="slotProps">
               <slot name="window-actions" v-bind="slotProps" />

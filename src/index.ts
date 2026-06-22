@@ -14,6 +14,18 @@ export {
   CAN_OPEN_TYPE,
 } from './composables/openWindow'
 
+export {
+  useWindowResize,
+  DEFAULT_MIN_WIDTH,
+  DEFAULT_HARD_MAX_FACTOR,
+} from './composables/useWindowResize'
+export type {
+  WindowResizeController,
+  WindowResizeControllerOptions,
+  WindowResizePhase,
+  WindowResizeEventType,
+} from './composables/useWindowResize'
+
 export { usePlanciaSync, createArgCodec } from './composables/usePlanciaSync'
 export type {
   PlanciaCodec,
