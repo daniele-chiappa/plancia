@@ -13,6 +13,7 @@ import '../style.css'
 import WindowFrame from './WindowFrame.vue'
 import { useWindowsStore } from '../store/windows'
 import { OPEN_WINDOW, CAN_OPEN_TYPE } from '../composables/openWindow'
+import { usePlanciaConfig } from '../config/usePlanciaConfig'
 import {
   DEFAULT_LABELS,
   type PlanciaLabels,
@@ -40,10 +41,20 @@ const props = defineProps<{
 }>()
 
 const store = useWindowsStore()
-const labels = computed<PlanciaLabels>(() => ({ ...DEFAULT_LABELS, ...props.labels }))
+const cfg = usePlanciaConfig()
+const labels = computed<PlanciaLabels>(() => ({
+  ...DEFAULT_LABELS,
+  ...cfg?.value.components?.window?.labels,
+  ...props.labels,
+}))
 
-// Apply (and keep in sync) the width configuration from props.
-watchEffect(() => store.configure({ widthCycle: props.widthCycle, defaultWidth: props.defaultWidth }))
+// Apply (and keep in sync) the width configuration from props (or config).
+watchEffect(() =>
+  store.configure({
+    widthCycle: props.widthCycle ?? cfg?.value.components?.window?.defaults?.widthCycle,
+    defaultWidth: props.defaultWidth ?? cfg?.value.components?.window?.defaults?.defaultWidth,
+  }),
+)
 
 function foreignLabel(w: WindowInstance): string | null {
   if (!props.nativeType || w.type === props.nativeType) return null

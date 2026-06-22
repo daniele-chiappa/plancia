@@ -1,0 +1,7 @@
+{
+  "meta": { "name": "compact", "version": 1 },
+  "components": {
+    "window": { "defaults": { "defaultWidth": "s" } },
+    "sidebar": { "defaults": { "defaultState": "collapsed" } }
+  }
+}

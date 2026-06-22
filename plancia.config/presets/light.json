@@ -1,0 +1,13 @@
+{
+  "meta": { "name": "light", "version": 1 },
+  "theme": {
+    "--plancia-surface": "#ffffff",
+    "--plancia-text": "#0f172a",
+    "--plancia-text-muted": "#64748b",
+    "--plancia-border": "#e2e8f0",
+    "--plancia-accent": "#3b82f6",
+    "--plancia-on-accent": "#ffffff",
+    "--plancia-danger": "#dc2626",
+    "--plancia-warning": "#d97706"
+  }
+}

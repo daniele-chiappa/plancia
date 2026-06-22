@@ -1,14 +1,16 @@
 <script setup lang="ts">
 // Dev playground: drives the library components to iterate locally / in the
 // Docker webui. NOT part of the published bundle.
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import {
   Plancia,
+  PlanciaConfigProvider,
   PlanciaDialogHost,
   PlanciaLayout,
   PlanciaSidebar,
   useDialogs,
   useWindowsStore,
+  type PlanciaConfig,
   type PlanciaLabels,
   type SidebarLabels,
   type SidebarMode,
@@ -17,6 +19,10 @@ import {
   type WindowWidth,
 } from '../index'
 import { registry } from './registry'
+import defaultCfg from '../../plancia.config/current.json'
+import lightCfg from '../../plancia.config/presets/light.json'
+import darkCfg from '../../plancia.config/presets/dark.json'
+import compactCfg from '../../plancia.config/presets/compact.json'
 
 const store = useWindowsStore()
 let n = 0
@@ -91,10 +97,20 @@ const menu = [
   { icon: '⚙️', label: 'Impostazioni', run: openSettings },
 ]
 const links = Array.from({ length: 20 }, (_, i) => `Collegamento ${i + 1}`)
+
+// Config presets (loaded from plancia.config/) + a theme switcher.
+const presets: Record<string, PlanciaConfig> = {
+  default: defaultCfg as PlanciaConfig,
+  light: lightCfg as PlanciaConfig,
+  dark: darkCfg as PlanciaConfig,
+  compact: compactCfg as PlanciaConfig,
+}
+const themeName = ref<'default' | 'light' | 'dark' | 'compact'>('default')
+const activeConfig = computed(() => presets[themeName.value]!)
 </script>
 
 <template>
-  <div class="app">
+  <PlanciaConfigProvider class="app" :config="activeConfig">
     <header class="toolbar">
       <strong>plancia · playground</strong>
       <button type="button" @click="openNote">+ Nota</button>
@@ -103,6 +119,15 @@ const links = Array.from({ length: 20 }, (_, i) => `Collegamento ${i + 1}`)
       <button type="button" @click="demoPrompt">✎ prompt</button>
       <button type="button" @click="demoReset">🗑 reset</button>
       <span class="spacer" />
+      <label class="ctl">
+        tema
+        <select v-model="themeName">
+          <option value="default">default</option>
+          <option value="light">light</option>
+          <option value="dark">dark</option>
+          <option value="compact">compact</option>
+        </select>
+      </label>
       <label class="ctl">
         pos
         <select v-model="sbPosition">
@@ -177,7 +202,7 @@ const links = Array.from({ length: 20 }, (_, i) => `Collegamento ${i + 1}`)
     </main>
 
     <PlanciaDialogHost />
-  </div>
+  </PlanciaConfigProvider>
 </template>
 
 <style>

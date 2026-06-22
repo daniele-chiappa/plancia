@@ -67,8 +67,26 @@ products-dc) into a standalone, content-agnostic library.
   `<PlanciaDialogHost>` (stacking), `usePlanciaDialogStore`. Callable from anywhere,
   including store actions (`await useDialogs().confirm(...)`); Promise resolvers live
   outside store state.
+- **Config layer** — `<PlanciaConfigProvider>` applies a serializable `PlanciaConfig`
+  (theme CSS vars + per-component behavior defaults + labels) to its subtree: scoped
+  wrapper vars + (by default) a `:root` mirror so teleported dialogs pick it up;
+  provides the config so components resolve **prop › config › built-in**. Helpers
+  `defineConfig`, `usePlanciaConfig`, `applyTheme`, `themeToCss`. A `plancia.config/`
+  folder convention (`current.json` + `presets/`) ships `light`/`dark`/`tailwind`/
+  `compact` presets. Pinia-free.
+- **Semantic color core** — the color tokens form a small overridable core
+  (`--plancia-accent` / `-on-accent` / `-surface` / `-text` / `-text-muted` /
+  `-border` / `-danger` / `-warning`); the rest derive via `color-mix()`, so
+  overriding a few re-themes everything and binds cleanly to Tailwind tokens at
+  runtime.
 - TypeScript types for the full public API; ships prebuilt **ESM + `.d.ts`**.
 - English usage documentation under `docs/en/` (incl. `sidebar.md`).
+
+### Changed
+
+- Renamed the windows-store config type **`PlanciaConfig` → `WindowsConfig`** — the
+  name `PlanciaConfig` now denotes the app-wide config. Update imports if you
+  referenced it.
 
 ### Notes
 

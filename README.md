@@ -141,6 +141,7 @@ Full usage guide (English) under **[`docs/en/`](docs/en/README.md)**:
 | [Recipes](docs/en/recipes.md) | Cross-window links, tags, per-window actions… |
 | [Sidebar](docs/en/sidebar.md) | `<PlanciaSidebar>` — edges, states, modes, peek, resize, drawer |
 | [Dialogs](docs/en/dialog.md) | `<PlanciaModal>` / `<PlanciaConfirm>` + imperative `useDialogs()` |
+| [Config](docs/en/config.md) | `PlanciaConfig` — theme + behavior via `<PlanciaConfigProvider>` |
 
 ## Compatibility
 

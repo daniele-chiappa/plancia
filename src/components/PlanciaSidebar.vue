@@ -16,6 +16,7 @@ import { computed, onBeforeUnmount, onMounted, provide, ref, useId, watch } from
 import '../style.css'
 import { useSidebarController } from '../sidebar/useSidebarController'
 import { SIDEBAR_CONTROL } from '../sidebar/usePlanciaSidebar'
+import { usePlanciaConfig } from '../config/usePlanciaConfig'
 import {
   DEFAULT_SIDEBAR_LABELS,
   type SidebarLabels,
@@ -58,9 +59,9 @@ const props = withDefaults(
   }>(),
   {
     position: 'left',
-    mode: 'inline',
+    mode: undefined,
     state: undefined,
-    defaultState: 'expanded',
+    defaultState: undefined,
     size: undefined,
     defaultSize: undefined,
     railSize: undefined,
@@ -70,7 +71,7 @@ const props = withDefaults(
     peek: undefined,
     peekDelay: () => ({ open: 120, close: 240 }),
     draggable: false,
-    responsive: false,
+    responsive: undefined,
     backdrop: undefined,
     labels: undefined,
     landmark: 'complementary',
@@ -91,6 +92,10 @@ const emit = defineEmits<{
   move: [{ x: number; y: number }]
 }>()
 
+const cfg = usePlanciaConfig()
+const sbDefaults = computed(() => cfg?.value.components?.sidebar?.defaults)
+const responsive = computed(() => props.responsive ?? sbDefaults.value?.responsive ?? false)
+
 /* --- responsive drawer ---------------------------------------------------- */
 const isNarrow = ref(false)
 let mql: MediaQueryList | undefined
@@ -99,8 +104,8 @@ function onMqlChange(e: MediaQueryListEvent) {
 }
 function setupMql() {
   teardownMql()
-  if (props.responsive && typeof window !== 'undefined' && window.matchMedia) {
-    mql = window.matchMedia(`(max-width: ${props.responsive}px)`)
+  if (responsive.value && typeof window !== 'undefined' && window.matchMedia) {
+    mql = window.matchMedia(`(max-width: ${responsive.value}px)`)
     isNarrow.value = mql.matches
     mql.addEventListener('change', onMqlChange)
   } else {
@@ -114,14 +119,16 @@ function teardownMql() {
   }
 }
 /** A responsive drawer forces overlay regardless of the `mode` prop. */
-const effectiveMode = computed<SidebarMode>(() => (isNarrow.value ? 'overlay' : props.mode))
+const effectiveMode = computed<SidebarMode>(() =>
+  isNarrow.value ? 'overlay' : (props.mode ?? sbDefaults.value?.mode ?? 'inline'),
+)
 
 const ctrl = useSidebarController({
   position: () => props.position,
   mode: () => effectiveMode.value,
   state: () => props.state,
   size: () => props.size,
-  defaultState: props.defaultState,
+  defaultState: props.defaultState ?? sbDefaults.value?.defaultState,
   defaultSize: props.defaultSize,
   minSize: () => props.minSize,
   maxSize: () => props.maxSize,
@@ -160,7 +167,11 @@ const uid = useId()
 const panelId = `plancia-sidebar-${uid}`
 const bodyId = `${panelId}-body`
 
-const labels = computed<SidebarLabels>(() => ({ ...DEFAULT_SIDEBAR_LABELS, ...props.labels }))
+const labels = computed<SidebarLabels>(() => ({
+  ...DEFAULT_SIDEBAR_LABELS,
+  ...cfg?.value.components?.sidebar?.labels,
+  ...props.labels,
+}))
 
 const landmarkRole = computed(() => (props.landmark === 'none' ? undefined : props.landmark))
 
@@ -366,7 +377,7 @@ function onBackdrop() {
 }
 
 onMounted(setupMql)
-watch(() => props.responsive, setupMql)
+watch(responsive, setupMql)
 onBeforeUnmount(() => {
   clearTimers()
   teardownMql()

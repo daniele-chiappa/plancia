@@ -14,20 +14,27 @@
   --plancia-padding: 0.75rem;
   --plancia-radius: 0.5rem;
 
-  --plancia-bg: transparent;
+  /* ── Semantic color core ───────────────────────────────────────────────
+     Override these few tokens to re-theme everything — the rest derive from
+     them via var() / color-mix(). Map them to your design system, e.g. with
+     Tailwind v4:  --plancia-accent: var(--color-blue-600). */
   --plancia-surface: #ffffff;
-  --plancia-header-bg: rgba(0, 0, 0, 0.03);
-  --plancia-footer-bg: rgba(0, 0, 0, 0.03);
-  --plancia-border: #e2e8f0;
-  --plancia-accent: #3b82f6;
-  --plancia-accent-soft: rgba(59, 130, 246, 0.12);
   --plancia-text: #0f172a;
   --plancia-text-muted: #64748b;
+  --plancia-border: #e2e8f0;
+  --plancia-accent: #3b82f6;
+  --plancia-on-accent: #ffffff;
   --plancia-danger: #dc2626;
   --plancia-warning: #d97706;
+  --plancia-bg: transparent;
+
+  /* Derived from the core (follow it automatically). */
+  --plancia-accent-soft: color-mix(in srgb, var(--plancia-accent) 14%, transparent);
+  --plancia-header-bg: color-mix(in srgb, var(--plancia-text) 4%, transparent);
+  --plancia-footer-bg: color-mix(in srgb, var(--plancia-text) 4%, transparent);
   --plancia-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
 
-  --plancia-tag-bg: rgba(100, 116, 139, 0.14);
+  --plancia-tag-bg: color-mix(in srgb, var(--plancia-text-muted) 18%, transparent);
   --plancia-tag-fg: var(--plancia-text-muted);
 
   /* sidebar */
@@ -240,11 +247,11 @@
   line-height: 0;
 }
 .plancia-btn:hover {
-  background: rgba(0, 0, 0, 0.06);
+  background: color-mix(in srgb, var(--plancia-text) 7%, transparent);
   color: var(--plancia-text);
 }
 .plancia-btn--danger:hover {
-  background: rgba(220, 38, 38, 0.12);
+  background: color-mix(in srgb, var(--plancia-danger) 14%, transparent);
   color: var(--plancia-danger);
 }
 .plancia-btn svg {
@@ -711,17 +718,17 @@ button.plancia-tag:hover {
   line-height: 1.2;
 }
 .plancia-btn-text:hover {
-  background: rgba(0, 0, 0, 0.04);
+  background: color-mix(in srgb, var(--plancia-text) 5%, transparent);
 }
 .plancia-btn-primary {
   background: var(--plancia-accent);
   border-color: var(--plancia-accent);
-  color: #fff;
+  color: var(--plancia-on-accent);
 }
 .plancia-btn-danger {
   background: var(--plancia-danger);
   border-color: var(--plancia-danger);
-  color: #fff;
+  color: var(--plancia-on-accent);
 }
 .plancia-btn-primary:hover,
 .plancia-btn-danger:hover {

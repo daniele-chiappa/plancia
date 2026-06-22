@@ -10,6 +10,7 @@
 import { computed, nextTick, onBeforeUnmount, ref, useId, useSlots, watch } from 'vue'
 import '../style.css'
 import { isTopModal, popModal, pushModal } from '../dialog/modalStack'
+import { usePlanciaConfig } from '../config/usePlanciaConfig'
 import { DEFAULT_MODAL_LABELS, type ModalLabels, type ModalSlotProps } from '../dialog/types'
 
 const open = defineModel<boolean>('open', { default: false })
@@ -26,8 +27,8 @@ const props = withDefaults(
   }>(),
   {
     title: '',
-    closeOnBackdrop: true,
-    closeOnEsc: true,
+    closeOnBackdrop: undefined,
+    closeOnEsc: undefined,
     initialFocus: '',
     ariaLabel: '',
     labels: undefined,
@@ -37,7 +38,17 @@ const props = withDefaults(
 const emit = defineEmits<{ close: [] }>()
 
 const slots = useSlots()
-const labels = computed<ModalLabels>(() => ({ ...DEFAULT_MODAL_LABELS, ...props.labels }))
+const cfg = usePlanciaConfig()
+const dlgDefaults = computed(() => cfg?.value.components?.dialog?.defaults)
+const escClose = computed(() => props.closeOnEsc ?? dlgDefaults.value?.closeOnEsc ?? true)
+const backdropClose = computed(
+  () => props.closeOnBackdrop ?? dlgDefaults.value?.closeOnBackdrop ?? true,
+)
+const labels = computed<ModalLabels>(() => ({
+  ...DEFAULT_MODAL_LABELS,
+  ...cfg?.value.components?.dialog?.labels,
+  ...props.labels,
+}))
 const uid = useId()
 const titleId = `plancia-modal-${uid}-title`
 const bodyId = `plancia-modal-${uid}-body`
@@ -58,7 +69,7 @@ function requestClose() {
   emit('close')
 }
 function onBackdrop(e: MouseEvent) {
-  if (props.closeOnBackdrop && e.target === e.currentTarget) requestClose()
+  if (backdropClose.value && e.target === e.currentTarget) requestClose()
 }
 function focusInitial() {
   const root = panelRef.value
@@ -90,7 +101,7 @@ function trapFocus(e: KeyboardEvent) {
 }
 function onKeydown(e: KeyboardEvent) {
   if (!stackId || !isTopModal(stackId)) return
-  if (e.key === 'Escape' && props.closeOnEsc) {
+  if (e.key === 'Escape' && escClose.value) {
     e.stopPropagation()
     requestClose()
     return

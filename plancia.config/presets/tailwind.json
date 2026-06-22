@@ -1,0 +1,13 @@
+{
+  "meta": { "name": "tailwind", "version": 1 },
+  "theme": {
+    "--plancia-surface": "var(--color-white)",
+    "--plancia-text": "var(--color-slate-900)",
+    "--plancia-text-muted": "var(--color-slate-500)",
+    "--plancia-border": "var(--color-slate-200)",
+    "--plancia-accent": "var(--color-blue-600)",
+    "--plancia-on-accent": "var(--color-white)",
+    "--plancia-danger": "var(--color-red-600)",
+    "--plancia-warning": "var(--color-amber-600)"
+  }
+}

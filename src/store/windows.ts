@@ -28,7 +28,7 @@ interface WindowsState {
   defaultWidth: WindowWidth
 }
 
-export interface PlanciaConfig {
+export interface WindowsConfig {
   widthCycle?: WindowWidth[]
   defaultWidth?: WindowWidth
 }
@@ -50,7 +50,7 @@ export const useWindowsStore = defineStore('plancia-windows', {
   },
   actions: {
     /** Set width behaviour. Called once by the manager from its props. */
-    configure(cfg: PlanciaConfig): void {
+    configure(cfg: WindowsConfig): void {
       if (cfg.widthCycle && cfg.widthCycle.length) this.widthCycle = [...cfg.widthCycle]
       if (cfg.defaultWidth) this.defaultWidth = cfg.defaultWidth
     },

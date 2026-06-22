@@ -5,7 +5,7 @@ export { default as Plancia } from './components/Plancia.vue'
 export { default as WindowFrame } from './components/WindowFrame.vue'
 
 export { useWindowsStore, DEFAULT_WIDTH_CYCLE, DEFAULT_WIDTH } from './store/windows'
-export type { PlanciaConfig } from './store/windows'
+export type { WindowsConfig } from './store/windows'
 
 export {
   useOpenWindow,
@@ -76,3 +76,19 @@ export type {
   PromptOptions,
   DialogRequest,
 } from './dialog/types'
+
+// --- config ----------------------------------------------------------------
+export { default as PlanciaConfigProvider } from './components/PlanciaConfigProvider.vue'
+export {
+  usePlanciaConfig,
+  applyTheme,
+  themeToCss,
+  themeToStyle,
+} from './config/usePlanciaConfig'
+export { defineConfig } from './config/types'
+export type {
+  PlanciaConfig,
+  WindowConfigDefaults,
+  SidebarConfigDefaults,
+  ModalConfigDefaults,
+} from './config/types'

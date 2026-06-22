@@ -20,41 +20,66 @@ import 'plancia/style.css'
   --plancia-padding: 0.75rem;    /* strip padding */
   --plancia-radius: 0.5rem;
 
-  /* colours */
-  --plancia-bg: transparent;     /* strip background */
-  --plancia-surface: #ffffff;    /* window background */
-  --plancia-header-bg: rgba(0,0,0,.03);
-  --plancia-footer-bg: rgba(0,0,0,.03);
-  --plancia-border: #e2e8f0;
-  --plancia-accent: #3b82f6;     /* focused window / hovers */
-  --plancia-accent-soft: rgba(59,130,246,.12);
+  /* ── semantic color core — override THESE to re-theme everything ── */
+  --plancia-surface: #ffffff;    /* panel / window background */
   --plancia-text: #0f172a;
   --plancia-text-muted: #64748b;
-  --plancia-danger: #dc2626;     /* close hover / unknown type */
+  --plancia-border: #e2e8f0;
+  --plancia-accent: #3b82f6;     /* focus / primary buttons / hovers */
+  --plancia-on-accent: #ffffff;  /* text on accent / danger buttons */
+  --plancia-danger: #dc2626;
   --plancia-warning: #d97706;    /* dirty marker */
-  --plancia-shadow: 0 1px 2px rgba(0,0,0,.06);
+  --plancia-bg: transparent;     /* strip background */
 
-  /* header tags */
-  --plancia-tag-bg: rgba(100,116,139,.14);
+  /* derived from the core via color-mix() — follow it automatically */
+  --plancia-accent-soft: color-mix(in srgb, var(--plancia-accent) 14%, transparent);
+  --plancia-header-bg: color-mix(in srgb, var(--plancia-text) 4%, transparent);
+  --plancia-footer-bg: color-mix(in srgb, var(--plancia-text) 4%, transparent);
+  --plancia-tag-bg: color-mix(in srgb, var(--plancia-text-muted) 18%, transparent);
   --plancia-tag-fg: var(--plancia-text-muted);
+  --plancia-shadow: 0 1px 2px rgba(0,0,0,.06);
 }
 ```
 
-### Example: dark-ish theme scoped to your app
+### Example: dark theme — override just the core
+
+Because the rest derive via `color-mix()`, a dark theme is only a handful of
+tokens (the soft/hover/tag variants follow automatically):
 
 ```css
 .my-app {
   --plancia-surface: #1e293b;
-  --plancia-bg: #0f172a;
-  --plancia-border: #334155;
   --plancia-text: #e2e8f0;
   --plancia-text-muted: #94a3b8;
-  --plancia-accent: #38bdf8;
-  --plancia-accent-soft: rgba(56,189,248,.15);
-  --plancia-header-bg: rgba(255,255,255,.04);
-  --plancia-footer-bg: rgba(255,255,255,.04);
+  --plancia-border: #334155;
+  --plancia-accent: #60a5fa;
+  --plancia-on-accent: #0b1220;
 }
 ```
+
+### Deriving from Tailwind
+
+plancia stays framework-agnostic, but the core tokens bind to a Tailwind theme
+**at runtime** in your own `:root` — no plancia/Tailwind coupling:
+
+```css
+:root {                                    /* Tailwind v4: tokens are CSS vars */
+  --plancia-accent: var(--color-blue-600);
+  --plancia-surface: var(--color-white);
+  --plancia-text: var(--color-slate-900);
+  --plancia-border: var(--color-slate-200);
+}
+/* Tailwind v3: in your build-processed CSS use theme(), e.g.
+   --plancia-accent: theme('colors.blue.600'); */
+```
+
+A ready-made `tailwind` preset ships under `plancia.config/presets/`.
+
+### Programmatic / config-driven theming
+
+For swappable themes + behavior defaults from a JSON/TS config, see
+**[Config](./config.md)** (`<PlanciaConfigProvider>`, `defineConfig`,
+`applyTheme`, `themeToCss`).
 
 ### Window sizes
 
