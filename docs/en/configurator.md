@@ -5,7 +5,7 @@ preview. **Not** part of the published package; it lives in `tools/configurator/
 and runs in a container.
 
 ```bash
-docker compose up configurator     # → http://172.16.0.80:5181
+docker compose up configurator     # → http://localhost:5181
 # or locally:
 npx vite --config tools/configurator/vite.config.ts
 ```

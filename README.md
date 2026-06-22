@@ -11,7 +11,7 @@ It is **content-agnostic** (a `type → component` registry decides what each wi
 shows) and **dependency-light**: zero runtime dependencies — it only needs Vue and
 Pinia, which your app already has.
 
-![plancia — a scrollable strip of resizable windows: open panels side by side, resize them in steps, and tuck the ones you don't need into a footer](docs/assets/plancia-demo.gif)
+![plancia — a scrollable strip of resizable windows: open panels side by side, resize them in steps, and tuck the ones you don't need into a footer](https://raw.githubusercontent.com/daniele-chiappa/plancia/main/docs/assets/plancia-demo.gif)
 
 <sub>Open windows side by side · resize in steps (`⤢`) · minimize into the footer · `Alt + ←/→` moves focus. Rendered from the live [playground](src/playground/).</sub>
 
@@ -116,7 +116,7 @@ panel for any of the four edges, with `closed` / `collapsed` / `expanded` states
 drag-resize, hover-peek and a responsive drawer. Themeable with the same
 `--plancia-*` CSS variables; zero runtime deps.
 
-![PlanciaSidebar demo](docs/assets/plancia-sidebar-demo.gif)
+![PlanciaSidebar demo](https://raw.githubusercontent.com/daniele-chiappa/plancia/main/docs/assets/plancia-sidebar-demo.gif)
 
 ```vue
 <PlanciaSidebar position="left" :responsive="768" resizable>

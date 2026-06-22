@@ -4,9 +4,11 @@ FROM node:22-alpine
 
 WORKDIR /app
 
-# Install deps first for layer caching.
+# Install deps first for layer caching. `--ignore-scripts` skips the package's
+# `prepare` (vue-tsc + vite build), which can't run here — the source isn't
+# copied yet, and the dev servers use Vite directly, not the built dist/.
 COPY package*.json ./
-RUN npm ci
+RUN npm ci --ignore-scripts
 
 COPY . .
 

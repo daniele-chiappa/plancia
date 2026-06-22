@@ -1,9 +1,34 @@
 {
   "name": "plancia",
-  "version": "0.0.0",
-  "description": "Tiling window-manager component (niri-style) for Vue 3 — abstracted from gosidian and products-dc.",
+  "version": "0.1.0",
+  "description": "Tiling window-manager component (niri-style) for Vue 3 — a scrollable strip of resizable, content-agnostic windows, plus sidebar, layout, dialog and config building blocks.",
   "type": "module",
   "license": "MIT",
+  "author": "Daniele Chiappa",
+  "homepage": "https://github.com/daniele-chiappa/plancia#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/daniele-chiappa/plancia.git"
+  },
+  "bugs": {
+    "url": "https://github.com/daniele-chiappa/plancia/issues"
+  },
+  "keywords": [
+    "vue",
+    "vue3",
+    "window-manager",
+    "tiling",
+    "niri",
+    "workspace",
+    "components",
+    "pinia",
+    "sidebar",
+    "dialog",
+    "modal"
+  ],
+  "sideEffects": [
+    "**/*.css"
+  ],
   "files": [
     "dist"
   ],
@@ -15,12 +40,13 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/plancia.js"
     },
-    "./style.css": "./dist/plancia.css"
+    "./style.css": "./dist/plancia.css",
+    "./package.json": "./package.json"
   },
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
-    "prepare": "npm run build",
+    "prepublishOnly": "npm run build",
     "preview": "vite preview",
     "typecheck": "vue-tsc --noEmit",
     "test": "vitest run",
