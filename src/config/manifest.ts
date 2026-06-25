@@ -68,17 +68,42 @@ function stripCssComments(css: string): string {
   }
 }
 
+// Anchored, single-quantifier → linear (not a ReDoS shape). Validates a knob name.
+const KNOB_NAME = /^--plancia-[a-z0-9-]+$/i
+
+/** Body of the first `:root { … }` block (up to its first `}`), or null.
+ *  indexOf-based, not regex, so it can't be a ReDoS target. */
+function extractRootBody(css: string): string | null {
+  for (let from = 0; ; ) {
+    const r = css.indexOf(':root', from)
+    if (r === -1) return null
+    let j = r + 5
+    while (j < css.length && /\s/.test(css[j]!)) j++
+    if (css[j] === '{') {
+      const close = css.indexOf('}', j + 1)
+      return close === -1 ? null : css.slice(j + 1, close)
+    }
+    from = r + 5
+  }
+}
+
 /** Parse the first `:root { … }` block of a CSS string into theme knobs. */
 export function parseThemeManifest(css: string): ThemeKnob[] {
   // Strip comments first — they may contain `--plancia-*: …` example text.
-  const root = stripCssComments(css).match(/:root\s*\{([\s\S]*?)\}/)
-  if (!root) return []
+  const body = extractRootBody(stripCssComments(css))
+  if (body === null) return []
   const knobs: ThemeKnob[] = []
-  const re = /(--plancia-[a-z0-9-]+)\s*:\s*([^;]+);/gi
-  let m: RegExpExecArray | null
-  while ((m = re.exec(root[1]!)) !== null) {
-    const name = m[1]!
-    const value = m[2]!.trim()
+  // Walk `;`-terminated declarations. The part after the last `;` is
+  // unterminated → ignored (matches the old `[^;]+;` regex). Split on the
+  // first `:` per declaration. No regex over the input → no ReDoS.
+  const decls = body.split(';')
+  for (let k = 0; k < decls.length - 1; k++) {
+    const decl = decls[k]!
+    const colon = decl.indexOf(':')
+    if (colon === -1) continue
+    const name = decl.slice(0, colon).trim()
+    if (!KNOB_NAME.test(name)) continue
+    const value = decl.slice(colon + 1).trim()
     const derived = /var\(|color-mix\(/.test(value)
     knobs.push({
       name,
