@@ -54,7 +54,10 @@ function typeByName(name: string): ThemeKnobType {
 /** Parse the first `:root { … }` block of a CSS string into theme knobs. */
 export function parseThemeManifest(css: string): ThemeKnob[] {
   // Strip comments first — they may contain `--plancia-*: …` example text.
-  const root = css.replace(/\/\*[\s\S]*?\*\//g, '').match(/:root\s*\{([\s\S]*?)\}/)
+  // Comment regex is the linear "unrolled" form on purpose: the naive
+  // /\/\*[\s\S]*?\*\// backtracks polynomially on `/*` + many `a/*` (ReDoS,
+  // CodeQL js/polynomial-redos). Keep it unrolled.
+  const root = css.replace(/\/\*[^*]*\*+(?:[^/*][^*]*\*+)*\//g, '').match(/:root\s*\{([\s\S]*?)\}/)
   if (!root) return []
   const knobs: ThemeKnob[] = []
   const re = /(--plancia-[a-z0-9-]+)\s*:\s*([^;]+);/gi
