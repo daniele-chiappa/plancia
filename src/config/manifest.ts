@@ -51,13 +51,27 @@ function typeByName(name: string): ThemeKnobType {
   return 'text'
 }
 
+/** Strip CSS block comments with a linear indexOf scan. Any regex form (lazy
+ *  or the textbook "unrolled" loop) trips CodeQL's js/polynomial-redos on
+ *  adversarial input; indexOf is O(n) and unambiguous. An unterminated comment
+ *  opener is left untouched. */
+function stripCssComments(css: string): string {
+  let out = ''
+  let i = 0
+  for (;;) {
+    const start = css.indexOf('/*', i)
+    if (start === -1) return out + css.slice(i)
+    const end = css.indexOf('*/', start + 2)
+    if (end === -1) return out + css.slice(i) // unterminated: leave as-is
+    out += css.slice(i, start)
+    i = end + 2
+  }
+}
+
 /** Parse the first `:root { … }` block of a CSS string into theme knobs. */
 export function parseThemeManifest(css: string): ThemeKnob[] {
   // Strip comments first — they may contain `--plancia-*: …` example text.
-  // Comment regex is the linear "unrolled" form on purpose: the naive
-  // /\/\*[\s\S]*?\*\// backtracks polynomially on `/*` + many `a/*` (ReDoS,
-  // CodeQL js/polynomial-redos). Keep it unrolled.
-  const root = css.replace(/\/\*[^*]*\*+(?:[^/*][^*]*\*+)*\//g, '').match(/:root\s*\{([\s\S]*?)\}/)
+  const root = stripCssComments(css).match(/:root\s*\{([\s\S]*?)\}/)
   if (!root) return []
   const knobs: ThemeKnob[] = []
   const re = /(--plancia-[a-z0-9-]+)\s*:\s*([^;]+);/gi
