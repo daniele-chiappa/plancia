@@ -4,7 +4,7 @@
  * Applied by <PlanciaConfigProvider>; authorable as TS via `defineConfig`,
  * persisted as JSON. See ADR-003.
  */
-import type { PlanciaLabels, WindowWidth } from '../types'
+import type { PlanciaLabels, ViewMode, WindowWidth } from '../types'
 import type { SidebarLabels, SidebarMode, SidebarState } from '../sidebar/types'
 import type { ModalLabels } from '../dialog/types'
 
@@ -17,6 +17,10 @@ export interface WindowConfigDefaults {
   /** Dwell (ms) at the viewport-fit soft-max before a drag may exceed it.
    *  Default 300. */
   softMaxDelayMs?: number
+  /** Initial layout mode when the manager is uncontrolled. Default 'strip'. */
+  viewMode?: ViewMode
+  /** In `tabs` mode, how many window subtrees to keep mounted (LRU). Default 5. */
+  keepAliveMax?: number
 }
 export interface SidebarConfigDefaults {
   mode?: SidebarMode

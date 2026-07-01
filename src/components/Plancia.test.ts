@@ -5,6 +5,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { mount } from '@vue/test-utils'
 import Plancia from './Plancia.vue'
 import { useOpenWindow } from '../composables/openWindow'
+import { useWindowsStore } from '../store/windows'
 
 // jsdom doesn't implement scrollIntoView (Plancia scrolls the focused window).
 Element.prototype.scrollIntoView = () => {}
@@ -60,5 +61,76 @@ describe('Plancia edge sidebar slots', () => {
   it('keeps the plain strip layout when no sidebar slots are used', () => {
     const w = mountPlancia({})
     expect(w.find('.plancia__mid > .plancia__main > .plancia__strip').exists()).toBe(true)
+  })
+})
+
+function mountMode(viewMode: 'strip' | 'tabs') {
+  return mount(Plancia, { props: { registry, viewMode }, global: { plugins: [pinia] } })
+}
+
+describe('Plancia view mode (strip ↔ tabs)', () => {
+  it('renders a tab bar with one tab (title + close) per visible window in tabs mode', () => {
+    const store = useWindowsStore()
+    store.open({ type: 'x', key: 'a', title: 'Alpha' })
+    store.open({ type: 'x', key: 'b', title: 'Beta' })
+    const w = mountMode('tabs')
+    expect(w.find('.plancia__strip').exists()).toBe(false)
+    expect(w.find('.plancia__tabbar').exists()).toBe(true)
+    const tabs = w.findAll('.plancia__tab')
+    expect(tabs).toHaveLength(2)
+    expect(tabs[0]!.find('.plancia__tab-text').text()).toBe('Alpha')
+    expect(tabs[1]!.find('.plancia__tab-text').text()).toBe('Beta')
+    expect(tabs[0]!.find('.plancia__tab-close').exists()).toBe(true)
+  })
+
+  it('mounts only the focused window in tabs, but all visible windows in strip', () => {
+    const store = useWindowsStore()
+    store.open({ type: 'x', key: 'a', title: 'Alpha' })
+    store.open({ type: 'x', key: 'b', title: 'Beta' })
+    store.open({ type: 'x', key: 'c', title: 'Gamma' })
+    // strip: every window is mounted side by side
+    expect(mountMode('strip').findAll('.winbody')).toHaveLength(3)
+    // tabs: only the focused window's content is mounted (the L1 perf property)
+    expect(mountMode('tabs').findAll('.winbody')).toHaveLength(1)
+  })
+
+  it('focuses a window when its tab is clicked', async () => {
+    const store = useWindowsStore()
+    store.open({ type: 'x', key: 'a', title: 'Alpha' })
+    store.open({ type: 'x', key: 'b', title: 'Beta' }) // focused = Beta
+    const w = mountMode('tabs')
+    await w.findAll('.plancia__tab-name')[0]!.trigger('click')
+    expect(store.focusedId).toBe(store.windows[0]!.id)
+  })
+
+  it('closes a window directly from its tab close button', async () => {
+    const store = useWindowsStore()
+    store.open({ type: 'x', key: 'a', title: 'Alpha' })
+    store.open({ type: 'x', key: 'b', title: 'Beta' })
+    const w = mountMode('tabs')
+    expect(store.windows).toHaveLength(2)
+    await w.findAll('.plancia__tab-close')[0]!.trigger('click')
+    expect(store.windows).toHaveLength(1)
+    expect(store.windows[0]!.key).toBe('b')
+  })
+
+  it('the built-in toggle switches the view mode (update:viewMode)', async () => {
+    const store = useWindowsStore()
+    store.open({ type: 'x', key: 'a', title: 'Alpha' })
+    const w = mountMode('tabs')
+    await w.find('.plancia__view-toggle').trigger('click')
+    expect(w.emitted('update:viewMode')).toBeTruthy()
+    expect(w.emitted('update:viewMode')![0]).toEqual(['strip'])
+  })
+
+  it('never leaves the tabs pane blank: auto-focuses the first visible window', async () => {
+    const store = useWindowsStore()
+    // Open without focus, then clear focus → tabs mode must still pick one.
+    store.open({ type: 'x', key: 'a', title: 'Alpha', focus: false })
+    store.focusedId = null
+    const w = mountMode('tabs')
+    await w.vm.$nextTick()
+    expect(store.focusedId).toBe(store.windows[0]!.id)
+    expect(w.findAll('.winbody')).toHaveLength(1)
   })
 })

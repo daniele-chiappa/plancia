@@ -28,12 +28,16 @@ ones. Fills its parent, so give the parent a height.
 | `widthCycle` | `('s' \| 'm' \| 'full')[]` | `['s','m','full']` | Order the resize button cycles through. Applied to the store via `configure()`. |
 | `defaultWidth` | `'s' \| 'm' \| 'full'` | `'m'` | Width for windows opened without an explicit `width`. |
 | `resolveTone` | `(tone?: string) => string` | `() => ''` | Returns an extra CSS class for a tag/badge, derived from its `tone`. Tags also carry a `data-tone` attribute you can target in CSS. |
+| `v-model:view-mode` | `'strip' \| 'tabs'` | `'strip'` (or config) | Layout mode. `strip` = the tiling strip; `tabs` = a scrollable tab bar over a single focused pane. See [View mode](./view-mode.md). |
+| `keepAliveMax` | `number` | `5` | In `tabs` mode, how many window subtrees stay mounted (LRU). The lever for hosting many windows cheaply. |
+| `showViewToggle` | `boolean` | `true` | Render the built-in view toggle in the tab bar (override its content with the `view-toggle` slot). |
 
 ### Slots
 
 | Slot | Props | Purpose |
 |---|---|---|
 | `window-actions` | `{ win: WindowInstance }` | Extra buttons in **every** window header (before the resize button). This is where app-specific, per-window actions live — e.g. a "show links" button gated on `win.props.path`. |
+| `view-toggle` | `{ mode, toggle }` | Override the built-in view toggle rendered in the tab bar (`tabs` mode). See [View mode](./view-mode.md#the-toggle). |
 | `empty` | — | Replaces the default "no window open" placeholder. |
 | `sidebar-left` / `sidebar-right` / `sidebar-top` / `sidebar-bottom` | — | Mount a [`<PlanciaSidebar>`](./sidebar.md) (or any content) on that edge. `top`/`bottom` span the full width; `left`/`right` flank the strip + footer. The middle band is `position: relative`, so `overlay`/`floating` sidebars anchor correctly. Slot content lives **inside** `<Plancia>`, so it can `useOpenWindow()` to open windows. |
 
@@ -67,6 +71,9 @@ component rendered inside `<Plancia>`, so `useOpenWindow()` resolves (see
 
 ### Behaviour built in
 
+- Two layouts, switchable at runtime via `v-model:view-mode` — the tiling
+  `strip` and a `tabs` bar over a single focused pane. See
+  [View mode](./view-mode.md).
 - Tiling strip with horizontal scroll-snap; the focused window is scrolled into
   view automatically.
 - Header buttons: **resize** (cycles `widthCycle`), **minimize** (to footer),

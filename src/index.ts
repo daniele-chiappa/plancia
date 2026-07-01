@@ -37,6 +37,7 @@ export type {
 export { DEFAULT_LABELS } from './types'
 export type {
   WindowWidth,
+  ViewMode,
   WindowTag,
   WindowInstance,
   OpenSpec,

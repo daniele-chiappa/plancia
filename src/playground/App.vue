@@ -40,9 +40,13 @@ const labels: Partial<PlanciaLabels> = {
   dirty: 'Modifiche non salvate',
   unsavedClose: 'Modifiche non salvate. Chiudere comunque?',
   openTag: 'Apri',
+  viewStrip: 'Striscia',
+  viewTabs: 'Schede',
+  viewToggle: 'Cambia vista',
 }
 const widthCycle: WindowWidth[] = ['s', 'm', 'full']
 const resolveTone = (tone?: string) => (tone ? `tone-${tone}` : '')
+const viewMode = ref<'strip' | 'tabs'>('strip')
 
 function openNote() {
   n += 1
@@ -131,6 +135,13 @@ openSeveral()
       <button type="button" @click="demoReset">🗑 reset</button>
       <span class="spacer" />
       <label class="ctl">
+        vista
+        <select v-model="viewMode">
+          <option value="strip">strip</option>
+          <option value="tabs">tabs</option>
+        </select>
+      </label>
+      <label class="ctl">
         tema
         <select v-model="themeName">
           <option value="default">default</option>
@@ -203,6 +214,7 @@ openSeveral()
         </template>
 
         <Plancia
+          v-model:view-mode="viewMode"
           :registry="registry"
           native-type="note"
           :labels="labels"

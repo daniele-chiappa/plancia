@@ -5,6 +5,36 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-07-01
+
+### Added
+
+- **Tabs view mode** — `<Plancia>` can now lay its windows out as a scrollable
+  **tab bar** over a single full-width pane, as an alternative to the niri-style
+  strip. Switch at runtime with **`v-model:view-mode`** (`'strip' | 'tabs'`), or
+  set the initial mode via config (`components.window.defaults.viewMode`). Each
+  tab shows the window title and a **direct close** button (honouring the
+  unsaved-changes guard) — no need to minimise first. The tab bar scrolls
+  horizontally and the active tab is kept in view.
+- **Built-in view toggle** — rendered in the tab bar by default
+  (`showViewToggle`, default `true`); override its content with the new
+  **`view-toggle`** slot (`{ mode, toggle }`). Host apps can also drive the mode
+  entirely through `v-model` and place their own toggle. New optional labels
+  `viewStrip` / `viewTabs` / `viewToggle`; new exported type **`ViewMode`**.
+- **Performance: only the focused window mounts in tabs mode**, wrapped in
+  `<KeepAlive :max>` (LRU) so switching tabs preserves state while bounding how
+  many window subtrees stay mounted. Configurable via the **`keepAliveMax`** prop
+  (or `components.window.defaults.keepAliveMax`, default `5`) — the key lever for
+  hosting many windows cheaply. Note: kept-alive subtrees stay reactive, so keep
+  `keepAliveMax` modest and gate expensive per-window work on `onActivated` /
+  `onDeactivated`.
+
+### Changed
+
+- `WindowFrame` gained an internal **`fill`** prop (used by tabs mode): the frame
+  fills the pane width and its width affordances (preset cycle + drag handle) are
+  hidden. Strip mode is unchanged.
+
 ## [0.2.0] - 2026-06-23
 
 ### Added

@@ -5,6 +5,15 @@ import type { Component } from 'vue'
 export type WindowWidth = 's' | 'm' | 'full'
 
 /**
+ * How the plancia lays out its windows.
+ * - `strip`: the niri-style horizontal strip — every visible window is mounted
+ *   side by side and scrolled into view (the historical, default behaviour).
+ * - `tabs`: a scrollable tab bar; only the focused window is mounted in a single
+ *   full-width pane (kept alive up to `keepAliveMax`). Cheaper with many windows.
+ */
+export type ViewMode = 'strip' | 'tabs'
+
+/**
  * Header tag (reusable). Communicates "what this window is associated with".
  * When `open` is set the tag is clickable and opens that window — provided its
  * type is registered in the host plancia, otherwise it stays informational.
@@ -66,6 +75,10 @@ export interface PlanciaLabels {
   /** Optional (added in 0.2.0) — falls back to the default, so adding it never
    *  breaks consumers that type a full `PlanciaLabels`. */
   resizeWidth?: string
+  /** View-mode labels (added in 0.3.0) — optional, fall back to the defaults. */
+  viewStrip?: string
+  viewTabs?: string
+  viewToggle?: string
   minimize: string
   close: string
   restore: string
@@ -82,6 +95,9 @@ export const DEFAULT_LABELS: Required<PlanciaLabels> = {
   unknownType: (type) => `Unknown window type: ${type}`,
   resize: 'Width (click to cycle)',
   resizeWidth: 'Resize width',
+  viewStrip: 'Strip',
+  viewTabs: 'Tabs',
+  viewToggle: 'Toggle view',
   minimize: 'Minimize',
   close: 'Close',
   restore: 'Restore',

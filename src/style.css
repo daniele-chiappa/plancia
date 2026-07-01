@@ -170,6 +170,108 @@
   color: var(--plancia-danger);
 }
 
+/* --- tab bar (tabs view mode) ---------------------------------------------- */
+.plancia__tabbar {
+  display: flex;
+  flex-shrink: 0;
+  align-items: stretch;
+  gap: 0.25rem;
+  border-bottom: 1px solid var(--plancia-border);
+  background: var(--plancia-header-bg);
+  padding: 0.25rem 0.375rem;
+}
+/* The tab list scrolls horizontally on its own; the toggle stays pinned. */
+.plancia__tabs {
+  display: flex;
+  flex: 1 1 0%;
+  align-items: stretch;
+  gap: 0.25rem;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.plancia__tab {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.125rem;
+  max-width: 16rem;
+  border: 1px solid var(--plancia-border);
+  border-radius: 0.375rem;
+  background: var(--plancia-surface);
+  padding: 0.0625rem 0.25rem 0.0625rem 0.5rem;
+}
+.plancia__tab--active {
+  border-color: var(--plancia-accent);
+  background: var(--plancia-accent-soft);
+}
+.plancia__tab-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-width: 0;
+  max-width: 13rem;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  font-size: 0.8125rem;
+  padding: 0.25rem 0;
+}
+.plancia__tab-name:hover {
+  color: var(--plancia-accent);
+}
+.plancia__tab--active .plancia__tab-name {
+  color: var(--plancia-accent);
+  font-weight: 600;
+}
+.plancia__tab-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.plancia__tab-dirty {
+  flex-shrink: 0;
+  color: var(--plancia-warning);
+}
+.plancia__tab-close {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 1.125rem;
+  height: 1.125rem;
+  border: 0;
+  border-radius: 0.25rem;
+  background: none;
+  cursor: pointer;
+  color: var(--plancia-text-muted);
+  font-size: 0.75rem;
+  line-height: 1;
+  padding: 0;
+}
+.plancia__tab-close:hover {
+  background: color-mix(in srgb, var(--plancia-danger) 14%, transparent);
+  color: var(--plancia-danger);
+}
+.plancia__view-toggle {
+  flex-shrink: 0;
+  align-self: center;
+}
+
+/* tabs content pane: a single full-width window fills the area */
+.plancia__content--tabs {
+  display: flex;
+  flex: 1 1 0%;
+  min-height: 0;
+  flex-direction: column;
+  padding: var(--plancia-padding);
+}
+.plancia__content--tabs .plancia-window {
+  flex: 1 1 auto;
+}
+
 /* --- single window --------------------------------------------------------- */
 .plancia-window {
   position: relative;

@@ -22,6 +22,7 @@ import 'plancia/style.css'
 | [Getting started](./getting-started.md) | Install, peer deps, a minimal working plancia |
 | [Concepts](./concepts.md) | Windows, the registry, the store, the content↔frame contract |
 | [Components](./components.md) | `<Plancia>` and `<WindowFrame>` — props, slots, events |
+| [View mode](./view-mode.md) | `strip` ↔ `tabs`, `v-model:view-mode`, the toggle, perf with many windows |
 | [Store](./store.md) | `useWindowsStore` — state, getters, actions |
 | [URL & state sync](./url-sync.md) | `usePlanciaSync` + `createArgCodec` |
 | [Theming](./theming.md) | CSS variables, window sizing, labels / i18n |

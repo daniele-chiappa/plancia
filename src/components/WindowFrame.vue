@@ -25,6 +25,9 @@ const props = withDefaults(
     minWidthPx?: number
     /** Dwell (ms) at the soft-max before a drag may exceed the viewport. */
     softMaxDelayMs?: number
+    /** Single-pane mode (tabs): the frame fills the available width and the
+     *  width affordances (preset cycle + drag handle) are hidden. */
+    fill?: boolean
   }>(),
   {
     foreignLabel: null,
@@ -33,6 +36,7 @@ const props = withDefaults(
     maxVisiblePx: undefined,
     minWidthPx: undefined,
     softMaxDelayMs: 300,
+    fill: false,
   },
 )
 
@@ -87,7 +91,10 @@ const renderWidth = computed(() =>
 )
 const rootStyle = computed<Record<string, string>>(() => {
   const s: Record<string, string> = {}
-  if (renderWidth.value) s['--plancia-window-w'] = renderWidth.value
+  // `fill` (tabs single-pane) forces 100% via the same var every width rule
+  // reads, so it wins over the `data-width` presets without a specificity war.
+  if (props.fill) s['--plancia-window-w'] = '100%'
+  else if (renderWidth.value) s['--plancia-window-w'] = renderWidth.value
   return s
 })
 const ariaNow = computed(() => Math.round(props.win.widthPx ?? 0))
@@ -209,6 +216,7 @@ onBeforeUnmount(() => {
         <slot name="actions" :win="win" />
 
         <button
+          v-if="!fill"
           type="button"
           class="plancia-btn"
           :title="`${labels.resize} (${win.width.toUpperCase()})`"
@@ -271,8 +279,10 @@ onBeforeUnmount(() => {
     </div>
 
     <!-- Right-edge drag handle: continuous width resize (coexists with the
-         preset cycle). Keyboard-operable; double-click clears the px width. -->
+         preset cycle). Keyboard-operable; double-click clears the px width.
+         Hidden in single-pane (fill) mode, where width is not user-driven. -->
     <div
+      v-if="!fill"
       class="plancia-window__resize"
       role="separator"
       aria-orientation="vertical"
