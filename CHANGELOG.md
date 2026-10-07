@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-10-07
+
+### Changed
+
+- **Build toolchain updated** — Vite 8, Vitest 4, vue-tsc 3,
+  `vite-plugin-dts` 5 and Node 24, the versions gosidian builds with. This
+  clears the Dependabot alerts on the development dependencies; the package
+  itself still has no runtime dependencies. No API change:
+  - `plancia.js` is now bundled by Rolldown, and is smaller (52 kB, was
+    63 kB);
+  - `plancia.css` comes from a new minifier, with equivalent rules;
+  - `index.d.ts` is regenerated, with the same exports.
+
 ## [0.3.1] - 2026-10-07
 
 ### Fixed
@@ -173,6 +186,7 @@ products-dc) into a standalone, content-agnostic library.
 - Zero runtime dependencies. Peers: `vue ^3.5`, `pinia ^2.2 || ^3`,
   `vue-router ^4` (optional).
 
+[0.3.2]: https://github.com/daniele-chiappa/plancia/releases/tag/v0.3.2
 [0.3.1]: https://github.com/daniele-chiappa/plancia/releases/tag/v0.3.1
 [0.3.0]: https://github.com/daniele-chiappa/plancia/releases/tag/v0.3.0
 [0.2.0]: https://github.com/daniele-chiappa/plancia/releases/tag/v0.2.0

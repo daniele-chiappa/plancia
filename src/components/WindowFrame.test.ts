@@ -7,6 +7,14 @@ import WindowFrame from './WindowFrame.vue'
 import { useWindowsStore } from '../store/windows'
 import { DEFAULT_LABELS } from '../types'
 
+// trigger() builds the event and then assigns clientX & co. to it, which
+// jsdom's PointerEvent (read-only coordinates) rejects: dispatch one built
+// with its init dict instead.
+async function pointerDown(el: { element: Element }, init: PointerEventInit) {
+  el.element.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, ...init }))
+  await nextTick()
+}
+
 let pinia: ReturnType<typeof createPinia>
 let store: ReturnType<typeof useWindowsStore>
 beforeEach(() => {
@@ -54,7 +62,7 @@ describe('WindowFrame drag-resize', () => {
     const handle = w.get('.plancia-window__resize')
 
     // pointerdown pins the currently-rendered width (0 in jsdom → rounded to 0).
-    await handle.trigger('pointerdown', { clientX: 100, button: 0, pointerId: 1 })
+    await pointerDown(handle, { clientX: 100, button: 0, pointerId: 1 })
     expect(win.widthPx).not.toBeNull()
 
     // drag right to a candidate inside [min=240, softMax=800].
@@ -75,7 +83,7 @@ describe('WindowFrame drag-resize', () => {
     const w = mountFrame(win, { maxVisiblePx: 500, softMaxDelayMs: 300 })
     const handle = w.get('.plancia-window__resize')
 
-    await handle.trigger('pointerdown', { clientX: 0, button: 0, pointerId: 1 })
+    await pointerDown(handle, { clientX: 0, button: 0, pointerId: 1 })
     // pinned at ~0; drag way past 500 → held + signaling
     window.dispatchEvent(new MouseEvent('pointermove', { clientX: 900 }))
     await nextTick()

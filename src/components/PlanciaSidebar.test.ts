@@ -5,6 +5,14 @@ import { mount } from '@vue/test-utils'
 import PlanciaSidebar from './PlanciaSidebar.vue'
 import { usePlanciaSidebar } from '../sidebar/usePlanciaSidebar'
 
+// trigger() builds the event and then assigns clientX & co. to it, which
+// jsdom's PointerEvent (read-only coordinates) rejects: dispatch one built
+// with its init dict instead.
+async function pointerDown(el: { element: Element }, init: PointerEventInit) {
+  el.element.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, ...init }))
+  await nextTick()
+}
+
 afterEach(() => {
   // teleported backdrops land on document.body — clear between tests.
   document.body.innerHTML = ''
@@ -184,7 +192,7 @@ describe('PlanciaSidebar', () => {
 
   it('drags the floating panel by its header and emits move', async () => {
     const w = mount(PlanciaSidebar, { props: { mode: 'floating', draggable: true } })
-    await w.get('.plancia-sidebar__header').trigger('pointerdown', { clientX: 0, clientY: 0 })
+    await pointerDown(w.get('.plancia-sidebar__header'), { clientX: 0, clientY: 0 })
     expect(aside(w).attributes('data-dragging')).toBe('')
     window.dispatchEvent(new MouseEvent('pointermove', { clientX: 30, clientY: 20 }))
     window.dispatchEvent(new MouseEvent('pointerup'))
@@ -195,7 +203,7 @@ describe('PlanciaSidebar', () => {
 
   it('does not start a drag from an interactive header control', async () => {
     const w = mount(PlanciaSidebar, { props: { mode: 'floating', draggable: true } })
-    await w.get('.plancia-sidebar__toggle').trigger('pointerdown', { clientX: 0, clientY: 0 })
+    await pointerDown(w.get('.plancia-sidebar__toggle'), { clientX: 0, clientY: 0 })
     expect(aside(w).attributes('data-dragging')).toBeUndefined()
   })
 })

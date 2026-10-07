@@ -1,6 +1,6 @@
 # Dev image for the plancia playground + test runner.
 # Not a production artifact: the library itself ships as an npm package (dist/).
-FROM node:22-alpine
+FROM node:24-alpine
 
 WORKDIR /app
 
