@@ -7,12 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-10-07
+
+### Fixed
+
+- **`PlanciaModal` slot types** — the published declarations typed its slots
+  as `any`. They are now declared: `default` and `footer` receive
+  `ModalSlotProps` (`{ close }`), `title` receives nothing. The runtime code
+  is unchanged.
+
 ### Changed
 
 - **Releases ship on GitHub, not npm** — each version tag gets its package
   attached to its GitHub release (`plancia-X.Y.Z.tgz`, built by the new
   `release` workflow); install the release URL. The npm package stops at
   0.3.0, whose GitHub release carries the same tarball, byte for byte.
+- **The build fails on declaration errors** — a type error in the `.d.ts`
+  pass now stops `npm run build`, and with it CI and the release workflow,
+  instead of shipping declarations degraded to `any`.
 
 ## [0.3.0] - 2026-07-01
 
@@ -161,5 +173,7 @@ products-dc) into a standalone, content-agnostic library.
 - Zero runtime dependencies. Peers: `vue ^3.5`, `pinia ^2.2 || ^3`,
   `vue-router ^4` (optional).
 
+[0.3.1]: https://github.com/daniele-chiappa/plancia/releases/tag/v0.3.1
+[0.3.0]: https://github.com/daniele-chiappa/plancia/releases/tag/v0.3.0
 [0.2.0]: https://github.com/daniele-chiappa/plancia/releases/tag/v0.2.0
 [0.1.0]: https://github.com/daniele-chiappa/plancia/releases/tag/v0.1.0

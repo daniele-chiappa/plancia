@@ -13,6 +13,14 @@ export default defineConfig({
       include: ['src'],
       exclude: ['src/**/*.test.ts', 'src/playground/**'],
       rollupTypes: true,
+      // The declaration pass only logs its type errors and still writes
+      // `dist/index.d.ts`, degraded to `any` where it could not infer a type:
+      // fail the build instead, so a release never ships such declarations.
+      afterDiagnostic(diagnostics) {
+        if (diagnostics.length) {
+          throw new Error(`vite-plugin-dts: ${diagnostics.length} type error(s), see above`)
+        }
+      },
     }),
   ],
   resolve: {

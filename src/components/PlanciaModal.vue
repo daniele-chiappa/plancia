@@ -7,7 +7,7 @@
  * ref-counted across stacked modals. Themed with `--plancia-dialog-*` CSS
  * variables (no Tailwind); no Pinia. See ADR-002.
  */
-import { computed, nextTick, onBeforeUnmount, ref, useId, useSlots, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, useId, watch } from 'vue'
 import '../style.css'
 import { isTopModal, popModal, pushModal } from '../dialog/modalStack'
 import { usePlanciaConfig } from '../config/usePlanciaConfig'
@@ -37,7 +37,17 @@ const props = withDefaults(
 
 const emit = defineEmits<{ close: [] }>()
 
-const slots = useSlots()
+// Declared rather than inferred from the template: `hasHeader` reads
+// `slots.title` and the template reads `hasHeader`, a cycle that left the
+// published slot types as `any`.
+const slots = defineSlots<{
+  /** Dialog body. */
+  default?(props: ModalSlotProps): any
+  /** Header content, in place of the `title` prop. */
+  title?(): any
+  /** Footer row, e.g. the action buttons. */
+  footer?(props: ModalSlotProps): any
+}>()
 const cfg = usePlanciaConfig()
 const dlgDefaults = computed(() => cfg?.value.components?.dialog?.defaults)
 const escClose = computed(() => props.closeOnEsc ?? dlgDefaults.value?.closeOnEsc ?? true)
