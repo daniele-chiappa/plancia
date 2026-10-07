@@ -14,8 +14,12 @@ app must already provide:
 ## Install
 
 ```bash
-npm install plancia
+npm install https://github.com/daniele-chiappa/plancia/releases/download/v0.3.0/plancia-0.3.0.tgz
 ```
+
+Every release attaches its package to the [GitHub release](https://github.com/daniele-chiappa/plancia/releases)
+of its tag: replace the version in the URL with the one you want. The npm
+package stops at 0.3.0.
 
 (The package ships prebuilt ESM + `.d.ts`, so your bundler/TS version does not
 have to match the one used to build plancia.)

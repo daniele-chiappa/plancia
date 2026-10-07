@@ -1,6 +1,6 @@
 # plancia
 
-[![CI](https://github.com/daniele-chiappa/plancia/actions/workflows/ci.yml/badge.svg)](https://github.com/daniele-chiappa/plancia/actions/workflows/ci.yml) [![npm version](https://img.shields.io/npm/v/plancia.svg)](https://www.npmjs.com/package/plancia) [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![CI](https://github.com/daniele-chiappa/plancia/actions/workflows/ci.yml/badge.svg)](https://github.com/daniele-chiappa/plancia/actions/workflows/ci.yml) [![release](https://img.shields.io/github/v/release/daniele-chiappa/plancia)](https://github.com/daniele-chiappa/plancia/releases) [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 > A niri-style **tiling window manager** for Vue 3 — a scrollable strip of
 > resizable, content-agnostic "windows".
@@ -41,8 +41,13 @@ chrome and a pure, testable store.
 ## Quick start
 
 ```bash
-npm install plancia    # peers: vue ^3.5, pinia ^2.2|^3  (vue-router ^4 optional)
+npm install https://github.com/daniele-chiappa/plancia/releases/download/v0.3.0/plancia-0.3.0.tgz
+# peers: vue ^3.5, pinia ^2.2|^3  (vue-router ^4 optional)
 ```
+
+Each release attaches its package to the [GitHub release](https://github.com/daniele-chiappa/plancia/releases)
+of its tag; install the URL of the version you want. The npm package stops at
+0.3.0 (`npm install plancia@0.3.0` still works).
 
 ```ts
 // main.ts — Pinia must be active

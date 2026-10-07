@@ -5,6 +5,15 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- **Releases ship on GitHub, not npm** — each version tag gets its package
+  attached to its GitHub release (`plancia-X.Y.Z.tgz`, built by the new
+  `release` workflow); install the release URL. The npm package stops at
+  0.3.0, whose GitHub release carries the same tarball, byte for byte.
+
 ## [0.3.0] - 2026-07-01
 
 ### Added

@@ -1,0 +1,68 @@
+name: Release
+
+# Attaches the package tarball to the GitHub release of each version tag.
+# Consumers install plancia from
+#   https://github.com/daniele-chiappa/plancia/releases/download/vX.Y.Z/plancia-X.Y.Z.tgz
+# (the npm package stops at 0.3.0). Run it by hand with an existing tag to
+# build that tag again; a tarball already attached is never replaced, so a
+# release's bytes, and the integrity consumers locked, never change.
+on:
+  push:
+    tags: ["v*.*.*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to build, e.g. v0.3.0"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
+      - name: Pack
+        id: pack
+        run: |
+          version="${TAG#v}"
+          if [ "$(node -p "require('./package.json').version")" != "$version" ]; then
+            echo "package.json version does not match the tag $TAG"
+            exit 1
+          fi
+          npm pack
+          echo "file=plancia-$version.tgz" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Attach to the release
+        env:
+          FILE: ${{ steps.pack.outputs.file }}
+          VERSION: ${{ steps.pack.outputs.version }}
+        run: |
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            # The notes are the version's section of the CHANGELOG.
+            awk -v ver="$VERSION" '$0 ~ "^## \\[" ver "\\]" {f=1; next} f && /^## \[/ {exit} f {print}' \
+              CHANGELOG.md > notes.md
+            [ -s notes.md ] || echo "See CHANGELOG.md." > notes.md
+            gh release create "$TAG" --verify-tag --title "plancia $VERSION" --notes-file notes.md
+          fi
+          if gh release view "$TAG" --json assets --jq '.assets[].name' | grep -qxF "$FILE"; then
+            echo "$FILE is already attached to $TAG: left as it is"
+          else
+            gh release upload "$TAG" "$FILE"
+          fi
