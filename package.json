@@ -49,8 +49,8 @@
     "prepublishOnly": "npm run build",
     "preview": "vite preview",
     "typecheck": "vue-tsc --noEmit",
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "test": "vitest run --dir src",
+    "test:watch": "vitest --dir src"
   },
   "peerDependencies": {
     "pinia": "^2.2.0 || ^3.0.0",
