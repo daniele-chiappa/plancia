@@ -28,7 +28,7 @@ edges:
 ## Install
 
 ```bash
-npm install https://github.com/daniele-chiappa/plancia/releases/download/diagrams-v0.3.0/plancia-diagrams-0.3.0.tgz
+npm install https://github.com/daniele-chiappa/plancia/releases/download/diagrams-v0.4.0/plancia-diagrams-0.4.0.tgz
 # peer: vue ^3.5
 ```
 
@@ -132,6 +132,37 @@ Eisenhower, impact and effort, SWOT, a project in phases).
   yaml, twin)` writes the block with its twin made, written again or taken
   away.
 
+## Pipelines
+
+The package also reads, draws and edits the pipelines of gosidian (its
+ADR-035): a ```` ```pipeline ```` block of YAML with a `trigger` and `nodes`,
+each with its type (`use`), its settings (`with`) and the nodes it waits for
+(`after`; unset, the node before it).
+
+```vue
+<PipelineEditor v-model:source="yaml" :catalog="nodeTypes" :run="run" :problems="serverProblems" />
+<PipelineView :source="yaml" :catalog="nodeTypes" :run="run" />
+```
+
+- `catalog` is the node types the page's server has, with the JSON Schemas
+  of their settings and output (`{type, group, description, input_schema,
+  output_schema}`): the package knows no server. A node's settings are a
+  form from its schema; `format` in a text says how to edit it (multiline,
+  code). The texts offer the `{{ }}` references a node may read: the
+  trigger's fields, the run's, and the outputs of the nodes before it.
+- On the drawing a node is added from the types, dragged (the first drag
+  fixes them all, in `layout:`, which the server ignores), joined to the
+  node it waits for, and deleted with its waits handed on. The trigger is
+  a node too, and its panel sets its kind and fields.
+- `run` (`{status, steps: {id: {status, error, output, …}}}`) colours each
+  node by how it went, and a node's panel shows its error and output.
+- `problems` are the page's (the server's checks of the text as it is);
+  the package lists what it reads wrong itself, on its lines.
+- `editPipeline(source, ops)` (`addNode`, `connect`, `removeNode`,
+  `renameNode`, `setWith`, `setTrigger`, `move`…) keeps what it does not
+  touch as written, as `editDiagram` does; `readPipeline`,
+  `exprSuggestions` and `pipelineGraph` are the steps.
+
 ## API
 
 | Export | |
@@ -142,6 +173,8 @@ Eisenhower, impact and effort, SWOT, a project in phases).
 | `diagramLinks(d)` | the links of a diagram |
 | `toMermaid(d, opts?)`, `fromMermaid(text)` | a diagram as Mermaid, and Mermaid as a diagram (`{source, warnings}`, async) |
 | `toCanvas(d)`, `fromCanvas(json)` | a flow as an Obsidian canvas, and a canvas as a flow |
+| `<PipelineEditor>`, `<PipelineView>` | a ```` ```pipeline ```` block edited and drawn, with `catalog`, `run` and `problems` |
+| `readPipeline`, `editPipeline`, `exprSuggestions`, `pipelineGraph` | a pipeline read, changed, its references, its graph |
 | `diagramToSVG(d, at?)` | any diagram's drawing as an SVG file, without a view (async: Mermaid's kinds load Mermaid) |
 | `matrixToSVG(m, palette, measure)` | a matrix's drawing as an SVG file |
 | `<DiagramEditor>` | props `source` (`v-model:source`), `labels`, `linkSuggest`, `height`; `undo()`, `redo()` and `exportSVG()` (async) through a template ref |

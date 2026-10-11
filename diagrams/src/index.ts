@@ -46,3 +46,14 @@ export {
   type ReadyTemplate,
 } from './templates'
 export { curved } from './layout/layout'
+
+// Pipelines of gosidian (ADR-035): read, drawn and edited (IMP-169, F4).
+export * from './pipeline/types'
+export { readPipeline, ancestors, type PipelineReadResult } from './pipeline/read'
+export { editPipeline, PipelineEditError, type PipelineOp, type PipelineEditResult } from './pipeline/edit'
+export { exprSuggestions, exprAt, completeExpr, type ExprSuggestion } from './pipeline/expr'
+export { pipelineGraph } from './pipeline/graph'
+export { default as PipelineView } from './components/PipelineView.vue'
+export { default as PipelineEditor } from './components/PipelineEditor.vue'
+export type { PipelineSelection } from './components/PipelineCanvas.vue'
+export { DEFAULT_PIPELINE_LABELS, type PipelineLabels } from './labels'

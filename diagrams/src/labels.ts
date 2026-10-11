@@ -195,3 +195,139 @@ export const DEFAULT_EDITOR_LABELS: DiagramEditorLabels = {
   importCancel: 'Cancel',
   importWarnings: 'Converted. Left out:',
 }
+
+/** The words of the pipeline drawing and editor, English by default. */
+export interface PipelineLabels {
+  trigger: string
+  triggers: Record<'manual' | 'external' | 'ingest' | 'schedule', string>
+  statuses: Record<'pending' | 'queued' | 'running' | 'waiting' | 'done' | 'failed' | 'skipped' | 'canceled', string>
+  drawing: string
+  yaml: string
+  undo: string
+  redo: string
+  addNode: string
+  remove: string
+  relayout: string
+  fit: string
+  zoomIn: string
+  zoomOut: string
+  palette: string
+  base: string
+  node: string
+  id: string
+  type: string
+  settings: string
+  more: string
+  when: string
+  unless: string
+  each: string
+  attempts: string
+  backoff: string
+  timeout: string
+  onError: string
+  onErrorStop: string
+  onErrorContinue: string
+  waitsFor: string
+  startsAtOnce: string
+  edge: string
+  edgeHint: string
+  triggerOn: string
+  kinds: string
+  folder: string
+  every: string
+  required: string
+  structured: string
+  invalidValue: string
+  unknownType: string
+  otherSettings: string
+  problems: string
+  serverProblem: string
+  line: string
+  noProblems: string
+  broken: string
+  connectHint: string
+  run: string
+  status: string
+  duration: string
+  attempt: string
+  error: string
+  output: string
+  outputTruncated: string
+  waitingUntil: string
+  none: string
+  yes: string
+  no: string
+  exprHint: string
+}
+
+export const DEFAULT_PIPELINE_LABELS: PipelineLabels = {
+  trigger: 'Start',
+  triggers: { manual: 'By hand', external: 'From outside', ingest: 'On arrival', schedule: 'On schedule' },
+  statuses: {
+    pending: 'Pending',
+    queued: 'Queued',
+    running: 'Running',
+    waiting: 'Waiting',
+    done: 'Done',
+    failed: 'Failed',
+    skipped: 'Skipped',
+    canceled: 'Canceled',
+  },
+  drawing: 'Drawing',
+  yaml: 'YAML',
+  undo: 'Undo',
+  redo: 'Redo',
+  addNode: 'Add a node',
+  remove: 'Delete',
+  relayout: 'Lay out again',
+  fit: 'Fit',
+  zoomIn: 'Zoom in',
+  zoomOut: 'Zoom out',
+  palette: 'Node types',
+  base: 'Base',
+  node: 'Node',
+  id: 'Id',
+  type: 'Type',
+  settings: 'Settings',
+  more: 'When and how',
+  when: 'Only when',
+  unless: 'Skip when',
+  each: 'For each',
+  attempts: 'Attempts',
+  backoff: 'Wait before trying again',
+  timeout: 'Timeout',
+  onError: 'On error',
+  onErrorStop: 'Stop the run',
+  onErrorContinue: 'Go on',
+  waitsFor: 'Waits for',
+  startsAtOnce: 'Starts with the run',
+  edge: 'Wait',
+  edgeHint: 'Delete takes this wait away: the second node no longer waits for the first.',
+  triggerOn: 'Starts',
+  kinds: 'File extensions',
+  folder: 'Folder',
+  every: 'Every',
+  required: 'needed',
+  structured: 'YAML or JSON',
+  invalidValue: 'Not valid YAML:',
+  unknownType: 'This server has no such node type.',
+  otherSettings: 'Other settings',
+  problems: 'This pipeline has problems:',
+  serverProblem: 'The server would not run it:',
+  line: 'line',
+  noProblems: 'No problems.',
+  broken: 'The YAML does not read: fix it in the YAML tab to edit the drawing.',
+  connectHint: 'Drag from the dot under a node to another node: the second waits for the first. Delete removes what is selected.',
+  run: 'Run',
+  status: 'Status',
+  duration: 'Duration',
+  attempt: 'Attempt',
+  error: 'Error',
+  output: 'Output',
+  outputTruncated: 'cut: the output is longer',
+  waitingUntil: 'Waiting until',
+  none: 'None',
+  yes: 'Yes',
+  no: 'No',
+  exprHint: 'Type {{ for the values of the trigger, the run and the nodes before this one.',
+}

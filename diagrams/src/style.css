@@ -674,3 +674,354 @@
   margin: 0.2rem 0 0;
   padding-left: 1.2rem;
 }
+
+/* Pipelines (IMP-169, F4): a node is its id over its type; a plugin's has a
+   purple edge, an unknown type a dashed one; in a run, the colour of its
+   state. */
+.pd-pnode {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1px;
+  padding: 4px 12px;
+  border: 1.25px solid var(--pd-border);
+  border-left: 4px solid var(--pd-accent);
+  border-radius: 6px;
+  background: var(--pd-node);
+  color: var(--pd-text);
+  font-size: 13px;
+  line-height: 18px;
+  text-align: left;
+}
+.pd-pnode[data-plugin] {
+  border-left-color: #8250df;
+}
+.pd-pnode[data-unknown] {
+  border-style: dashed;
+  border-left-color: var(--pd-warning);
+}
+.pd-pnode[data-trigger] .pd-pnode__use {
+  font-family: inherit;
+}
+.pd-pnode[data-trigger] {
+  align-items: center;
+  border-left-width: 1.25px;
+  border-radius: 999px;
+  background: var(--pd-accent-soft);
+  text-align: center;
+}
+.pd-pnode__id {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pd-pnode__use {
+  color: var(--pd-muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pd-pnode__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--pd-muted);
+  font-size: 12px;
+}
+.pd-pnode__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--pd-muted);
+}
+.pd-pnode[data-status='running'] .pd-pnode__dot,
+.pd-pnode[data-status='queued'] .pd-pnode__dot {
+  background: var(--pd-accent);
+  animation: pd-pulse 1s ease-in-out infinite;
+}
+.pd-pnode[data-status='waiting'] .pd-pnode__dot {
+  background: var(--pd-warning);
+}
+.pd-pnode[data-status='done'] .pd-pnode__dot {
+  background: #1a7f37;
+}
+.pd-pnode[data-status='failed'] .pd-pnode__dot {
+  background: #cf222e;
+}
+.pd-pnode[data-status='done'] {
+  border-color: color-mix(in srgb, #1a7f37 55%, var(--pd-border));
+}
+.pd-pnode[data-status='failed'] {
+  border-color: #cf222e;
+  background: color-mix(in srgb, #cf222e 10%, var(--pd-node));
+}
+.pd-pnode[data-status='running'] {
+  border-color: var(--pd-accent);
+}
+.pd-pnode[data-status='waiting'] {
+  border-color: var(--pd-warning);
+}
+.pd-pnode[data-status='skipped'],
+.pd-pnode[data-status='canceled'] {
+  opacity: 0.55;
+}
+.pd-pnode[data-selected] {
+  outline: 2px solid var(--pd-accent);
+  outline-offset: 2px;
+}
+.pd-pnode[data-editable] {
+  cursor: grab;
+}
+@keyframes pd-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pd-pnode__dot {
+    animation: none !important;
+  }
+}
+.pd-pnode .vue-flow__handle {
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--pd-surface);
+  background: var(--pd-accent);
+  opacity: 0;
+}
+.pd-pnode[data-editable]:hover .vue-flow__handle,
+.pd-pnode[data-selected] .vue-flow__handle {
+  opacity: 1;
+}
+.plancia-pipeline .plancia-diagram__head {
+  justify-content: flex-end;
+}
+
+/* The node types, under "Add a node". */
+.pd-palette {
+  position: relative;
+  display: inline-flex;
+}
+.pd-palette__menu {
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  min-width: 18rem;
+  max-height: 22rem;
+  overflow-y: auto;
+  padding: 0.25rem;
+  border: 1px solid var(--pd-border);
+  border-radius: 6px;
+  background: var(--pd-surface);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.12);
+}
+.pd-palette__group {
+  padding: 0.35rem 0.5rem 0.15rem;
+  color: var(--pd-muted);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.pd-palette__menu button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  padding: 0.3rem 0.5rem;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--pd-text);
+  text-align: left;
+}
+.pd-palette__menu button span {
+  color: var(--pd-muted);
+  font-size: 12px;
+}
+.pd-palette__menu button:hover,
+.pd-palette__menu button:focus-visible {
+  background: var(--pd-accent-soft);
+}
+
+/* A text field with the {{ }} references. */
+.pd-expr {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+.pd-expr__input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 3px 6px;
+  border: 1px solid var(--pd-border);
+  border-radius: 4px;
+  background: var(--pd-surface);
+  color: var(--pd-text);
+  font: inherit;
+  font-size: 13px;
+}
+textarea.pd-expr__input {
+  resize: vertical;
+}
+.pd-expr__input--code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+}
+.pd-expr__list {
+  position: absolute;
+  z-index: 20;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: 14rem;
+  overflow-y: auto;
+  margin: 2px 0 0;
+  padding: 0.2rem;
+  list-style: none;
+  border: 1px solid var(--pd-border);
+  border-radius: 6px;
+  background: var(--pd-surface);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.12);
+}
+.pd-expr__list li {
+  display: flex;
+  flex-direction: column;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.pd-expr__list li span {
+  color: var(--pd-muted);
+  font-size: 11px;
+}
+.pd-expr__list li[aria-selected='true'],
+.pd-expr__list li:hover {
+  background: var(--pd-accent-soft);
+}
+
+/* The settings of a node. */
+.pd-schema-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+.pd-schema-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.pd-schema-form__name {
+  display: flex;
+  gap: 0.4rem;
+  align-items: baseline;
+  font-size: 12px;
+}
+.pd-schema-form__name em {
+  color: var(--pd-muted);
+  font-size: 11px;
+}
+.pd-schema-form__hint {
+  color: var(--pd-muted);
+  font-size: 11px;
+}
+.pd-schema-form__error {
+  color: #cf222e;
+  font-size: 11px;
+}
+.pd-pipeline__panel {
+  max-height: 100%;
+  overflow-y: auto;
+}
+.pd-editor__main[data-mode='flow'] .pd-pipeline__panel {
+  min-width: 0;
+}
+@container (min-width: 721px) {
+  .plancia-pipeline-editor .pd-editor__main[data-mode='flow'] {
+    grid-template-columns: minmax(0, 1fr) 20rem;
+  }
+}
+.pd-pipeline__panel h4,
+.pd-pipeline__panel h5 {
+  margin: 0.4rem 0 0;
+  font-size: 12px;
+}
+.pd-pipeline__warn {
+  color: var(--pd-warning);
+}
+.pd-pipeline__more summary {
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+}
+.pd-pipeline__more label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 0.4rem;
+  font-size: 12px;
+  color: var(--pd-muted);
+}
+.pd-pipeline__after {
+  margin: 0.4rem 0;
+  font-size: 12px;
+}
+.pd-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin: 0 0.2rem;
+  padding: 0 0.35rem;
+  border: 1px solid var(--pd-border);
+  border-radius: 999px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.pd-chip button {
+  padding: 0 2px;
+  border: 0;
+  background: transparent;
+  color: var(--pd-muted);
+  cursor: pointer;
+}
+.pd-pipeline__run {
+  margin: 0.4rem 0;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--pd-border);
+  border-radius: 6px;
+  background: var(--pd-group);
+  font-size: 12px;
+}
+.pd-pipeline__run dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.1rem 0.6rem;
+  margin: 0.2rem 0;
+}
+.pd-pipeline__run dt {
+  color: var(--pd-muted);
+}
+.pd-pipeline__run dd {
+  margin: 0;
+}
+.pd-pipeline__error {
+  margin: 0.3rem 0;
+  color: #cf222e;
+  white-space: pre-wrap;
+}
+.pd-pipeline__output {
+  max-height: 12rem;
+  overflow: auto;
+  margin: 0.2rem 0 0;
+  padding: 0.35rem;
+  border-radius: 4px;
+  background: var(--pd-surface);
+  font-size: 11px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watchEffect } from 'vue'
-import { DiagramEditor, DiagramView, type DiagramLinkEvent } from '../src'
+import { DiagramEditor, DiagramView, PipelineEditor, PipelineView, type DiagramLinkEvent } from '../src'
+import { CATALOG, PIPELINE, RUN } from './pipeline-sample'
 
 // Every valid example, then an editor: what an agent writes, as the page
 // draws it. The theme switch sets plancia's core variables, as a consumer
@@ -18,6 +19,10 @@ const editor = ref<InstanceType<typeof DiagramView> | null>(null)
 // ?edit=<example>: the editor on one example, its YAML shown as it changes.
 const editName = new URLSearchParams(location.search).get('edit')
 const edited = ref(examples.find((e) => editName && e.name.includes(editName))?.src ?? '')
+// ?pipeline: the pipeline editor, with a run (&run) or without.
+const pipelineMode = new URLSearchParams(location.search).has('pipeline')
+const withRun = new URLSearchParams(location.search).has('run')
+const pipelineSource = ref(PIPELINE)
 const notes = ['team/frontend', 'team/backend', 'team/pipelines/arrivals', 'gosidian/hot']
 async function linkSuggest(q: string) {
   return notes.filter((n) => n.includes(q)).map((n) => ({ label: n, link: `[[${n}]]` }))
@@ -48,16 +53,23 @@ function exportSvg() {
       <label><input v-model="dark" type="checkbox" data-theme-toggle /> dark</label>
       <span v-if="last" class="pg-last" data-last-link>{{ last }}</span>
     </header>
-    <section v-if="editName" class="pg-editor" data-edit>
+    <section v-if="pipelineMode" class="pg-editor" data-pipeline>
+      <h2>Pipeline editor</h2>
+      <PipelineEditor v-model:source="pipelineSource" :catalog="CATALOG" :run="withRun ? RUN : null" :height="460" />
+      <pre class="pg-source" data-source>{{ pipelineSource }}</pre>
+      <h2>Pipeline view</h2>
+      <PipelineView :source="pipelineSource" :catalog="CATALOG" :run="withRun ? RUN : null" />
+    </section>
+    <section v-else-if="editName" class="pg-editor" data-edit>
       <h2>Editor: {{ editName }}</h2>
       <DiagramEditor v-model:source="edited" :link-suggest="linkSuggest" :height="440" />
       <pre class="pg-source" data-source>{{ edited }}</pre>
     </section>
-    <section v-for="e in editName ? [] : shown" :key="e.name" class="pg-example" :data-example="e.name">
+    <section v-for="e in editName || pipelineMode ? [] : shown" :key="e.name" class="pg-example" :data-example="e.name">
       <h2>{{ e.name }}</h2>
       <DiagramView :source="e.src" @link="onLink" />
     </section>
-    <section class="pg-editor" v-if="!only && !editName">
+    <section class="pg-editor" v-if="!only && !editName && !pipelineMode">
       <h2>Editor</h2>
       <textarea v-model="source" rows="16" spellcheck="false" data-editor />
       <DiagramView ref="editor" :source="source" @link="onLink" />

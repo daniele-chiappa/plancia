@@ -3,6 +3,25 @@
 All notable changes to this package. It follows [Semantic Versioning](https://semver.org);
 its tags are `diagrams-vX.Y.Z`.
 
+## [0.4.0] - 2026-10-11
+
+### Added
+
+- The pipelines of gosidian (its ADR-035): `<PipelineEditor>` and
+  `<PipelineView>` for a ```` ```pipeline ```` block. The trigger and the
+  nodes are drawn with Vue Flow, top to bottom, laid out by dagre or at the
+  places of `layout:`. A node is added from the page's node types
+  (`catalog`), dragged, joined to the node it waits for, and set in a panel
+  whose form comes from the JSON Schema of its type; its texts offer the
+  `{{ }}` references of the trigger, the run and the nodes before it. A
+  run (`run`) colours each node by how it went, its error and output in
+  the panel; the page's `problems` are listed with the package's own.
+- `readPipeline`, `editPipeline` (on the yaml library's Document: what it
+  does not touch stays as written; a new node is written on one line or
+  several like the node before it; a node taken away hands what waited for
+  it to what it waited for), `exprSuggestions`, `completeExpr`,
+  `pipelineGraph`.
+
 ## [0.3.0] - 2026-10-11
 
 ### Added
