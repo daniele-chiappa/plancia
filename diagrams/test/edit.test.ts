@@ -227,3 +227,177 @@ describe('branches', () => {
     expect(gone(tree, r.source)).toEqual(['  - label: Frontend', '    link: "[[team/frontend]]"'])
   })
 })
+
+describe('sets and areas (venn)', () => {
+  const src = fixture('venn-3.yaml')
+
+  it('add a set in the full form, rename one written as its id as a mapping', () => {
+    const r = apply(src, [
+      { op: 'addSet', label: 'Orders' },
+      { op: 'updateSet', id: 'Quotes', label: 'Offers' },
+    ])
+    expect(r.ids).toEqual(['s1'])
+    expect(r.source).toContain('  - {id: Quotes, label: Offers}\n')
+    expect(r.source).toContain('  - {id: s1, label: Orders}\n')
+    expect(gone(src, r.source)).toEqual(['  - Quotes'])
+  })
+
+  it('take a set out of its areas; an area left as another one goes', () => {
+    const r = apply(src, { op: 'removeSet', id: 'inv' })
+    expect(r.d.sets.map((s) => s.id)).toEqual(['con', 'Quotes'])
+    // [inv, con] is [con] now, [inv, con, Quotes] the same as [con, Quotes], which stays.
+    expect(r.d.areas.map((a) => [a.sets, a.label])).toEqual([
+      [['con'], 'Framework agreements'],
+      [['con', 'Quotes'], 'Accepted quotes'],
+    ])
+  })
+
+  it('add, change and take away areas, a size of 0 leaving it out', () => {
+    const r = apply(src, [
+      { op: 'updateArea', index: 0, label: 'Frameworks', size: 0 },
+      { op: 'updateArea', index: 1, sets: ['inv', 'Quotes'] },
+      { op: 'removeArea', index: 2 },
+      { op: 'addArea', sets: ['con', 'Quotes'], label: 'Signed' },
+    ])
+    expect(r.source).toContain('  - {sets: [inv, con], label: "Frameworks"}\n')
+    expect(r.source).toContain('  - {sets: [inv, Quotes], label: "Accepted quotes"}\n')
+    expect(r.source.trimEnd().endsWith('  - {sets: [con, Quotes], label: Signed}')).toBe(true)
+  })
+})
+
+describe('quadrants and points (matrix)', () => {
+  const src = fixture('matrix-eisenhower.yaml')
+
+  it('change the axes and a quadrant in place', () => {
+    const r = apply(src, [
+      { op: 'setAxis', axis: 'x', high: 'Very urgent' },
+      { op: 'setQuadrant', index: 2, label: 'Later' },
+    ])
+    expect(gone(src, r.source)).toEqual([
+      'x: {label: Urgency, low: Not urgent, high: Urgent}',
+      'quadrants: [Plan, Do now, Drop, Delegate]',
+    ])
+    expect(r.source).toContain('x: {label: Urgency, low: Not urgent, high: Very urgent}')
+    expect(r.source).toContain('quadrants: [Plan, Do now, Later, Delegate]')
+  })
+
+  it('an axis written as its label stays a text until it gets an end', () => {
+    const one = apply('kind: matrix\nx: U\ny: I\nquadrants: [a, b, c, d]\nitems: []\n', { op: 'setAxis', axis: 'y', label: 'Importance' })
+    expect(one.source).toContain('y: Importance\n')
+    const two = apply(one.source, { op: 'setAxis', axis: 'x', low: 'Low' })
+    expect(two.source).toContain('x: {label: U, low: Low}\n')
+  })
+
+  it('move, add and take away points, rounded and kept from 0 to 1', () => {
+    const r = apply(src, [
+      { op: 'updateItem', index: 0, x: 0.333, y: 1.4 },
+      { op: 'removeItem', index: 2 },
+      { op: 'addItem', label: 'Call', x: 0.5, y: 0.5 },
+    ])
+    expect(r.d.matrix!.items.map((i) => [i.label, i.x, i.y])).toEqual([
+      ['Release v2.76', 0.33, 1],
+      ['Tidy the hot file', 0.3, 0.6],
+      ['Call', 0.5, 0.5],
+    ])
+  })
+
+  it('a point added to items: [] goes on a line of its own', () => {
+    const r = apply('kind: matrix\nx: U\ny: I\nquadrants: [a, b, c, d]\nitems: []\n', { op: 'addItem', label: 'A', x: 0.2, y: 0.4 })
+    expect(r.source).toBe('kind: matrix\nx: U\ny: I\nquadrants: [a, b, c, d]\nitems:\n  - {label: A, x: 0.2, y: 0.4}\n')
+  })
+})
+
+describe('the grid (matrix)', () => {
+  const src = fixture('matrix-grid.yaml')
+
+  it('renames rows and columns, sets cells, a short row padded', () => {
+    const short = src.replace('  - [Opportunities, Threats]', '  - [Opportunities]')
+    const r = apply(short, [
+      { op: 'renameRow', index: 0, label: 'Inside' },
+      { op: 'renameColumn', index: 1, label: 'Hurts' },
+      { op: 'setCell', row: 1, column: 1, text: 'Threats' },
+      { op: 'setCell', row: 0, column: 0, text: 'Strong' },
+    ])
+    expect(r.source).toContain('rows: [Inside, External]')
+    expect(r.source).toContain('columns: [Helpful, Hurts]')
+    expect(r.source).toContain('  - [Strong, Weaknesses]\n  - [Opportunities, Threats]\n')
+  })
+
+  it('adds and takes away rows and columns with their cells', () => {
+    const r = apply(src, [
+      { op: 'addColumn', index: 1, label: 'Neutral' },
+      { op: 'addRow', index: 0, label: 'Top' },
+      { op: 'removeRow', index: 2 },
+      { op: 'removeColumn', index: 0 },
+    ])
+    expect(r.d.matrix).toMatchObject({ rows: ['Top', 'Internal'], columns: ['Neutral', 'Harmful'], cells: [[], ['', 'Weaknesses']] })
+  })
+
+  it('refuses a cell outside the grid', () => {
+    expect(() => editDiagram(src, { op: 'setCell', row: 5, column: 0, text: 'x' })).toThrow('no cell 5, 0')
+  })
+})
+
+describe('tasks and sections (gantt)', () => {
+  const src = fixture('gantt-sections.yaml')
+  const ref = (section: number, index: number) => ({ section, index })
+
+  it('change a task in place: start and after, end and days replace each other', () => {
+    const r = apply(src, [
+      { op: 'updateTask', task: ref(0, 1), start: '2026-10-10' },
+      { op: 'updateTask', task: ref(0, 0), days: 2 },
+      { op: 'updateTask', task: ref(1, 0), status: '', label: 'The plugins' },
+    ])
+    expect(r.source).toContain('{id: nodes, label: "Base nodes", start: 2026-10-10, days: 1, status: done}')
+    expect(r.source).toContain('{id: runner, label: "Job runner", start: 2026-10-08, days: 2, status: done}')
+    expect(r.source).toContain('{id: plugins, label: "The plugins", after: nodes, days: 2, link: "[[gosidian/docs/improvements/IMP-168]]"}')
+  })
+
+  it('add a task with an id, move it, and take one away: what came after it comes after what it came after', () => {
+    const r = apply(src, [
+      { op: 'addTask', section: 0, index: 2, label: 'Docs', after: 'nodes', days: 1 },
+      { op: 'moveTask', task: ref(0, 2), section: 1, index: 0 },
+      { op: 'removeTask', task: ref(0, 1) },
+    ])
+    expect(r.ids).toEqual(['t1'])
+    const tasks = r.d.sections.map((s) => s.tasks.map((t) => [t.id || t.label, t.start || t.after]))
+    expect(tasks).toEqual([
+      [['runner', '2026-10-08']],
+      [
+        ['t1', 'runner'],
+        ['plugins', 'runner'],
+        ['Release', 'plugins'],
+      ],
+    ])
+  })
+
+  it('a task taken away that started gives its start to the ones after it', () => {
+    const r = apply(src, { op: 'removeTask', task: ref(0, 0) })
+    expect(r.d.sections[0]!.tasks[0]).toMatchObject({ id: 'nodes', start: '2026-10-08', after: '' })
+  })
+
+  it('tasks without sections become the first section when one is added', () => {
+    const tasks = fixture('gantt-tasks.yaml')
+    const r = apply(tasks, [
+      { op: 'addSection', index: 1, label: 'Later' },
+      { op: 'addTask', section: 1, index: 0, label: 'Follow up', start: '2026-11-20', days: 1 },
+    ])
+    expect(r.source).toBe(
+      '# Tasks without sections.\nkind: gantt\nsections:\n  - tasks:\n' +
+        '      - {id: a, label: Draft, start: 2026-11-02, days: 3}\n' +
+        '      - {id: b, label: Review, after: a, days: 2, status: critical}\n' +
+        '      - {label: Go live, start: 2026-11-09, status: milestone}\n' +
+        '  - label: Later\n    tasks:\n      - {id: t1, label: Follow up, start: 2026-11-20, days: 1}\n',
+    )
+  })
+
+  it('rename and take away sections, never the last', () => {
+    const r = apply(src, [
+      { op: 'renameSection', index: 1, label: 'Release 2' },
+      { op: 'removeSection', index: 0 },
+    ])
+    expect(r.d.sections.map((s) => s.label)).toEqual(['Release 2'])
+    expect(r.d.sections[0]!.tasks[0]).toMatchObject({ id: 'plugins', start: '2026-10-08' })
+    expect(() => editDiagram(r.source, { op: 'removeSection', index: 0 })).toThrow('one section at least')
+  })
+})

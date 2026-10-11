@@ -2,8 +2,9 @@
 
 > Diagrams for Vue 3 from a YAML source: flows and trees drawn with
 > [Vue Flow](https://vueflow.dev) and [dagre](https://github.com/dagrejs/dagre),
-> mind maps and fishbones with [Mermaid](https://mermaid.js.org), each with its
-> text alternative and an SVG export.
+> mind maps, fishbones, Venns and Gantts with [Mermaid](https://mermaid.js.org),
+> matrices in an SVG of its own; each with its text alternative, an SVG export,
+> an editor, and conversions to and from Mermaid and Obsidian canvases.
 
 A diagram is a small YAML document: what it shows (nodes, branches, sets, tasks),
 with the positions an editor sets kept on the side. The YAML stays the source:
@@ -27,7 +28,7 @@ edges:
 ## Install
 
 ```bash
-npm install https://github.com/daniele-chiappa/plancia/releases/download/diagrams-v0.2.0/plancia-diagrams-0.2.0.tgz
+npm install https://github.com/daniele-chiappa/plancia/releases/download/diagrams-v0.3.0/plancia-diagrams-0.3.0.tgz
 # peer: vue ^3.5
 ```
 
@@ -63,7 +64,9 @@ Seven kinds: `flow`, `tree`, `mindmap`, `fishbone`, `venn`, `matrix`, `gantt`.
 | `tree` | Vue Flow + dagre | `root` and `children`, a branch being a text, `{Label: [children]}` or `{id, label, link, children}` |
 | `mindmap` | Mermaid | as a tree |
 | `fishbone` | Mermaid | as a tree: the root is the effect, the first level the categories, the levels below the causes |
-| `venn`, `matrix`, `gantt` | not yet: their text is shown | read and checked already |
+| `venn` | Mermaid | `sets` (`id`, `label`, `link`) and `areas` (`sets`, `label`, `size`) |
+| `matrix` | the package's SVG | quadrants (`x`, `y`, `quadrants`, `items` from 0 to 1) or a grid (`rows`, `columns`, `cells`) |
+| `gantt` | Mermaid | `sections` of `tasks` (or `tasks` alone): `start` or `after`, then `end` (the last day) or `days`, and `status` |
 
 `layout:` (optional) places ids where an editor put them: `id: {x, y, w, h}`,
 `x` and `y` being the top left corner in px. Without it the drawing lays itself
@@ -84,11 +87,17 @@ short forms and the order of the fields stay as written, what it adds is in
 the full form, positions go to `layout:`. Its Drawing tab edits a flow on
 its drawing (drag, add, join from a node's dot, delete, a panel for the
 label, shape, class, link and group of a node and the label and line of an
-edge, groups, lay out again) and a tree, a mind map or a fishbone as
-indented lines beside their drawing (Enter, Tab, Shift+Tab, Alt+↑↓, drag);
-its YAML tab edits the text, every kind included. Ctrl+Z and Ctrl+Shift+Z
-undo and redo. `linkSuggest(query)` gives the `{label, link}` the link
-fields offer: the page knows its notes, the package does not.
+edge, groups, lay out again), a tree, a mind map or a fishbone as
+indented lines beside their drawing (Enter, Tab, Shift+Tab, Alt+↑↓, drag),
+and a Venn, a matrix or a Gantt as a form beside theirs: sets and shared
+parts; axes, quadrants and points, which are also dragged on the drawing;
+a grid as a table; a Gantt's sections and tasks, a task starting on a date
+or after another and lasting days or until a date. Its YAML tab edits the
+text, every kind included. **Import** puts a pasted Mermaid (a flowchart, a
+mind map, a Gantt, a quadrant chart) or an Obsidian canvas in place of the
+diagram, and says what it left out. Ctrl+Z and Ctrl+Shift+Z undo and redo.
+`linkSuggest(query)` gives the `{label, link}` the link fields offer: the
+page knows its notes, the package does not.
 
 The same changes are functions, for a page or a script: `editDiagram(source,
 ops)` applies operations (`move`, `addNode`, `updateEdge`, `moveBranch`…)
@@ -96,7 +105,32 @@ and gives the new text, the same text when nothing changed.
 `findDiagramBlocks(markdown)` finds the ```` ```diagram ```` blocks of a
 markdown note as gosidian's server does, and `replaceDiagramBlock` puts one
 back. `diagramTemplate(kind, words)` is a small diagram of a kind to start
-from.
+from, `readyTemplates(words)` ten more to start from (a process, an
+architecture, an organisation chart, a brainstorm, the 6M, three sets,
+Eisenhower, impact and effort, SWOT, a project in phases).
+
+## Conversions and the twin
+
+- `toMermaid(d)` writes any kind as Mermaid: a flow and a tree as a
+  `flowchart`, then `mindmap`, `ishikawa`, `venn-beta`, `quadrantChart`,
+  `block-beta` for a grid, and `gantt`. With `{portable: true}` it uses only
+  what any Mermaid 11 draws (a fishbone becomes a mind map).
+- `fromMermaid(text)` reads Mermaid with Mermaid's own parser and gives the
+  YAML of a flowchart, a mind map, a Gantt or a quadrant chart, with
+  `warnings` for what the format has no place for (styles, nested
+  subgraphs, excluded days).
+- `toCanvas(d)` writes a flow as an Obsidian canvas (JSON Canvas 1.0): text
+  cards where the drawing puts the nodes, group cards around their nodes,
+  connections between the facing sides. `fromCanvas(json)` reads one back:
+  cards as nodes at their places, a card inside a group card in that group.
+- A **twin** is a ```` ```mermaid ```` block right after a diagram's block,
+  for apps that draw Mermaid and not this format (Obsidian). Its first line is
+  `%% diagram-twin <hash>`, the hash of the YAML it was made from
+  (`diagramHash`, FNV-1a on 32 bits, which gosidian's server computes too), so
+  a twin left behind by a change is found. `twinText(yaml, mermaid)` makes
+  one, `findTwin(md, block)` finds it, and `writeDiagramBlock(md, block,
+  yaml, twin)` writes the block with its twin made, written again or taken
+  away.
 
 ## API
 
@@ -106,11 +140,15 @@ from.
 | `parseDiagram(src)` | `{diagram, problems}`: the diagram as far as it reads, and what is wrong in it, each problem on its line |
 | `diagramText(d)` | the diagram in words, the drawing's text alternative |
 | `diagramLinks(d)` | the links of a diagram |
-| `toMermaid(d)` | Mermaid source of a mind map or a fishbone |
-| `<DiagramEditor>` | props `source` (`v-model:source`), `labels`, `linkSuggest`, `height`; `undo()` and `redo()` through a template ref |
+| `toMermaid(d, opts?)`, `fromMermaid(text)` | a diagram as Mermaid, and Mermaid as a diagram (`{source, warnings}`, async) |
+| `toCanvas(d)`, `fromCanvas(json)` | a flow as an Obsidian canvas, and a canvas as a flow |
+| `diagramToSVG(d, at?)` | any diagram's drawing as an SVG file, without a view (async: Mermaid's kinds load Mermaid) |
+| `matrixToSVG(m, palette, measure)` | a matrix's drawing as an SVG file |
+| `<DiagramEditor>` | props `source` (`v-model:source`), `labels`, `linkSuggest`, `height`; `undo()`, `redo()` and `exportSVG()` (async) through a template ref |
 | `editDiagram(source, ops)` | `{source, changed, ids}`: the YAML with the operations applied, the ids given to what they added |
 | `findDiagramBlocks(md)`, `replaceDiagramBlock(md, block, yaml)` | the diagram blocks of a markdown text, and one replaced |
-| `diagramTemplate(kind, words?, today?)` | a diagram of a kind to start from |
+| `writeDiagramBlock`, `findTwin`, `twinText`, `twinHash`, `diagramHash` | a block written with its twin, and the twin's parts |
+| `diagramTemplate(kind, words?, today?)`, `readyTemplates(words?, base?, today?)` | diagrams to start from |
 | `flowGraph`, `treeGraph`, `layoutGraph`, `flowToSVG` | the steps of a flow's drawing, for a page that draws it itself |
 
 ## Theme

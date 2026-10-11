@@ -19,6 +19,11 @@ export interface Palette {
   ext: string
   /** One colour per branch of a mind map, from fixed hues on the surface. */
   sections: string[]
+  /** The fixed hues themselves (the accent first), for lines and the sets of a Venn. */
+  hues: string[]
+  /** A critical task: its line, and its fill on the surface. */
+  critical: string
+  criticalSoft: string
   fontFamily: string
 }
 
@@ -38,6 +43,9 @@ export const DEFAULT_PALETTE: Palette = {
   data: '#e6f4ea',
   ext: '#f1ebfb',
   sections: [],
+  hues: ['#3b82f6', '#1a7f37', '#8250df', '#bc4c00', '#0f766e', '#bf3989'],
+  critical: '#cf222e',
+  criticalSoft: '#f5d3d5',
   fontFamily: 'system-ui, sans-serif',
 }
 
@@ -52,7 +60,7 @@ function mix(a: string, b: string, share: number): string {
   return `#${x.map((v, i) => hex2(Math.round(v * share + y[i]! * (1 - share)))).join('')}`
 }
 
-const VARS: Record<Exclude<keyof Palette, 'dark' | 'fontFamily' | 'sections'>, string> = {
+const VARS: Record<Exclude<keyof Palette, 'dark' | 'fontFamily' | 'sections' | 'hues' | 'critical' | 'criticalSoft'>, string> = {
   surface: '--pd-surface',
   node: '--pd-node',
   text: '--pd-text',
@@ -127,5 +135,9 @@ export function readPalette(el: Element | null): Palette {
   }
   out.dark = luminance(out.surface) < 0.5
   out.sections = SECTION_HUES.map((h) => mix(h || out.accent, out.surface, out.dark ? 0.32 : 0.2))
+  // On a dark surface the hues are lighter, so lines and text stand out.
+  out.hues = SECTION_HUES.map((h) => (out.dark && h ? mix(h, '#ffffff', 0.7) : h || out.accent))
+  out.critical = out.dark ? '#ff8182' : '#cf222e'
+  out.criticalSoft = mix(out.critical, out.surface, out.dark ? 0.35 : 0.2)
   return out
 }

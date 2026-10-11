@@ -8,9 +8,9 @@ import { renderMermaid } from '../mermaid/render'
 import { readPalette } from '../theme'
 import { useThemeChange } from '../composables'
 
-// A mind map or a fishbone drawn by Mermaid, again whenever the diagram or
-// the page's theme changes. Mermaid's drawing is static, so the links of
-// its branches are listed under it.
+// A mind map, a fishbone, a Venn or a Gantt drawn by Mermaid, again
+// whenever the diagram or the page's theme changes. Mermaid's drawing is
+// static, so the links of its branches, sets and tasks are listed under it.
 const props = defineProps<{ diagram: Diagram; labels: DiagramLabels; title?: string; description?: string }>()
 const emit = defineEmits<{ open: [link: DiagramLinkEvent] }>()
 
@@ -18,17 +18,23 @@ const root = ref<HTMLElement | null>(null)
 const svg = ref('')
 const error = ref('')
 const theme = useThemeChange()
-const source = computed(() => toMermaid(props.diagram))
+// The figure has its own caption: the drawing leaves the title out.
+const source = computed(() => toMermaid(props.diagram, { title: false }))
 
 const links = computed(() => {
   const out: DiagramLinkEvent[] = []
+  const add = (link: string, label: string) => {
+    const l = link ? linkTarget(link, label) : null
+    if (l) out.push(l)
+  }
   const walk = (b: DiagramBranch | undefined) => {
     if (!b) return
-    const l = b.link ? linkTarget(b.link, b.label) : null
-    if (l) out.push(l)
+    add(b.link, b.label)
     b.children.forEach(walk)
   }
   walk(props.diagram.root)
+  for (const s of props.diagram.sets) add(s.link, s.label)
+  for (const s of props.diagram.sections) for (const t of s.tasks) add(t.link, t.label)
   return out
 })
 

@@ -13,13 +13,36 @@ export { linkTarget, type DiagramLinkEvent } from './links'
 export { flowGraph, treeGraph, type Graph, type GraphNode, type GraphEdge, type GraphGroup } from './layout/graph'
 export { layoutGraph, edgePath, type Laid, type LaidNode, type LaidEdge, type LaidGroup, type Box, type Point } from './layout/layout'
 export { createMeasure, wrapLabel, nodeSize, shapePaths, type Measure } from './layout/shapes'
-export { toMermaid, mermaidText, MERMAID_KINDS } from './mermaid/convert'
+export { toMermaid, mermaidText, MERMAID_KINDS, type MermaidOptions } from './mermaid/convert'
+export { fromMermaid, DiagramConvertError, type ConvertResult } from './mermaid/import'
+export { toCanvas, fromCanvas } from './canvas'
 export { flowToSVG } from './svg/flowSvg'
+export { matrixToSVG } from './svg/matrixSvg'
+export { diagramToSVG } from './svg/export'
 export { readPalette, DEFAULT_PALETTE, type Palette } from './theme'
 
-export { editDiagram, DiagramEditError, type DiagramOp, type EditResult, type EdgeRef, type BranchPath, type LayoutPosition } from './edit/edit'
-export { findDiagramBlocks, replaceDiagramBlock, type MarkdownDiagramBlock } from './markdown'
+export { editDiagram, DiagramEditError, type DiagramOp, type EditResult, type EdgeRef, type BranchPath, type LayoutPosition, type TaskRef, type TaskFields } from './edit/edit'
+export {
+  findDiagramBlocks,
+  replaceDiagramBlock,
+  writeDiagramBlock,
+  findTwin,
+  twinText,
+  twinHash,
+  diagramHash,
+  TWIN_MARK,
+  type MarkdownDiagramBlock,
+} from './markdown'
 export { default as DiagramEditor } from './components/DiagramEditor.vue'
 export { DEFAULT_EDITOR_LABELS, type DiagramEditorLabels } from './labels'
-export { diagramTemplate, DEFAULT_TEMPLATE_WORDS, type TemplateWords } from './templates'
+export {
+  diagramTemplate,
+  DEFAULT_TEMPLATE_WORDS,
+  readyTemplates,
+  DEFAULT_READY_WORDS,
+  READY_TEMPLATE_KINDS,
+  type TemplateWords,
+  type ReadyTemplateWords,
+  type ReadyTemplate,
+} from './templates'
 export { curved } from './layout/layout'

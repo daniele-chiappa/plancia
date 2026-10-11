@@ -2,7 +2,7 @@
 import { describe, expect, it, beforeAll } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { nextTick } from 'vue'
-import { DiagramView } from '../src'
+import { DiagramView, diagramToSVG, parseDiagram } from '../src'
 
 beforeAll(() => {
   // jsdom has no ResizeObserver; Vue Flow and the view need one.
@@ -51,12 +51,39 @@ describe('DiagramView', () => {
     expect(w.find('.plancia-diagram__flow').exists()).toBe(false)
   })
 
-  it('says the kinds it does not draw yet', async () => {
+  it('draws a quadrant matrix in its own SVG, a point with a link opening it', async () => {
     const w = mount(DiagramView, {
-      props: { source: 'kind: venn\nsets: [A, B]', labels: { pending: 'Non ancora disegnato:' } },
+      props: {
+        source: 'kind: matrix\ntitle: E\nx: {label: Urgency, low: No, high: Yes}\ny: Importance\nquadrants: [Plan, Do, Drop, Give]\nitems:\n  - {label: Release, x: 0.8, y: 0.9, link: "[[p/r]]"}\n  - {label: Mail, x: 0.2, y: 0.1}',
+      },
+      attachTo: document.body,
     })
     await settle()
-    expect(w.find('.plancia-diagram__pending').text()).toContain('Non ancora disegnato:')
-    expect(w.find('.plancia-diagram__pending').text()).toContain('Venn of 2 sets: A, B')
+    const svg = w.find('.plancia-diagram__matrix-svg svg')
+    expect(svg.exists()).toBe(true)
+    expect(svg.findAll('[data-item]')).toHaveLength(2)
+    expect(svg.text()).toContain('Do')
+    await w.find('[data-item="0"]').trigger('pointerdown')
+    await w.find('.plancia-diagram__matrix-svg').trigger('pointerup')
+    expect(w.emitted('link')?.[0]).toEqual([{ target: 'p/r', kind: 'note', label: 'Release' }])
+    const out = (w.vm as unknown as { exportSVG: () => string | null }).exportSVG()
+    expect(out).toContain('<title>E</title>')
+    expect(out).toContain('Release')
+    w.unmount()
+  })
+
+  it('draws a grid as a table', async () => {
+    const w = mount(DiagramView, { props: { source: 'kind: matrix\nrows: [In, Out]\ncolumns: [Good, Bad]\ncells: [[S, W], [O, T]]' } })
+    await settle()
+    expect(w.find('.plancia-diagram__matrix-svg svg').text().split(/\s+/)).toEqual(['Good', 'Bad', 'In', 'S', 'W', 'Out', 'O', 'T'])
+  })
+
+  it('draws a diagram as an SVG file without a view', async () => {
+    const flow = await diagramToSVG(parseDiagram('kind: flow\ntitle: F\nnodes: [a, b]\nedges: ["a -> b"]').diagram!)
+    expect(flow).toContain('<title>F</title>')
+    expect(flow).toContain('<desc>F — Flow (TB), 2 nodes, 1 edge: a → b</desc>')
+    const grid = await diagramToSVG(parseDiagram('kind: matrix\nrows: [In]\ncolumns: [Good]\ncells: [[S]]').diagram!)
+    expect(grid).toContain('>S</tspan>')
+    expect(await diagramToSVG(parseDiagram('kind: gantt\nsections: [{label: S}]').diagram!)).toBeNull()
   })
 })

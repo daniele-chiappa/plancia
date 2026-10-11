@@ -2,8 +2,15 @@
 import { computed, ref, useId, watch } from 'vue'
 import FlowEditor from './FlowEditor.vue'
 import HierarchyEditor from './HierarchyEditor.vue'
+import VennEditor from './VennEditor.vue'
+import MatrixEditor from './MatrixEditor.vue'
+import GanttEditor from './GanttEditor.vue'
 import DiagramView from './DiagramView.vue'
+import MatrixDiagram from './MatrixDiagram.vue'
 import { parseDiagram } from '../model/parse'
+import { fromMermaid } from '../mermaid/import'
+import { fromCanvas } from '../canvas'
+import { diagramToSVG } from '../svg/export'
 import type { DiagramBranch, EdgeStyle, NodeClass, NodeShape } from '../model/types'
 import { EDGE_STYLES, NODE_CLASSES, NODE_SHAPES } from '../model/types'
 import { editDiagram, type BranchPath, type DiagramOp } from '../edit/edit'
@@ -12,9 +19,11 @@ import type { FlowSelection } from './selection'
 
 /**
  * DiagramEditor — edits a diagram's YAML (`v-model:source`). The Drawing
- * tab edits a flow on its drawing and a tree, a mind map or a fishbone as
- * indented lines beside their drawing; the YAML tab edits the text itself,
- * every kind included. Every change is an operation on the YAML that keeps
+ * tab edits a flow on its drawing, a tree, a mind map or a fishbone as
+ * indented lines, and a Venn, a matrix or a Gantt as a form, each beside
+ * its drawing (a matrix's points are dragged on it); the YAML tab edits the
+ * text itself. Import puts a pasted Mermaid or Obsidian canvas in place of
+ * the diagram. Every change is an operation on the YAML that keeps
  * what it does not touch (editDiagram); Ctrl+Z and Ctrl+Shift+Z undo and
  * redo them. The problems of the YAML are listed below, line by line.
  * `linkSuggest` gives the links the link fields offer: the page knows its
@@ -49,8 +58,14 @@ const mode = computed(() => {
   if (!k) return 'broken'
   if (k === 'flow') return 'flow'
   if (k === 'tree' || k === 'mindmap' || k === 'fishbone') return 'outline'
-  return 'yaml'
+  if (k === 'matrix' && !d.value?.matrix) return 'broken'
+  return k
 })
+const hasSections = computed(() => /^sections\s*:/m.test(props.source))
+const today = (() => {
+  const t = new Date()
+  return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`
+})()
 const error = ref('')
 
 // --- history ---
@@ -122,6 +137,7 @@ function apply(ops: DiagramOp[], key?: string): string[] {
 
 const flowSel = ref<FlowSelection>(null)
 const branchSel = ref<BranchPath | null>(null)
+const itemSel = ref<number | null>(null)
 const node = computed(() => (flowSel.value?.kind === 'node' ? d.value?.nodes.find((n) => n.id === (flowSel.value as { id: string }).id) : undefined))
 const group = computed(() => (flowSel.value?.kind === 'group' ? d.value?.groups.find((g) => g.id === (flowSel.value as { id: string }).id) : undefined))
 const edge = computed(() => {
@@ -152,9 +168,12 @@ function addGroup() {
   const [id] = apply([{ op: 'addGroup', label: words.value.newGroup, nodes: node.value ? [node.value.id] : [] }])
   if (id) flowSel.value = { kind: 'group', id }
 }
-const canRemove = computed(() =>
-  mode.value === 'flow' ? !!(node.value || edge.value || group.value) : mode.value === 'outline' ? !!branchSel.value?.length : false,
-)
+const canRemove = computed(() => {
+  if (mode.value === 'flow') return !!(node.value || edge.value || group.value)
+  if (mode.value === 'outline') return !!branchSel.value?.length
+  if (mode.value === 'matrix') return itemSel.value !== null && !!d.value?.matrix?.items[itemSel.value]
+  return false
+})
 const rootEl = ref<HTMLElement | null>(null)
 function remove() {
   const s = flowSel.value
@@ -168,6 +187,9 @@ function remove() {
   } else if (mode.value === 'outline' && branchSel.value?.length) {
     apply([{ op: 'removeBranch', path: branchSel.value }])
     branchSel.value = null
+  } else if (mode.value === 'matrix' && itemSel.value !== null) {
+    apply([{ op: 'removeItem', index: itemSel.value }])
+    itemSel.value = null
   }
 }
 
@@ -259,7 +281,48 @@ function goToLine(line: number) {
 
 const value = (e: Event) => (e.target as HTMLInputElement).value
 
-defineExpose({ undo, redo })
+// --- import ---
+
+const importing = ref(false)
+const importText = ref('')
+const importNotes = ref<string[]>([])
+const converting = ref(false)
+// What an import left out is said until the diagram changes again.
+let imported = ''
+watch(
+  () => props.source,
+  (s) => {
+    if (s !== imported) importNotes.value = []
+  },
+)
+
+/** The pasted text in place of the diagram: an Obsidian canvas's JSON, or Mermaid. */
+async function runImport() {
+  const text = importText.value.trim()
+  if (!text) return
+  error.value = ''
+  converting.value = true
+  try {
+    const r = text.startsWith('{') ? fromCanvas(text) : await fromMermaid(text)
+    imported = r.source
+    commit(r.source)
+    importNotes.value = r.warnings
+    importing.value = false
+    importText.value = ''
+    tab.value = 'drawing'
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : String(e)
+  } finally {
+    converting.value = false
+  }
+}
+
+defineExpose({
+  undo,
+  redo,
+  /** The diagram's drawing as an SVG file, as the view exports it; null when it does not read. */
+  exportSVG: (): Promise<string | null> => (d.value ? diagramToSVG(d.value, rootEl.value) : Promise.resolve(null)),
+})
 </script>
 
 <template>
@@ -285,6 +348,7 @@ defineExpose({ undo, redo })
         <button v-if="tab === 'drawing'" type="button" data-action="remove" :disabled="!canRemove" @click="remove">
           {{ words.remove }}
         </button>
+        <button type="button" data-action="import" :aria-expanded="importing" @click="importing = !importing">{{ words.import }}</button>
         <button type="button" data-action="undo" :disabled="!past.length" :title="`${words.undo} (Ctrl+Z)`" @click="undo">
           ↶ {{ words.undo }}
         </button>
@@ -294,8 +358,22 @@ defineExpose({ undo, redo })
       </div>
     </div>
     <p v-if="error" class="plancia-diagram__status" role="alert">{{ error }}</p>
+    <div v-if="importing" class="pd-editor__import">
+      <p class="pd-editor__hint">{{ words.importHint }}</p>
+      <textarea v-model="importText" data-field="import" rows="8" spellcheck="false" :aria-label="words.import" />
+      <div class="pd-form__row">
+        <button type="button" data-action="import-apply" :disabled="!importText.trim() || converting" @click="runImport">{{ words.importApply }}</button>
+        <button type="button" @click="importing = false">{{ words.importCancel }}</button>
+      </div>
+    </div>
+    <div v-if="importNotes.length" class="pd-editor__notes" role="status">
+      {{ words.importWarnings }}
+      <ul>
+        <li v-for="(n, i) in importNotes" :key="i">{{ n }}</li>
+      </ul>
+    </div>
 
-    <div v-if="tab === 'drawing'" class="pd-editor__main" :data-mode="mode">
+    <div v-if="tab === 'drawing'" class="pd-editor__main" :data-mode="mode" :data-grid="d?.matrix?.rows.length ? '' : undefined">
       <template v-if="mode === 'flow' && d">
         <FlowEditor
           ref="flow"
@@ -395,9 +473,42 @@ defineExpose({ undo, redo })
         </div>
       </template>
 
-      <template v-else-if="mode === 'yaml' && d">
-        <p class="pd-editor__hint">{{ words.yamlOnly }}</p>
-        <DiagramView :diagram="d" :labels="words" />
+      <template v-else-if="(mode === 'venn' || mode === 'matrix' || mode === 'gantt') && d">
+        <div class="pd-editor__form">
+          <VennEditor v-if="mode === 'venn'" :diagram="d" :labels="words" :links-id="linksId" :suggest="suggest" @ops="(ops, key) => apply(ops, key)" />
+          <MatrixEditor
+            v-else-if="mode === 'matrix'"
+            v-model:selected="itemSel"
+            :diagram="d"
+            :labels="words"
+            :links-id="linksId"
+            :suggest="suggest"
+            @ops="(ops, key) => apply(ops, key)"
+          />
+          <GanttEditor
+            v-else
+            :diagram="d"
+            :labels="words"
+            :links-id="linksId"
+            :suggest="suggest"
+            :sections="hasSections"
+            :today="today"
+            @ops="(ops, key) => apply(ops, key)"
+          />
+        </div>
+        <div class="pd-editor__preview">
+          <figure v-if="mode === 'matrix' && !d.matrix?.rows.length" class="plancia-diagram">
+            <MatrixDiagram
+              :diagram="d"
+              :labels="words"
+              editable
+              :selected="itemSel"
+              @select="(i) => (itemSel = i)"
+              @move="(i, x, y) => apply([{ op: 'updateItem', index: i, x, y }])"
+            />
+          </figure>
+          <DiagramView v-else :diagram="d" :labels="words" :max-height="height" />
+        </div>
       </template>
 
       <p v-else class="pd-editor__hint" role="note">{{ words.broken }}</p>

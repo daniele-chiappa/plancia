@@ -57,11 +57,60 @@ export interface DiagramEditorLabels extends DiagramLabels {
   moveDown: string
   outlineHint: string
   broken: string
-  yamlOnly: string
   noProblems: string
   shapes: Record<'box' | 'pill' | 'decision' | 'data' | 'doc' | 'db' | 'circle' | 'note', string>
   classes: Record<'user' | 'data' | 'ext' | 'planned' | 'off', string>
   styles: Record<'solid' | 'dashed' | 'dotted', string>
+  // A Venn.
+  sets: string
+  areas: string
+  addSet: string
+  addArea: string
+  newSet: string
+  size: string
+  sizeHint: string
+  // A matrix.
+  axisX: string
+  axisY: string
+  axisName: string
+  low: string
+  high: string
+  quadrants: string
+  /** Top left, top right, bottom left, bottom right. */
+  quadrantNames: [string, string, string, string]
+  items: string
+  addItem: string
+  newItem: string
+  dragHint: string
+  rows: string
+  columns: string
+  addRow: string
+  addColumn: string
+  newRow: string
+  newColumn: string
+  removeRow: string
+  removeColumn: string
+  // A Gantt.
+  sections: string
+  addSection: string
+  newSection: string
+  addTask: string
+  newTask: string
+  task: string
+  starts: string
+  onDate: string
+  afterTask: string
+  lasts: string
+  untilDate: string
+  days: string
+  status: string
+  statuses: Record<'done' | 'active' | 'critical' | 'milestone', string>
+  // Import.
+  import: string
+  importHint: string
+  importApply: string
+  importCancel: string
+  importWarnings: string
 }
 
 export const DEFAULT_EDITOR_LABELS: DiagramEditorLabels = {
@@ -96,9 +145,53 @@ export const DEFAULT_EDITOR_LABELS: DiagramEditorLabels = {
   moveDown: 'Move down',
   outlineHint: 'Enter adds a branch after, Tab and Shift+Tab change its level, Alt+↑ and Alt+↓ move it.',
   broken: 'The YAML does not read: fix it in the YAML tab to edit the drawing.',
-  yamlOnly: 'This kind is edited in the YAML for now.',
   noProblems: 'No problems.',
   shapes: { box: 'Box', pill: 'Pill', decision: 'Decision', data: 'Data', doc: 'Document', db: 'Database', circle: 'Circle', note: 'Note' },
   classes: { user: 'A person', data: 'Data', ext: 'An outside system', planned: 'Planned', off: 'Off' },
   styles: { solid: 'Solid', dashed: 'Dashed', dotted: 'Dotted' },
+  sets: 'Sets',
+  areas: 'Shared parts',
+  addSet: 'Add a set',
+  addArea: 'Add a shared part',
+  newSet: 'New set',
+  size: 'Size',
+  sizeHint: 'How large, against the others (empty: as it comes)',
+  axisX: 'Across',
+  axisY: 'Up',
+  axisName: 'Name',
+  low: 'Low end',
+  high: 'High end',
+  quadrants: 'Quadrants',
+  quadrantNames: ['Top left', 'Top right', 'Bottom left', 'Bottom right'],
+  items: 'Points',
+  addItem: 'Add a point',
+  newItem: 'New point',
+  dragHint: 'Drag a point on the drawing to move it.',
+  rows: 'Rows',
+  columns: 'Columns',
+  addRow: 'Add a row',
+  addColumn: 'Add a column',
+  newRow: 'New row',
+  newColumn: 'New column',
+  removeRow: 'Delete the row',
+  removeColumn: 'Delete the column',
+  sections: 'Sections',
+  addSection: 'Add a section',
+  newSection: 'New section',
+  addTask: 'Add a task',
+  newTask: 'New task',
+  task: 'Task',
+  starts: 'Starts',
+  onDate: 'on',
+  afterTask: 'after',
+  lasts: 'Lasts',
+  untilDate: 'until',
+  days: 'days',
+  status: 'Status',
+  statuses: { done: 'Done', active: 'Under way', critical: 'Critical', milestone: 'Milestone' },
+  import: 'Import…',
+  importHint: 'Paste Mermaid (a flowchart, a mind map, a Gantt, a quadrant chart) or the JSON of an Obsidian canvas: it takes the place of this diagram.',
+  importApply: 'Convert',
+  importCancel: 'Cancel',
+  importWarnings: 'Converted. Left out:',
 }

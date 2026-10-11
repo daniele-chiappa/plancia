@@ -1,6 +1,6 @@
 import { parseDocument, isMap, isPair, isScalar, isSeq, Pair, Scalar, YAMLMap, YAMLSeq, type Document, type Node as YamlNode } from 'yaml'
 import { edgeRe, parseDiagram } from '../model/parse'
-import type { Diagram, DiagramBranch, EdgeStyle, NodeClass, NodeShape } from '../model/types'
+import type { Diagram, DiagramBranch, EdgeStyle, NodeClass, NodeShape, TaskStatus } from '../model/types'
 
 // The editor's changes to a diagram's YAML (IMP-169, F2). They work on the
 // yaml library's Document, which keeps what they do not touch as written:
@@ -27,6 +27,25 @@ export interface EdgeRef {
 /** A branch by the indices from the root: [] the root, [1, 0] the first child of its second branch. */
 export type BranchPath = number[]
 
+/** A task of a Gantt by its section (0 for tasks without sections) and its place in it. */
+export interface TaskRef {
+  section: number
+  index: number
+}
+
+/** The fields of a task an operation sets; '' (0 for days) takes one away. start and after replace each other, end and days too. */
+export interface TaskFields {
+  /** An id for a task that has none, so another can come after it; an id there stays. */
+  id?: string
+  label?: string
+  start?: string
+  after?: string
+  end?: string
+  days?: number
+  status?: TaskStatus | ''
+  link?: string
+}
+
 export type DiagramOp =
   | { op: 'move'; positions: Record<string, LayoutPosition> }
   | { op: 'relayout' }
@@ -45,6 +64,31 @@ export type DiagramOp =
   | { op: 'addBranch'; parent: BranchPath; index: number; label: string }
   | { op: 'removeBranch'; path: BranchPath }
   | { op: 'moveBranch'; path: BranchPath; parent: BranchPath; index: number }
+  | { op: 'addSet'; label: string; id?: string }
+  | { op: 'updateSet'; id: string; label?: string; link?: string }
+  | { op: 'removeSet'; id: string }
+  | { op: 'addArea'; sets: string[]; label?: string }
+  | { op: 'updateArea'; index: number; sets?: string[]; label?: string; size?: number }
+  | { op: 'removeArea'; index: number }
+  | { op: 'setAxis'; axis: 'x' | 'y'; label?: string; low?: string; high?: string }
+  | { op: 'setQuadrant'; index: number; label: string }
+  | { op: 'addItem'; label: string; x: number; y: number }
+  | { op: 'updateItem'; index: number; label?: string; x?: number; y?: number; link?: string }
+  | { op: 'removeItem'; index: number }
+  | { op: 'setCell'; row: number; column: number; text: string }
+  | { op: 'renameRow'; index: number; label: string }
+  | { op: 'renameColumn'; index: number; label: string }
+  | { op: 'addRow'; index: number; label: string }
+  | { op: 'removeRow'; index: number }
+  | { op: 'addColumn'; index: number; label: string }
+  | { op: 'removeColumn'; index: number }
+  | ({ op: 'addTask'; section: number; index: number; label: string } & Omit<TaskFields, 'label'>)
+  | ({ op: 'updateTask'; task: TaskRef } & TaskFields)
+  | { op: 'removeTask'; task: TaskRef }
+  | { op: 'moveTask'; task: TaskRef; section: number; index: number }
+  | { op: 'addSection'; index: number; label: string }
+  | { op: 'renameSection'; index: number; label: string }
+  | { op: 'removeSection'; index: number }
 
 export interface EditResult {
   source: string
@@ -590,6 +634,417 @@ class Editor {
     const n = this.detach(path)
     this.insert(target, idx, n)
   }
+
+  // --- shared by the forms ---
+
+  /** The list at a top-level key for items one per line: an empty [] becomes a block list. */
+  private block(key: string): YAMLSeq {
+    const seq = this.list(key, true)!
+    if (seq.flow && seq.items.length === 0) seq.flow = false
+    return seq
+  }
+
+  private at(seq: YAMLSeq | null, index: number, what: string): YAMLMap {
+    const it = seq?.items[index]
+    if (!isMap(it)) throw new DiagramEditError(`no ${what} ${index}`)
+    return it
+  }
+
+  /** Sets a number field (undefined leaves it); with keepZero false, 0 takes it away. */
+  private setNum(map: YAMLMap, key: string, value: number | undefined, keepZero = true) {
+    if (value === undefined) return
+    if (!keepZero && value === 0) {
+      if (map.has(key)) {
+        map.delete(key)
+        this.touch()
+      }
+      return
+    }
+    const cur = map.get(key, true)
+    if (isScalar(cur) && Number(text(cur)) === value && text(cur) !== '') return
+    if (isScalar(cur)) cur.value = value
+    else map.set(key, value)
+    this.touch()
+  }
+
+  /** Puts key in place of other in a mapping (same place), or sets it; '' takes both away. */
+  private either(map: YAMLMap, key: string, other: string, value: string | number | undefined) {
+    if (value === undefined) return
+    if (value === '' || value === 0) {
+      this.setField(map, key, '')
+      return
+    }
+    const i = map.items.findIndex((p) => isPair(p) && text(p.key) === other)
+    if (i >= 0) {
+      map.items[i] = new Pair(this.doc.createNode(key), this.doc.createNode(value))
+      this.touch()
+      return
+    }
+    if (typeof value === 'number') this.setNum(map, key, value)
+    else this.setField(map, key, value)
+  }
+
+  /** A scalar of a list replaced by a text, or set when the list is shorter. */
+  private setText(seq: YAMLSeq, index: number, value: string) {
+    while (seq.items.length <= index) seq.items.push(this.doc.createNode(''))
+    const cur = seq.items[index]
+    if (isScalar(cur)) {
+      if (text(cur) === value) return
+      cur.value = value
+    } else seq.items[index] = this.doc.createNode(value)
+    this.touch()
+  }
+
+  // --- venn ---
+
+  private setIndex(id: string): [YAMLSeq, number] {
+    const seq = this.list('sets', false)
+    const i = seq ? seq.items.findIndex((it) => (isMap(it) ? text(it.get('id', true)) : text(it)) === id) : -1
+    if (!seq || i < 0) throw new DiagramEditError(`no set ${id}`)
+    return [seq, i]
+  }
+
+  addSet(label: string, id?: string): string {
+    const sid = id && !this.known.has(id) ? id : this.fresh('s')
+    this.known.add(sid)
+    this.list('sets', true)!.items.push(this.fields({ id: sid, label }))
+    this.touch()
+    return sid
+  }
+
+  updateSet(id: string, f: { label?: string; link?: string }) {
+    const [seq, i] = this.setIndex(id)
+    const item: unknown = seq.items[i]
+    if (isScalar(item)) {
+      // A set written as its id: a mapping only when it gets more than that.
+      const label = f.label !== undefined && f.label !== id ? f.label : undefined
+      if (label === undefined && !f.link) return
+      const map = this.fields({ id, label, link: f.link })
+      map.commentBefore = item.commentBefore
+      map.comment = item.comment
+      seq.items[i] = map
+      this.touch()
+      return
+    }
+    const map = item as YAMLMap
+    this.setField(map, 'label', f.label === id ? '' : f.label)
+    this.setField(map, 'link', f.link)
+  }
+
+  removeSet(id: string) {
+    const [seq, i] = this.setIndex(id)
+    seq.items.splice(i, 1)
+    this.touch()
+    const areas = this.list('areas', false)
+    if (!areas) return
+    // The set leaves its areas; an area left with none goes, and so does a second one of the same sets.
+    const seen = new Set<string>()
+    for (let k = 0; k < areas.items.length; k++) {
+      const a = areas.items[k]
+      const sets = isMap(a) ? a.get('sets', true) : null
+      if (!isSeq(sets)) continue
+      const j = sets.items.findIndex((n) => text(n) === id)
+      if (j >= 0) sets.items.splice(j, 1)
+      const key = sets.items.map(text).sort().join('+')
+      if (sets.items.length === 0 || seen.has(key)) {
+        areas.items.splice(k--, 1)
+        continue
+      }
+      seen.add(key)
+    }
+  }
+
+  addArea(sets: string[], label = '') {
+    this.block('areas').items.push(this.fields({ sets, label }))
+    this.touch()
+  }
+
+  updateArea(index: number, f: { sets?: string[]; label?: string; size?: number }) {
+    const map = this.at(this.list('areas', false), index, 'area')
+    if (f.sets) {
+      const cur = map.get('sets', true)
+      const now = isSeq(cur) ? cur.items.map(text) : []
+      if (now.join('\u0000') !== f.sets.join('\u0000')) {
+        map.set('sets', this.doc.createNode(f.sets, { flow: true }))
+        this.touch()
+      }
+    }
+    this.setField(map, 'label', f.label)
+    this.setNum(map, 'size', f.size, false)
+  }
+
+  removeArea(index: number) {
+    const seq = this.list('areas', false)
+    this.at(seq, index, 'area')
+    seq!.items.splice(index, 1)
+    this.touch()
+  }
+
+  // --- matrix ---
+
+  setAxis(axis: 'x' | 'y', f: { label?: string; low?: string; high?: string }) {
+    const cur: unknown = this.root.get(axis, true)
+    if (isMap(cur)) {
+      this.setField(cur, 'label', f.label)
+      this.setField(cur, 'low', f.low)
+      this.setField(cur, 'high', f.high)
+      return
+    }
+    const label = f.label ?? (isScalar(cur) ? text(cur) : '')
+    if (isScalar(cur) && !f.low && !f.high) {
+      // x: Urgency stays a text while it has no low or high.
+      if (text(cur) !== label) {
+        cur.value = label
+        this.touch()
+      }
+      return
+    }
+    if (!label && !f.low && !f.high && cur === undefined) return
+    this.root.set(axis, this.fields({ label, low: f.low, high: f.high }))
+    this.touch()
+  }
+
+  setQuadrant(index: number, label: string) {
+    if (index < 0 || index > 3) throw new DiagramEditError(`no quadrant ${index}`)
+    let seq: unknown = this.root.get('quadrants', true)
+    if (!isSeq(seq)) {
+      seq = this.doc.createNode(['', '', '', ''], { flow: true })
+      this.root.set('quadrants', seq)
+      this.touch()
+    }
+    this.setText(seq as YAMLSeq, index, label)
+  }
+
+  private round(v: number) {
+    return Math.round(Math.min(1, Math.max(0, v)) * 100) / 100
+  }
+
+  addItem(label: string, x: number, y: number) {
+    this.block('items').items.push(this.fields({ label, x: this.round(x), y: this.round(y) }))
+    this.touch()
+  }
+
+  updateItem(index: number, f: { label?: string; x?: number; y?: number; link?: string }) {
+    const map = this.at(this.list('items', false), index, 'item')
+    this.setField(map, 'label', f.label)
+    this.setNum(map, 'x', f.x === undefined ? undefined : this.round(f.x))
+    this.setNum(map, 'y', f.y === undefined ? undefined : this.round(f.y))
+    this.setField(map, 'link', f.link)
+  }
+
+  removeItem(index: number) {
+    const seq = this.list('items', false)
+    this.at(seq, index, 'item')
+    seq!.items.splice(index, 1)
+    this.touch()
+  }
+
+  private texts(key: string): YAMLSeq {
+    const seq = this.root.get(key, true)
+    if (!isSeq(seq)) throw new DiagramEditError(`the grid has no ${key}`)
+    return seq
+  }
+
+  setCell(row: number, column: number, value: string) {
+    if (row < 0 || row >= this.texts('rows').items.length || column < 0 || column >= this.texts('columns').items.length) {
+      throw new DiagramEditError(`no cell ${row}, ${column}`)
+    }
+    const cells = this.list('cells', true)!
+    if (cells.flow && cells.items.length === 0) cells.flow = false
+    while (cells.items.length <= row) cells.items.push(this.doc.createNode([], { flow: true }))
+    let r: unknown = cells.items[row]
+    if (!isSeq(r)) {
+      r = this.doc.createNode([], { flow: true })
+      cells.items[row] = r as YAMLSeq
+    }
+    const seq = r as YAMLSeq
+    if (value === '' && column >= seq.items.length) return
+    this.setText(seq, column, value)
+  }
+
+  renameRow(index: number, label: string) {
+    const seq = this.texts('rows')
+    if (index < 0 || index >= seq.items.length) throw new DiagramEditError(`no row ${index}`)
+    this.setText(seq, index, label)
+  }
+
+  renameColumn(index: number, label: string) {
+    const seq = this.texts('columns')
+    if (index < 0 || index >= seq.items.length) throw new DiagramEditError(`no column ${index}`)
+    this.setText(seq, index, label)
+  }
+
+  addRow(index: number, label: string) {
+    const rows = this.texts('rows')
+    rows.items.splice(index, 0, this.doc.createNode(label))
+    const cells = this.list('cells', false)
+    if (cells && cells.items.length > index) cells.items.splice(index, 0, this.doc.createNode([], { flow: true }))
+    this.touch()
+  }
+
+  removeRow(index: number) {
+    const rows = this.texts('rows')
+    if (index < 0 || index >= rows.items.length) throw new DiagramEditError(`no row ${index}`)
+    rows.items.splice(index, 1)
+    const cells = this.list('cells', false)
+    if (cells && cells.items.length > index) cells.items.splice(index, 1)
+    this.touch()
+  }
+
+  addColumn(index: number, label: string) {
+    this.texts('columns').items.splice(index, 0, this.doc.createNode(label))
+    for (const r of this.list('cells', false)?.items ?? []) {
+      if (isSeq(r) && r.items.length > index) r.items.splice(index, 0, this.doc.createNode(''))
+    }
+    this.touch()
+  }
+
+  removeColumn(index: number) {
+    const cols = this.texts('columns')
+    if (index < 0 || index >= cols.items.length) throw new DiagramEditError(`no column ${index}`)
+    cols.items.splice(index, 1)
+    for (const r of this.list('cells', false)?.items ?? []) {
+      if (isSeq(r) && r.items.length > index) r.items.splice(index, 1)
+    }
+    this.touch()
+  }
+
+  // --- gantt ---
+
+  private tasksOf(section: number): YAMLSeq {
+    const top = this.root.get('tasks', true)
+    if (isSeq(top)) {
+      if (section !== 0) throw new DiagramEditError(`no section ${section}`)
+      return top
+    }
+    const s = this.at(this.list('sections', false), section, 'section')
+    let t: unknown = s.get('tasks', true)
+    if (!isSeq(t)) {
+      t = new YAMLSeq()
+      s.set('tasks', t)
+      this.touch()
+    }
+    return t as YAMLSeq
+  }
+
+  private task(ref: TaskRef): YAMLMap {
+    return this.at(this.tasksOf(ref.section), ref.index, 'task')
+  }
+
+  /** Every task of the Gantt, by its mapping. */
+  private allTasks(): YAMLMap[] {
+    const top = this.root.get('tasks', true)
+    if (isSeq(top)) return top.items.filter(isMap)
+    return (this.list('sections', false)?.items ?? []).flatMap((s) => {
+      const t = isMap(s) ? s.get('tasks', true) : null
+      return isSeq(t) ? t.items.filter(isMap) : []
+    })
+  }
+
+  addTask(section: number, index: number, f: TaskFields & { label: string; id?: string }): string {
+    const tid = f.id && !this.known.has(f.id) ? f.id : this.fresh('t')
+    this.known.add(tid)
+    let seq: YAMLSeq
+    if (!this.root.has('tasks') && !this.root.has('sections')) seq = this.block('tasks')
+    else seq = this.tasksOf(section)
+    if (seq.flow && seq.items.length === 0) seq.flow = false
+    const map = this.fields({ id: tid, label: f.label, start: f.start, after: f.after, end: f.end, days: f.days || undefined, status: f.status, link: f.link })
+    seq.items.splice(Math.min(index, seq.items.length), 0, map)
+    this.touch()
+    return tid
+  }
+
+  updateTask(ref: TaskRef, f: TaskFields) {
+    const map = this.task(ref)
+    if (f.id && !map.has('id')) {
+      if (this.known.has(f.id)) throw new DiagramEditError(`the id ${f.id} is taken`)
+      this.known.add(f.id)
+      map.items.unshift(new Pair(this.doc.createNode('id'), this.doc.createNode(f.id)))
+      this.touch()
+    }
+    this.setField(map, 'label', f.label)
+    this.either(map, 'start', 'after', f.start)
+    this.either(map, 'after', 'start', f.after)
+    this.either(map, 'end', 'days', f.end)
+    this.either(map, 'days', 'end', f.days)
+    this.setField(map, 'status', f.status)
+    this.setField(map, 'link', f.link)
+  }
+
+  /** The tasks that came after removed ones come after what those came after, or start when they started. */
+  private reattach(removed: Map<string, { start: string; after: string }>) {
+    for (const t of this.allTasks()) {
+      let cur = text(t.get('after', true))
+      if (!removed.has(cur)) continue
+      while (removed.has(cur) && removed.get(cur)!.after) cur = removed.get(cur)!.after
+      const gone = removed.get(cur)
+      if (!gone) this.setField(t, 'after', cur)
+      else if (gone.start) this.either(t, 'start', 'after', gone.start)
+      else this.setField(t, 'after', '')
+    }
+  }
+
+  private gone(map: YAMLMap, into: Map<string, { start: string; after: string }>) {
+    const id = text(map.get('id', true))
+    if (id) into.set(id, { start: text(map.get('start', true)), after: text(map.get('after', true)) })
+  }
+
+  removeTask(ref: TaskRef) {
+    const seq = this.tasksOf(ref.section)
+    const map = this.at(seq, ref.index, 'task')
+    seq.items.splice(ref.index, 1)
+    this.touch()
+    const removed = new Map<string, { start: string; after: string }>()
+    this.gone(map, removed)
+    this.reattach(removed)
+  }
+
+  moveTask(ref: TaskRef, section: number, index: number) {
+    const from = this.tasksOf(ref.section)
+    const map = this.at(from, ref.index, 'task')
+    const to = this.tasksOf(section)
+    let at = index
+    if (from === to && at > ref.index) at--
+    if (from === to && at === ref.index) return
+    from.items.splice(ref.index, 1)
+    if (to.flow && to.items.length === 0) to.flow = false
+    to.items.splice(Math.min(at, to.items.length), 0, map)
+    this.touch()
+  }
+
+  addSection(index: number, label: string) {
+    const i = this.root.items.findIndex((p) => isPair(p) && text(p.key) === 'tasks')
+    if (i >= 0) {
+      // Tasks without sections become the first section, without a label.
+      const first = new YAMLMap()
+      first.set('tasks', (this.root.items[i] as Pair).value)
+      const seq = new YAMLSeq()
+      seq.items.push(first)
+      this.root.items[i] = new Pair(this.doc.createNode('sections'), seq)
+    }
+    const seq = this.list('sections', true)!
+    const s = new YAMLMap()
+    s.set('label', label)
+    s.set('tasks', this.doc.createNode([], { flow: true }))
+    seq.items.splice(Math.min(index, seq.items.length), 0, s)
+    this.touch()
+  }
+
+  renameSection(index: number, label: string) {
+    this.setField(this.at(this.list('sections', false), index, 'section'), 'label', label)
+  }
+
+  removeSection(index: number) {
+    const seq = this.list('sections', false)
+    const s = this.at(seq, index, 'section')
+    if (seq!.items.length === 1) throw new DiagramEditError('a Gantt keeps one section at least')
+    seq!.items.splice(index, 1)
+    this.touch()
+    const removed = new Map<string, { start: string; after: string }>()
+    const tasks = s.get('tasks', true)
+    for (const t of isSeq(tasks) ? tasks.items : []) if (isMap(t)) this.gone(t, removed)
+    this.reattach(removed)
+  }
 }
 
 function knownIds(d: Diagram): Set<string> {
@@ -667,6 +1122,81 @@ export function editDiagram(source: string, ops: DiagramOp | DiagramOp[]): EditR
         break
       case 'moveBranch':
         e.moveBranch(o.path, o.parent, o.index)
+        break
+      case 'addSet':
+        e.ids.push(e.addSet(o.label, o.id))
+        break
+      case 'updateSet':
+        e.updateSet(o.id, o)
+        break
+      case 'removeSet':
+        e.removeSet(o.id)
+        break
+      case 'addArea':
+        e.addArea(o.sets, o.label)
+        break
+      case 'updateArea':
+        e.updateArea(o.index, o)
+        break
+      case 'removeArea':
+        e.removeArea(o.index)
+        break
+      case 'setAxis':
+        e.setAxis(o.axis, o)
+        break
+      case 'setQuadrant':
+        e.setQuadrant(o.index, o.label)
+        break
+      case 'addItem':
+        e.addItem(o.label, o.x, o.y)
+        break
+      case 'updateItem':
+        e.updateItem(o.index, o)
+        break
+      case 'removeItem':
+        e.removeItem(o.index)
+        break
+      case 'setCell':
+        e.setCell(o.row, o.column, o.text)
+        break
+      case 'renameRow':
+        e.renameRow(o.index, o.label)
+        break
+      case 'renameColumn':
+        e.renameColumn(o.index, o.label)
+        break
+      case 'addRow':
+        e.addRow(o.index, o.label)
+        break
+      case 'removeRow':
+        e.removeRow(o.index)
+        break
+      case 'addColumn':
+        e.addColumn(o.index, o.label)
+        break
+      case 'removeColumn':
+        e.removeColumn(o.index)
+        break
+      case 'addTask':
+        e.ids.push(e.addTask(o.section, o.index, o))
+        break
+      case 'updateTask':
+        e.updateTask(o.task, o)
+        break
+      case 'removeTask':
+        e.removeTask(o.task)
+        break
+      case 'moveTask':
+        e.moveTask(o.task, o.section, o.index)
+        break
+      case 'addSection':
+        e.addSection(o.index, o.label)
+        break
+      case 'renameSection':
+        e.renameSection(o.index, o.label)
+        break
+      case 'removeSection':
+        e.removeSection(o.index)
         break
     }
   }

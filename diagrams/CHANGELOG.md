@@ -3,6 +3,44 @@
 All notable changes to this package. It follows [Semantic Versioning](https://semver.org);
 its tags are `diagrams-vX.Y.Z`.
 
+## [0.3.0] - 2026-10-11
+
+### Added
+
+- Venn and Gantt drawn by Mermaid (`venn-beta`, `gantt`) in the page's
+  colours, light or dark, their links listed under the drawing; a matrix
+  drawn in the package's own SVG (`matrixToSVG`): quadrants with their axes
+  and points, or a grid as a table. Every kind is drawn now, and exported as
+  SVG.
+- The editor's forms: a Venn's sets and shared parts; a matrix's axes,
+  quadrants and points, a point also dragged on the drawing; a grid as a
+  table of rows, columns and cells; a Gantt's sections and tasks, a task
+  starting on a date or after another and lasting days or until its last
+  day. `editDiagram` has their operations (`addSet`, `updateArea`,
+  `setAxis`, `updateItem`, `setCell`, `addRow`, `addTask`, `updateTask`,
+  `moveTask`, `addSection`…), which keep what they do not touch as written.
+- Conversions: `toMermaid` for every kind (`{portable: true}` for any
+  Mermaid 11), `fromMermaid` for a flowchart, a mind map, a Gantt and a
+  quadrant chart (read by Mermaid's own parser, with warnings for what is
+  left out), `toCanvas` and `fromCanvas` between a flow and an Obsidian
+  canvas. **Import** in the editor puts a pasted Mermaid or canvas in place
+  of the diagram.
+- The twin: a ```` ```mermaid ```` block after a diagram's block, marked with
+  the hash of its YAML (`diagramHash`, `twinText`, `findTwin`,
+  `writeDiagramBlock`).
+- `readyTemplates(words)`: ten diagrams to start from.
+- `diagramToSVG(d)`: any diagram's drawing as an SVG file without a view on
+  the page, and `exportSVG()` on the editor.
+
+### Changed
+
+- A Gantt's `end` is its last day, included (as gosidian's docs say): the
+  Mermaid of a task from the 8th to the 9th ends on the 10th.
+
+### Removed
+
+- The editor's word `yamlOnly`: no kind is edited in the YAML alone.
+
 ## [0.2.0] - 2026-10-11
 
 ### Added

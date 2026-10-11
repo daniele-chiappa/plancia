@@ -2,6 +2,8 @@
 import { computed, ref } from 'vue'
 import FlowDiagram from './FlowDiagram.vue'
 import MermaidDiagram from './MermaidDiagram.vue'
+import MatrixDiagram from './MatrixDiagram.vue'
+import { MERMAID_KINDS } from '../mermaid/convert'
 import { parseDiagram } from '../model/parse'
 import { diagramText } from '../model/text'
 import type { Diagram, DiagramProblem } from '../model/types'
@@ -13,8 +15,8 @@ import { linkTarget, type DiagramLinkEvent } from '../links'
 /**
  * DiagramView — a diagram of the format (ADR-036 of gosidian), drawn from
  * its YAML (`source`) or from a diagram already read (`diagram`). A flow
- * and a tree are drawn by Vue Flow, a mind map and a fishbone by Mermaid;
- * the other kinds show their text until they are drawn too. What is wrong
+ * and a tree are drawn by Vue Flow, a mind map, a fishbone, a Venn and a
+ * Gantt by Mermaid, a matrix by the package's own SVG. What is wrong
  * in the YAML is listed above the drawing, which leaves those parts out.
  * A link of the diagram is an event: the page decides what it opens. The
  * slot `actions` puts the page's own buttons beside the zoom ones.
@@ -44,8 +46,10 @@ const graph = computed(() => {
   return null
 })
 const drawing = ref<{ svg: () => string | null; zoomIn?: () => void; zoomOut?: () => void; fit?: () => void } | null>(null)
+const byMermaid = computed(() => !!d.value && (MERMAID_KINDS as readonly string[]).includes(d.value.kind))
+const matrix = computed(() => d.value?.kind === 'matrix' && !!d.value.matrix)
 /** Whether this kind is drawn (else its text is shown). */
-const drawable = computed(() => !!graph.value || d.value?.kind === 'mindmap' || d.value?.kind === 'fishbone')
+const drawable = computed(() => !!graph.value || byMermaid.value || matrix.value)
 
 function openNode(n: LaidNode) {
   const l = linkTarget(n.link, n.label)
@@ -98,7 +102,16 @@ defineExpose({
         @open="openNode"
       />
       <MermaidDiagram
-        v-else-if="d.kind === 'mindmap' || d.kind === 'fishbone'"
+        v-else-if="byMermaid"
+        ref="drawing"
+        :diagram="d"
+        :labels="words"
+        :title="d.title"
+        :description="text"
+        @open="(l) => emit('link', l)"
+      />
+      <MatrixDiagram
+        v-else-if="matrix"
         ref="drawing"
         :diagram="d"
         :labels="words"

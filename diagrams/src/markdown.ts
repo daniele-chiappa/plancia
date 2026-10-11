@@ -64,3 +64,82 @@ export function replaceDiagramBlock(markdown: string, block: MarkdownDiagramBloc
   const yaml = source === '' || source.endsWith('\n') ? source : `${source}\n`
   return markdown.slice(0, block.contentStart) + yaml + markdown.slice(block.contentEnd)
 }
+
+// --- the twin ---
+//
+// A note's diagram may keep a twin for other apps (Obsidian draws Mermaid,
+// not this format): a ```mermaid block right after the diagram's, nothing
+// but blank lines between, whose first line is the mark with the hash of
+// the YAML it was made from. gosidian hides it, and its lint says when a
+// diagram changed without its twin.
+
+/** The first line of a twin, before the hash. */
+export const TWIN_MARK = '%% diagram-twin'
+
+/**
+ * The hash of a diagram's YAML, as the twin's mark holds it: FNV-1a, 32
+ * bits, over the UTF-8 of the YAML with its line ends made \n and its
+ * trailing ASCII white space left out; 8 hex digits. gosidian's server makes the
+ * same one.
+ */
+export function diagramHash(source: string): string {
+  const bytes = new TextEncoder().encode(source.replace(/\r\n?/g, '\n').replace(/[ \t\n\r\f\v]+$/, ''))
+  let h = 0x811c9dc5
+  for (const b of bytes) {
+    h ^= b
+    h = Math.imul(h, 0x01000193) >>> 0
+  }
+  return h.toString(16).padStart(8, '0')
+}
+
+/** The hash in a twin's mark, or null when the Mermaid is no twin. */
+export function twinHash(mermaid: string): string | null {
+  const m = /^%% diagram-twin ([0-9a-f]{8})\b/.exec(mermaid)
+  return m ? m[1]! : null
+}
+
+/** The twin of a diagram block: the ```mermaid block after it, or null. */
+export function findTwin(markdown: string, block: MarkdownDiagramBlock): MarkdownDiagramBlock | null {
+  for (const m of findDiagramBlocks(markdown, 'mermaid')) {
+    if (m.start < block.end) continue
+    if (markdown.slice(block.end, m.start).trim() !== '') return null
+    return twinHash(m.source) !== null ? m : null
+  }
+  return null
+}
+
+/** A twin's text: the mark with the YAML's hash, then the Mermaid. */
+export function twinText(yaml: string, mermaid: string): string {
+  return `${TWIN_MARK} ${diagramHash(yaml)} — made from the diagram above: change that one\n${mermaid}`
+}
+
+/**
+ * markdown with a diagram block's YAML replaced, and its twin made, written
+ * again or taken away. `twin` is the twin's Mermaid (twinText makes it from
+ * the YAML), or null to take it away; undefined keeps a twin there as it
+ * is (the caller writes it again when the YAML changed).
+ */
+export function writeDiagramBlock(
+  markdown: string,
+  block: MarkdownDiagramBlock,
+  source: string,
+  twin?: string | null,
+): string {
+  const old = findTwin(markdown, block)
+  const yaml = source === '' || source.endsWith('\n') ? source : `${source}\n`
+  let text = markdown.slice(0, block.contentStart) + yaml + markdown.slice(block.contentEnd)
+  if (twin === undefined) return text
+  const shift = yaml.length - (block.contentEnd - block.contentStart)
+  const end = block.end + shift
+  if (old) {
+    // The twin and the blank lines before it go; a new one takes their place.
+    text = text.slice(0, end) + text.slice(old.end + shift)
+  }
+  if (twin === null) return text
+  const body = twin.endsWith('\n') ? twin : `${twin}\n`
+  const before = text.slice(0, end)
+  const after = text.slice(end)
+  const lead = before.endsWith('\n') ? '\n' : '\n\n'
+  const tail = after === '' || after.startsWith('\n') ? '' : '\n'
+  return `${before}${lead}\`\`\`mermaid\n${body}\`\`\`\n${tail}${after}`
+}

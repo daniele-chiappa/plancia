@@ -104,8 +104,13 @@ describe('toMermaid', () => {
     expect(toMermaid(d)).toBe('ishikawa\n    Late\n        Methods\n            No checklist\n        % % Machines\n            Old\n')
   })
 
-  it('has nothing for the other kinds', () => {
-    expect(toMermaid(read('kind: venn\nsets: [A, B]'))).toBe('')
+  it('writes a Venn: its sets, its areas with their sizes, the part of one set as its text', () => {
+    const d = read('kind: venn\ntitle: T\nsets: [A, {id: text, label: "B #1"}]\nareas:\n  - {sets: [A, text], label: Both, size: 2}\n  - {sets: [A], label: Only A}')
+    expect(toMermaid(d)).toBe('venn-beta\n  title T\n  set A["A"]\n  set s1["B #35;1"]\n  union A,s1["Both"]: 2\n  text A "Only A"\n')
+  })
+
+  it('has nothing for a diagram with nothing to draw', () => {
+    expect(toMermaid(read('kind: gantt\nsections: [{label: S}]'))).toBe('')
   })
 
   it('keeps one line', () => {

@@ -252,6 +252,25 @@
   max-width: 100%;
   height: auto;
 }
+.plancia-diagram__matrix-svg {
+  padding: 0.5rem;
+  border: 1px solid var(--pd-border);
+  border-radius: 6px;
+  background: var(--pd-surface);
+  overflow-x: auto;
+  text-align: center;
+  touch-action: none;
+}
+.plancia-diagram__matrix-svg svg {
+  max-width: 100%;
+  height: auto;
+}
+.pd-matrix__item {
+  cursor: pointer;
+}
+.plancia-diagram__matrix[data-editable] .pd-matrix__item {
+  cursor: grab;
+}
 .plancia-diagram__status {
   color: var(--pd-muted);
   padding: 0.5rem;
@@ -361,9 +380,28 @@
   gap: 0.75rem;
   align-items: start;
 }
-@media (max-width: 720px) {
+.pd-editor__main[data-mode='venn'],
+.pd-editor__main[data-mode='matrix'],
+.pd-editor__main[data-mode='gantt'] {
+  display: grid;
+  grid-template-columns: minmax(18rem, 1fr) minmax(0, 1.2fr);
+  gap: 0.75rem;
+  align-items: start;
+}
+.pd-editor__main[data-mode='gantt'],
+.pd-editor__main[data-grid] {
+  grid-template-columns: minmax(0, 1fr);
+}
+/* In a narrow editor (a window beside a note, a phone) the drawing goes
+   under its form or lines, as wide as the editor. */
+.plancia-diagram-editor {
+  container-type: inline-size;
+}
+@container (max-width: 720px) {
   .pd-editor__main[data-mode='flow'],
-  .pd-editor__main[data-mode='outline'] {
+  .pd-editor__main[data-mode='outline'],
+  .pd-editor__main[data-mode='venn'],
+  .pd-editor__main[data-mode='matrix'] {
     grid-template-columns: minmax(0, 1fr);
   }
 }
@@ -510,4 +548,129 @@
 }
 .plancia-diagram-editor:focus {
   outline: none;
+}
+
+/* The forms of a Venn, a matrix and a Gantt. */
+.pd-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  font-size: 13px;
+}
+.pd-form section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  align-items: flex-start;
+}
+.pd-form h3 {
+  margin: 0;
+  font-size: 13px;
+}
+.pd-form__row,
+.pd-form__task {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+  width: 100%;
+}
+.pd-form__task {
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--pd-border);
+}
+.pd-form__row[data-selected] {
+  outline: 2px solid var(--pd-accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.pd-form input,
+.pd-form select,
+.pd-editor__import textarea {
+  min-width: 0;
+  padding: 3px 6px;
+  border: 1px solid var(--pd-border);
+  border-radius: 4px;
+  background: var(--pd-surface);
+  color: var(--pd-text);
+  font: inherit;
+  font-size: 13px;
+}
+.pd-form__row > input:not([type='checkbox']):not(.pd-form__number),
+.pd-form__task-label {
+  flex: 1 1 8rem;
+}
+.pd-form input.pd-form__number {
+  width: 5rem;
+}
+.pd-form__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem 0.6rem;
+  width: 100%;
+  color: var(--pd-muted);
+  font-size: 12px;
+}
+.pd-form__chips label,
+.pd-form__inline {
+  display: inline-flex;
+  gap: 0.25rem;
+  align-items: center;
+  color: var(--pd-muted);
+  font-size: 12px;
+}
+.pd-form__quadrants {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.35rem;
+  width: 100%;
+}
+.pd-form__moves {
+  display: inline-flex;
+  gap: 0.2rem;
+}
+.pd-form__grid-wrap {
+  overflow-x: auto;
+  max-width: 100%;
+}
+.pd-form__grid {
+  border-collapse: collapse;
+}
+.pd-form__grid th,
+.pd-form__grid td {
+  padding: 3px;
+  border: 1px solid var(--pd-border);
+  vertical-align: top;
+}
+.pd-form__grid th {
+  background: var(--pd-group);
+  white-space: nowrap;
+}
+.pd-form__grid th input {
+  width: 8rem;
+  font-weight: 600;
+}
+.pd-form__grid td input {
+  width: 10rem;
+}
+.pd-editor__import {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 0.5rem;
+}
+.pd-editor__import textarea {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+}
+.pd-editor__notes {
+  margin: 0 0 0.5rem;
+  color: var(--pd-muted);
+  font-size: 12px;
+}
+.pd-editor__notes ul {
+  margin: 0.2rem 0 0;
+  padding-left: 1.2rem;
 }
