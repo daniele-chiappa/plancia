@@ -9,6 +9,10 @@ updates:
       time: "06:00"
       timezone: "Etc/UTC"
     open-pull-requests-limit: 5
+    # A release waits two weeks before its pull request: the rule of the
+    # projects for dependencies (security updates are not delayed).
+    cooldown:
+      default-days: 14
     labels:
       - "dependencies"
       - "npm"
@@ -28,6 +32,9 @@ updates:
       # vue-tsc does not run on TypeScript 7 yet.
       - dependency-name: "typescript"
         update-types: ["version-update:semver-major"]
+      # The types of the Node the CI and the build run, 24.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
 
   # plancia-diagrams (diagrams/): its runtime dependencies are pinned on
   # purpose (ADR-006), so only the development ones are grouped here.
@@ -39,6 +46,10 @@ updates:
       time: "06:00"
       timezone: "Etc/UTC"
     open-pull-requests-limit: 5
+    # A release waits two weeks before its pull request: the rule of the
+    # projects for dependencies (security updates are not delayed).
+    cooldown:
+      default-days: 14
     labels:
       - "dependencies"
       - "npm"
@@ -52,6 +63,13 @@ updates:
     ignore:
       - dependency-name: "typescript"
         update-types: ["version-update:semver-major"]
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+      # The package reads Mermaid's parsed data and its newest syntaxes
+      # (venn-beta, ishikawa): a major of Mermaid is a pass of its own,
+      # with the conversion tests and a run in a consumer.
+      - dependency-name: "mermaid"
+        update-types: ["version-update:semver-major"]
 
   # GitHub Actions used in workflows
   - package-ecosystem: "github-actions"
@@ -62,6 +80,10 @@ updates:
       time: "06:00"
       timezone: "Etc/UTC"
     open-pull-requests-limit: 3
+    # A release waits two weeks before its pull request: the rule of the
+    # projects for dependencies (security updates are not delayed).
+    cooldown:
+      default-days: 14
     labels:
       - "dependencies"
       - "ci"
