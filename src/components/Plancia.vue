@@ -27,6 +27,7 @@ import {
   type ViewMode,
   type WindowInstance,
   type WindowRegistry,
+  type WindowTag,
   type WindowWidth,
 } from '../types'
 
@@ -101,6 +102,23 @@ const minWidthPx = computed(
 const softMaxDelayMs = computed(
   () => props.softMaxDelayMs ?? cfg?.value.components?.window?.defaults?.softMaxDelayMs ?? 300,
 )
+
+/**
+ * The events of a window's content, bound to that window when it renders.
+ * Not to the focused window when the event comes: a content that opens
+ * another window (which takes the focus) and then closes would close the
+ * new one (IMP-006).
+ */
+function windowEvents(id: string) {
+  return {
+    title: (title: string) => store.setTitle(id, title),
+    dirty: (dirty: boolean) => store.setDirty(id, dirty),
+    identify: (e: { key: string; props: Record<string, unknown> }) => store.identify(id, e.key, e.props),
+    changed: () => store.touch(),
+    tags: (tags: WindowTag[]) => store.setTags(id, tags),
+    close: () => store.close(id),
+  }
+}
 
 function foreignLabel(w: WindowInstance): string | null {
   if (!props.nativeType || w.type === props.nativeType) return null
@@ -269,12 +287,7 @@ onBeforeUnmount(() => {
                   :is="registry[store.focused.type]"
                   v-if="registry[store.focused.type]"
                   v-bind="store.focused.props"
-                  @title="store.setTitle(store.focused.id, $event)"
-                  @dirty="store.setDirty(store.focused.id, $event)"
-                  @identify="store.identify(store.focused.id, $event.key, $event.props)"
-                  @changed="store.touch()"
-                  @tags="store.setTags(store.focused.id, $event)"
-                  @close="store.close(store.focused.id)"
+                  v-on="windowEvents(store.focused.id)"
                 />
                 <div v-else style="padding: 1rem; font-size: 0.875rem; color: var(--plancia-danger)">
                   {{ labels.unknownType(store.focused.type) }}
@@ -317,12 +330,7 @@ onBeforeUnmount(() => {
               :is="registry[w.type]"
               v-if="registry[w.type]"
               v-bind="w.props"
-              @title="store.setTitle(w.id, $event)"
-              @dirty="store.setDirty(w.id, $event)"
-              @identify="store.identify(w.id, $event.key, $event.props)"
-              @changed="store.touch()"
-              @tags="store.setTags(w.id, $event)"
-              @close="store.close(w.id)"
+              v-on="windowEvents(w.id)"
             />
             <div v-else style="padding: 1rem; font-size: 0.875rem; color: var(--plancia-danger)">
               {{ labels.unknownType(w.type) }}

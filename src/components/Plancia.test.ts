@@ -134,3 +134,42 @@ describe('Plancia view mode (strip ↔ tabs)', () => {
     expect(w.findAll('.winbody')).toHaveLength(1)
   })
 })
+
+// IMP-006: a window's content that opens another window (which takes the
+// focus) and then asks to close must close its own window, not the new one.
+describe('Plancia window events go to the window that sent them', () => {
+  const Opener = markRaw(
+    defineComponent({
+      emits: ['close', 'title'],
+      setup(_, { emit }) {
+        const open = useOpenWindow()
+        return () =>
+          h(
+            'button',
+            {
+              class: 'open-then-close',
+              onClick: () => {
+                open({ type: 'x', key: 'next', title: 'Next' })
+                emit('title', 'Renamed')
+                emit('close')
+              },
+            },
+            'go',
+          )
+      },
+    }),
+  )
+
+  it.each(['tabs', 'strip'] as const)('in %s mode', async (viewMode) => {
+    const store = useWindowsStore()
+    store.open({ type: 'opener', key: 'form', title: 'Form' })
+    const w = mount(Plancia, {
+      props: { registry: { ...registry, opener: Opener }, viewMode },
+      global: { plugins: [pinia] },
+    })
+    await w.get('.open-then-close').trigger('click')
+    expect(store.windows.map((x) => x.key)).toEqual(['next'])
+    expect(store.windows[0]!.title).toBe('Next')
+    expect(store.focused?.key).toBe('next')
+  })
+})

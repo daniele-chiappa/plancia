@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.3] - 2026-10-11
+
+### Fixed
+
+- **Window events in tabs mode** — the events of a window's content
+  (`close`, `title`, `dirty`, `identify`, `tags`) went to the focused window
+  at the time of the event, not to the window that sent them. A content
+  that opens another window (which takes the focus) and then emits `close`
+  closed the new window, and stayed on screen itself. They are now bound to
+  their own window, as in strip mode.
+
 ## [0.3.2] - 2026-10-07
 
 ### Changed
