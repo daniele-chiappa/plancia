@@ -17,6 +17,10 @@ Pinia, which your app already has.
 
 <sub>Open windows side by side · resize in steps (`⤢`) · minimize into the footer · `Alt + ←/→` moves focus. Rendered from the live [playground](src/playground/).</sub>
 
+> **Diagrams**: [`diagrams/`](diagrams/README.md) holds **plancia-diagrams**, a
+> package of its own: flows, trees, mind maps and fishbones drawn from a YAML
+> source. plancia does not depend on it.
+
 ## Why
 
 Route-based UIs show one thing at a time. Real work is comparative — you want the

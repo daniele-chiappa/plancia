@@ -29,6 +29,30 @@ updates:
       - dependency-name: "typescript"
         update-types: ["version-update:semver-major"]
 
+  # plancia-diagrams (diagrams/): its runtime dependencies are pinned on
+  # purpose (ADR-006), so only the development ones are grouped here.
+  - package-ecosystem: "npm"
+    directory: "/diagrams"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Etc/UTC"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "npm"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+    groups:
+      diagrams-dev-dependencies:
+        dependency-type: "development"
+        update-types: ["minor", "patch"]
+    ignore:
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+
   # GitHub Actions used in workflows
   - package-ecosystem: "github-actions"
     directory: "/"

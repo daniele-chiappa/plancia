@@ -1,0 +1,871 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/daniele-chiappa/plancia/blob/main/diagrams/src/model/diagram.schema.json",
+  "title": "Diagram, format 1",
+  "description": "A diagram as written in a ```diagram block (ADR-036 of gosidian), short forms included. The schema checks the shape; the reader (parseDiagram, and gosidian's Go reader) also checks what a schema cannot: ids used once, edges and groups that name nodes, a Gantt's dates and the chains of after.",
+  "type": "object",
+  "required": [
+    "kind"
+  ],
+  "properties": {
+    "kind": {
+      "enum": [
+        "flow",
+        "tree",
+        "mindmap",
+        "fishbone",
+        "venn",
+        "matrix",
+        "gantt"
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "flow"
+          }
+        }
+      },
+      "then": {
+        "$ref": "#/definitions/flow"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "tree"
+          }
+        }
+      },
+      "then": {
+        "$ref": "#/definitions/tree"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "mindmap"
+          }
+        }
+      },
+      "then": {
+        "$ref": "#/definitions/mindmap"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "fishbone"
+          }
+        }
+      },
+      "then": {
+        "$ref": "#/definitions/mindmap"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "venn"
+          }
+        }
+      },
+      "then": {
+        "$ref": "#/definitions/venn"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "matrix"
+          }
+        }
+      },
+      "then": {
+        "$ref": "#/definitions/matrix"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "gantt"
+          }
+        }
+      },
+      "then": {
+        "$ref": "#/definitions/gantt"
+      }
+    }
+  ],
+  "definitions": {
+    "text": {
+      "description": "A text. A number or a yes written bare reads as its text too.",
+      "type": [
+        "string",
+        "number",
+        "boolean",
+        "null"
+      ]
+    },
+    "id": {
+      "description": "A letter, then letters, digits, - and _, at most 40; used once in a diagram.",
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,39}$"
+    },
+    "link": {
+      "description": "A [[note]] (or [[note#Heading|text]]) or an http(s) address.",
+      "type": "string",
+      "pattern": "^\\s*(\\[\\[[^\\]]+\\]\\]|https?://.*)?\\s*$"
+    },
+    "direction": {
+      "enum": [
+        "TB",
+        "LR",
+        "BT",
+        "RL",
+        "tb",
+        "lr",
+        "bt",
+        "rl"
+      ]
+    },
+    "diagram": {
+      "description": "The format; it may be left out.",
+      "const": 1
+    },
+    "layout": {
+      "description": "Written by an editor: positions by id. Without it the drawing lays itself out.",
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "x",
+          "y"
+        ],
+        "properties": {
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          },
+          "w": {
+            "type": "number"
+          },
+          "h": {
+            "type": "number"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "flow": {
+      "type": "object",
+      "required": [
+        "nodes"
+      ],
+      "properties": {
+        "diagram": {
+          "$ref": "#/definitions/diagram"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "title": {
+          "$ref": "#/definitions/text"
+        },
+        "description": {
+          "$ref": "#/definitions/text"
+        },
+        "layout": {
+          "$ref": "#/definitions/layout"
+        },
+        "direction": {
+          "$ref": "#/definitions/direction"
+        },
+        "nodes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/node"
+          }
+        },
+        "edges": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/definitions/edge"
+          }
+        },
+        "groups": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/definitions/group"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "node": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/id"
+        },
+        {
+          "type": "object",
+          "required": [
+            "id"
+          ],
+          "properties": {
+            "id": {
+              "$ref": "#/definitions/id"
+            },
+            "label": {
+              "$ref": "#/definitions/text"
+            },
+            "shape": {
+              "enum": [
+                "box",
+                "pill",
+                "decision",
+                "data",
+                "doc",
+                "db",
+                "circle",
+                "note"
+              ]
+            },
+            "link": {
+              "$ref": "#/definitions/link"
+            },
+            "class": {
+              "enum": [
+                "user",
+                "data",
+                "ext",
+                "planned",
+                "off"
+              ]
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "edge": {
+      "anyOf": [
+        {
+          "description": "\"from -> to\" or \"from -> to: label\"",
+          "type": "string",
+          "pattern": "^\\s*([^\\s:>-][^\\s>]*?)\\s*->\\s*([^\\s:]+)\\s*(?::\\s*(.*))?$"
+        },
+        {
+          "type": "object",
+          "required": [
+            "from",
+            "to"
+          ],
+          "properties": {
+            "from": {
+              "$ref": "#/definitions/id"
+            },
+            "to": {
+              "$ref": "#/definitions/id"
+            },
+            "label": {
+              "$ref": "#/definitions/text"
+            },
+            "style": {
+              "enum": [
+                "solid",
+                "dashed",
+                "dotted"
+              ]
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "group": {
+      "type": "object",
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/id"
+        },
+        "label": {
+          "$ref": "#/definitions/text"
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/id"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "tree": {
+      "type": "object",
+      "required": [
+        "root"
+      ],
+      "properties": {
+        "diagram": {
+          "$ref": "#/definitions/diagram"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "title": {
+          "$ref": "#/definitions/text"
+        },
+        "description": {
+          "$ref": "#/definitions/text"
+        },
+        "layout": {
+          "$ref": "#/definitions/layout"
+        },
+        "direction": {
+          "$ref": "#/definitions/direction"
+        },
+        "root": {
+          "$ref": "#/definitions/branch"
+        },
+        "children": {
+          "$ref": "#/definitions/children"
+        }
+      },
+      "additionalProperties": false
+    },
+    "mindmap": {
+      "description": "A mind map, or a fishbone: its root is the effect, the first level the categories, the levels below the causes.",
+      "type": "object",
+      "required": [
+        "root"
+      ],
+      "properties": {
+        "diagram": {
+          "$ref": "#/definitions/diagram"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "title": {
+          "$ref": "#/definitions/text"
+        },
+        "description": {
+          "$ref": "#/definitions/text"
+        },
+        "layout": {
+          "$ref": "#/definitions/layout"
+        },
+        "root": {
+          "$ref": "#/definitions/branch"
+        },
+        "children": {
+          "$ref": "#/definitions/children"
+        }
+      },
+      "additionalProperties": false
+    },
+    "branch": {
+      "description": "A text (a leaf), {Label: [children]}, or {id, label, link, children}.",
+      "anyOf": [
+        {
+          "type": [
+            "string",
+            "number",
+            "boolean"
+          ]
+        },
+        {
+          "type": "object",
+          "minProperties": 1,
+          "properties": {
+            "id": {
+              "$ref": "#/definitions/id"
+            },
+            "label": {
+              "$ref": "#/definitions/text"
+            },
+            "link": {
+              "$ref": "#/definitions/link"
+            },
+            "children": {
+              "$ref": "#/definitions/children"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "minProperties": 1,
+          "maxProperties": 1,
+          "propertyNames": {
+            "not": {
+              "enum": [
+                "id",
+                "label",
+                "link",
+                "children"
+              ]
+            }
+          },
+          "additionalProperties": {
+            "$ref": "#/definitions/children"
+          }
+        }
+      ]
+    },
+    "children": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/definitions/branch"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/branch"
+          }
+        }
+      ]
+    },
+    "venn": {
+      "type": "object",
+      "required": [
+        "sets"
+      ],
+      "properties": {
+        "diagram": {
+          "$ref": "#/definitions/diagram"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "title": {
+          "$ref": "#/definitions/text"
+        },
+        "description": {
+          "$ref": "#/definitions/text"
+        },
+        "layout": {
+          "$ref": "#/definitions/layout"
+        },
+        "sets": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 5,
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/id"
+              },
+              {
+                "type": "object",
+                "required": [
+                  "id"
+                ],
+                "properties": {
+                  "id": {
+                    "$ref": "#/definitions/id"
+                  },
+                  "label": {
+                    "$ref": "#/definitions/text"
+                  },
+                  "link": {
+                    "$ref": "#/definitions/link"
+                  }
+                },
+                "additionalProperties": false
+              }
+            ]
+          }
+        },
+        "areas": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "object",
+            "required": [
+              "sets"
+            ],
+            "properties": {
+              "sets": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string"
+                }
+              },
+              "label": {
+                "$ref": "#/definitions/text"
+              },
+              "size": {
+                "type": "number",
+                "minimum": 0
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "axis": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/text"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "label": {
+              "$ref": "#/definitions/text"
+            },
+            "low": {
+              "$ref": "#/definitions/text"
+            },
+            "high": {
+              "$ref": "#/definitions/text"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "matrix": {
+      "description": "Quadrants (x, y, quadrants, items) or a grid (rows, columns, cells), not both.",
+      "type": "object",
+      "properties": {
+        "diagram": {
+          "$ref": "#/definitions/diagram"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "title": {
+          "$ref": "#/definitions/text"
+        },
+        "description": {
+          "$ref": "#/definitions/text"
+        },
+        "layout": {
+          "$ref": "#/definitions/layout"
+        },
+        "x": {
+          "$ref": "#/definitions/axis"
+        },
+        "y": {
+          "$ref": "#/definitions/axis"
+        },
+        "quadrants": {
+          "description": "Top left, top right, bottom left, bottom right.",
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "$ref": "#/definitions/text"
+          }
+        },
+        "items": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "object",
+            "required": [
+              "label",
+              "x",
+              "y"
+            ],
+            "properties": {
+              "label": {
+                "$ref": "#/definitions/text"
+              },
+              "x": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "y": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "link": {
+                "$ref": "#/definitions/link"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "rows": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/text"
+          }
+        },
+        "columns": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/text"
+          }
+        },
+        "cells": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/text"
+            }
+          }
+        }
+      },
+      "additionalProperties": false,
+      "oneOf": [
+        {
+          "required": [
+            "x",
+            "y"
+          ],
+          "not": {
+            "anyOf": [
+              {
+                "required": [
+                  "rows"
+                ]
+              },
+              {
+                "required": [
+                  "columns"
+                ]
+              },
+              {
+                "required": [
+                  "cells"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "required": [
+            "rows",
+            "columns"
+          ],
+          "not": {
+            "anyOf": [
+              {
+                "required": [
+                  "x"
+                ]
+              },
+              {
+                "required": [
+                  "y"
+                ]
+              },
+              {
+                "required": [
+                  "quadrants"
+                ]
+              },
+              {
+                "required": [
+                  "items"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "gantt": {
+      "description": "Sections with tasks, or tasks without sections, not both.",
+      "type": "object",
+      "properties": {
+        "diagram": {
+          "$ref": "#/definitions/diagram"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "title": {
+          "$ref": "#/definitions/text"
+        },
+        "description": {
+          "$ref": "#/definitions/text"
+        },
+        "layout": {
+          "$ref": "#/definitions/layout"
+        },
+        "sections": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "$ref": "#/definitions/text"
+              },
+              "tasks": {
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "items": {
+                  "$ref": "#/definitions/task"
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "tasks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/task"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "oneOf": [
+        {
+          "required": [
+            "sections"
+          ]
+        },
+        {
+          "required": [
+            "tasks"
+          ]
+        }
+      ]
+    },
+    "date": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "task": {
+      "type": "object",
+      "required": [
+        "label"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/id"
+        },
+        "label": {
+          "$ref": "#/definitions/text"
+        },
+        "link": {
+          "$ref": "#/definitions/link"
+        },
+        "start": {
+          "$ref": "#/definitions/date"
+        },
+        "after": {
+          "$ref": "#/definitions/id"
+        },
+        "end": {
+          "$ref": "#/definitions/date"
+        },
+        "days": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "status": {
+          "enum": [
+            "done",
+            "active",
+            "critical",
+            "milestone"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "oneOf": [
+            {
+              "required": [
+                "start"
+              ]
+            },
+            {
+              "required": [
+                "after"
+              ]
+            }
+          ]
+        },
+        {
+          "not": {
+            "required": [
+              "end",
+              "days"
+            ]
+          }
+        },
+        {
+          "if": {
+            "not": {
+              "required": [
+                "status"
+              ],
+              "properties": {
+                "status": {
+                  "const": "milestone"
+                }
+              }
+            }
+          },
+          "then": {
+            "anyOf": [
+              {
+                "required": [
+                  "end"
+                ]
+              },
+              {
+                "required": [
+                  "days"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

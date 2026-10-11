@@ -2,6 +2,7 @@
 #
 #   docker compose up playground        → webui at http://localhost:5180 (HMR)
 #   docker compose up configurator      → configurator at http://localhost:5181
+#   docker compose up diagrams          → plancia-diagrams at http://localhost:5182
 #   docker compose run --rm test        → run the vitest suite once
 #   docker compose --profile test up    → start the test service
 #
@@ -31,6 +32,23 @@ services:
     volumes:
       - .:/app
       - /app/node_modules
+    restart: unless-stopped
+
+  # plancia-diagrams playground (diagrams/): every example drawn, light and
+  # dark. Uses diagrams/node_modules as installed there (npm install in
+  # node:24-alpine), so the native bindings match.
+  diagrams:
+    image: node:24-alpine
+    container_name: plancia-diagrams
+    user: "1400:1400"
+    working_dir: /app/diagrams
+    environment:
+      HOME: /tmp
+    command: ["npx", "vite", "--config", "vite.playground.config.ts", "--host", "0.0.0.0", "--port", "5173"]
+    ports:
+      - "5182:5173"
+    volumes:
+      - .:/app
     restart: unless-stopped
 
   test:

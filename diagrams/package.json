@@ -1,0 +1,79 @@
+{
+  "name": "plancia-diagrams",
+  "version": "0.1.0",
+  "description": "Diagrams for Vue 3 from a YAML source: flows and trees drawn with Vue Flow and dagre, mind maps and fishbones with Mermaid, with the text alternative and an SVG export.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Daniele Chiappa",
+  "homepage": "https://github.com/daniele-chiappa/plancia/tree/main/diagrams#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/daniele-chiappa/plancia.git",
+    "directory": "diagrams"
+  },
+  "bugs": {
+    "url": "https://github.com/daniele-chiappa/plancia/issues"
+  },
+  "keywords": [
+    "vue",
+    "vue3",
+    "diagram",
+    "flowchart",
+    "mindmap",
+    "fishbone",
+    "yaml",
+    "vue-flow",
+    "dagre",
+    "mermaid"
+  ],
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/plancia-diagrams.js",
+  "module": "./dist/plancia-diagrams.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/plancia-diagrams.js"
+    },
+    "./style.css": "./dist/plancia-diagrams.css",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "dev": "vite --config vite.playground.config.ts",
+    "build": "vue-tsc --noEmit && vite build",
+    "typecheck": "vue-tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "peerDependencies": {
+    "vue": "^3.5.0"
+  },
+  "dependencies": {
+    "@dagrejs/dagre": "3.1.1",
+    "@vue-flow/core": "1.48.2",
+    "mermaid": "11.17.2",
+    "yaml": "2.9.1"
+  },
+  "devDependencies": {
+    "@microsoft/api-extractor": "^7.59.2",
+    "@types/node": "^24.19.0",
+    "@vitejs/plugin-vue": "^6.0.9",
+    "@vue/test-utils": "^2.5.1",
+    "ajv": "^8.20.0",
+    "jsdom": "^30.1.1",
+    "typescript": "~5.9.3",
+    "vite": "^8.3.1",
+    "vite-plugin-dts": "^5.1.1",
+    "vitest": "^4.1.11",
+    "vue": "^3.5.43",
+    "vue-tsc": "^3.3.11"
+  },
+  "overrides": {
+    "katex": "^0.18.9"
+  }
+}
