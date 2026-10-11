@@ -38,7 +38,7 @@ describe('readPipeline', () => {
   it('reads a pipeline: trigger, nodes, after from the order', () => {
     const { pipeline, problems } = readPipeline(ARRIVALS)
     expect(problems).toEqual([])
-    expect(pipeline!.trigger).toEqual({ on: 'ingest', kinds: ['png', 'jpg'], folder: 'inbox', every: '' })
+    expect(pipeline!.trigger).toEqual({ on: 'ingest', kinds: ['png', 'jpg'], folder: 'inbox', every: '', match: '', batch: false })
     expect(pipeline!.nodes.map((n) => [n.id, n.use, n.after, n.afterWritten, n.line])).toEqual([
       ['describe', 'llm.describe', [], false, 4],
       ['file', 'note.write', ['describe'], false, 9],
@@ -152,6 +152,20 @@ describe('editPipeline', () => {
     expect(none.source).toBe('trigger: {on: ingest, kinds: [pdf]}\nnodes:\n  - {id: a, use: starlark}\n')
   })
 
+  it('sets the fields of an in trigger, and drops them for another trigger', () => {
+    const r = apply('nodes:\n  - {id: a, use: starlark}\n', [
+      { op: 'setTrigger', on: 'in', kinds: ['pdf', 'xml'], folder: 'fatture', match: '*_T?.pdf' },
+      { op: 'setTrigger', batch: true },
+    ])
+    expect(r.source).toBe('trigger: {on: in, kinds: [pdf, xml], folder: fatture, match: "*_T?.pdf", batch: true}\nnodes:\n  - {id: a, use: starlark}\n')
+    const t = readPipeline(r.source).pipeline!.trigger
+    expect(t).toMatchObject({ on: 'in', kinds: ['pdf', 'xml'], folder: 'fatture', match: '*_T?.pdf', batch: true })
+    const off = apply(r.source, { op: 'setTrigger', batch: false })
+    expect(off.source).toContain('match: "*_T?.pdf"}')
+    const other = apply(r.source, { op: 'setTrigger', on: 'ingest' })
+    expect(other.source).toBe('trigger: {on: ingest, kinds: [pdf, xml], folder: fatture}\nnodes:\n  - {id: a, use: starlark}\n')
+  })
+
   it('works on the map form too', () => {
     const src = 'nodes:\n  a: {use: starlark}\n  b: {use: note.write}\n'
     const r = apply(src, [
@@ -176,6 +190,17 @@ describe('expressions', () => {
     expect(refs).toContain('describe.text')
     expect(refs).toContain('describe.usage.prompt_tokens')
     expect(exprSuggestions(p, 'describe', catalog).map((s) => s.ref)).not.toContain('describe.text')
+  })
+
+  it('offers the fields of an in trigger: a file, or a batch', () => {
+    const perFile = readPipeline('trigger: {on: in}\nnodes:\n  - {id: a, use: starlark}\n').pipeline!
+    const refs = exprSuggestions(perFile, 'a', catalog).map((s) => s.ref)
+    expect(refs).toEqual(expect.arrayContaining(['trigger.file', 'trigger.dir', 'trigger.sha256']))
+    expect(refs).not.toContain('trigger.batch')
+    const batch = readPipeline('trigger: {on: in, batch: true}\nnodes:\n  - {id: a, use: starlark}\n').pipeline!
+    const brefs = exprSuggestions(batch, 'a', catalog).map((s) => s.ref)
+    expect(brefs).toEqual(expect.arrayContaining(['trigger.batch', 'trigger.files', 'trigger.count']))
+    expect(brefs).not.toContain('trigger.file')
   })
 
   it('completes the reference being typed', () => {

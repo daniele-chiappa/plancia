@@ -8,14 +8,21 @@ import type { LayoutPoint } from '../model/types'
  * an editor sets in `layout:`, which the server ignores.
  */
 
-export type TriggerKind = 'manual' | 'external' | 'ingest' | 'schedule'
-export const TRIGGER_KINDS: readonly TriggerKind[] = ['manual', 'external', 'ingest', 'schedule']
+export type TriggerKind = 'manual' | 'external' | 'ingest' | 'schedule' | 'in'
+export const TRIGGER_KINDS: readonly TriggerKind[] = ['manual', 'external', 'ingest', 'schedule', 'in']
 
 export interface PipelineTrigger {
   on: string
+  /** ingest, in: the file extensions it takes. */
   kinds: string[]
+  /** ingest: the folder of the note a document comes with; in: a folder of the IN folder. */
   folder: string
+  /** schedule: "monday 09:00". */
   every: string
+  /** in: a glob on the file name. */
+  match: string
+  /** in: one run per batch of files, instead of one per file. */
+  batch: boolean
 }
 
 export interface PipelineRetry {

@@ -357,13 +357,25 @@ defineExpose({ undo, redo })
                 <option v-for="k in TRIGGER_KINDS" :key="k" :value="k">{{ words.triggers[k] }}</option>
               </select>
             </label>
-            <template v-if="p.trigger.on === 'ingest'">
+            <template v-if="p.trigger.on === 'ingest' || p.trigger.on === 'in'">
               <label>{{ words.kinds }}
                 <input data-field="trigger-kinds" placeholder="pdf, docx" :value="p.trigger.kinds.join(', ')"
                   @change="apply([{ op: 'setTrigger', kinds: value($event).split(/[,\s]+/).map((k) => k.replace(/^\./, '').trim()).filter(Boolean) }])" />
               </label>
               <label>{{ words.folder }}
                 <input data-field="trigger-folder" :value="p.trigger.folder" @change="apply([{ op: 'setTrigger', folder: value($event).trim() }])" />
+              </label>
+            </template>
+            <template v-if="p.trigger.on === 'in'">
+              <label>{{ words.match }}
+                <input data-field="trigger-match" placeholder="*.pdf" :value="p.trigger.match" @change="apply([{ op: 'setTrigger', match: value($event).trim() }])" />
+              </label>
+              <label>{{ words.batch }}
+                <select data-field="trigger-batch" :value="p.trigger.batch ? 'yes' : 'no'"
+                  @change="apply([{ op: 'setTrigger', batch: value($event) === 'yes' }])">
+                  <option value="no">{{ words.no }}</option>
+                  <option value="yes">{{ words.yes }}</option>
+                </select>
               </label>
             </template>
             <label v-if="p.trigger.on === 'schedule'">{{ words.every }}

@@ -3,6 +3,22 @@
 All notable changes to this package. It follows [Semantic Versioning](https://semver.org);
 its tags are `diagrams-vX.Y.Z`.
 
+## [0.5.0] - 2026-10-11
+
+### Added
+
+- The `in` trigger of gosidian's pipelines (its IMP-172): the files of a
+  project's IN folder, one run per file or, with `batch: true`, per batch.
+  The editor's trigger panel sets its kinds, folder, name glob (`match`)
+  and batch; its texts offer `{{ trigger.file }}`, `name`, `dir`, `sha256`
+  and the rest, or, for a batch, `batch`, `count`, `bytes` and `files`.
+
+### Changed
+
+- `PipelineTrigger` has `match` and `batch`; `PipelineLabels.triggers` is
+  keyed by every `TriggerKind`, `in` with it, and the labels have `match`
+  and `batch`: a consumer passing its own words adds the three.
+
 ## [0.4.0] - 2026-10-11
 
 ### Added

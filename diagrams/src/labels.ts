@@ -1,3 +1,5 @@
+import type { TriggerKind } from './pipeline/types'
+
 /** The words of the component, English by default; a consumer passes its own. */
 export interface DiagramLabels {
   problems: string
@@ -199,7 +201,7 @@ export const DEFAULT_EDITOR_LABELS: DiagramEditorLabels = {
 /** The words of the pipeline drawing and editor, English by default. */
 export interface PipelineLabels {
   trigger: string
-  triggers: Record<'manual' | 'external' | 'ingest' | 'schedule', string>
+  triggers: Record<TriggerKind, string>
   statuses: Record<'pending' | 'queued' | 'running' | 'waiting' | 'done' | 'failed' | 'skipped' | 'canceled', string>
   drawing: string
   yaml: string
@@ -235,6 +237,8 @@ export interface PipelineLabels {
   kinds: string
   folder: string
   every: string
+  match: string
+  batch: string
   required: string
   structured: string
   invalidValue: string
@@ -262,7 +266,7 @@ export interface PipelineLabels {
 
 export const DEFAULT_PIPELINE_LABELS: PipelineLabels = {
   trigger: 'Start',
-  triggers: { manual: 'By hand', external: 'From outside', ingest: 'On arrival', schedule: 'On schedule' },
+  triggers: { manual: 'By hand', external: 'From outside', ingest: 'On arrival', schedule: 'On schedule', in: 'In the IN folder' },
   statuses: {
     pending: 'Pending',
     queued: 'Queued',
@@ -307,6 +311,8 @@ export const DEFAULT_PIPELINE_LABELS: PipelineLabels = {
   kinds: 'File extensions',
   folder: 'Folder',
   every: 'Every',
+  match: 'Name matching',
+  batch: 'One run per batch',
   required: 'needed',
   structured: 'YAML or JSON',
   invalidValue: 'Not valid YAML:',

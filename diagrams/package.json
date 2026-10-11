@@ -1,6 +1,6 @@
 {
   "name": "plancia-diagrams",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Diagrams for Vue 3 from a YAML source: flows and trees drawn with Vue Flow and dagre, mind maps, fishbones, Venns and Gantts with Mermaid, matrices in SVG; an editor, gosidian pipelines drawn and edited, conversions to and from Mermaid and Obsidian canvases, the text alternative and an SVG export.",
   "type": "module",
   "license": "MIT",

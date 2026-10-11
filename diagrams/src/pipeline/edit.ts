@@ -26,7 +26,7 @@ export type PipelineOp =
   | { op: 'setWith'; id: string; key: string; value: unknown }
   | { op: 'setNodeField'; id: string; field: 'when' | 'unless' | 'each' | 'timeout' | 'on_error'; value: string }
   | { op: 'setRetry'; id: string; attempts?: number; backoff?: string }
-  | { op: 'setTrigger'; on?: string; kinds?: string[]; folder?: string; every?: string }
+  | { op: 'setTrigger'; on?: string; kinds?: string[]; folder?: string; every?: string; match?: string; batch?: boolean }
 
 export interface PipelineEditResult {
   source: string
@@ -336,7 +336,7 @@ class Editor {
     this.touch()
   }
 
-  setTrigger(f: { on?: string; kinds?: string[]; folder?: string; every?: string }) {
+  setTrigger(f: { on?: string; kinds?: string[]; folder?: string; every?: string; match?: string; batch?: boolean }) {
     let t: unknown = this.root.get('trigger', true)
     if (!isMap(t)) {
       t = this.doc.createNode({}, { flow: true })
@@ -346,8 +346,6 @@ class Editor {
     }
     const map = t as YAMLMap
     if (f.on !== undefined) this.setText(map, 'on', f.on)
-    if (f.folder !== undefined) this.setText(map, 'folder', f.folder)
-    if (f.every !== undefined) this.setText(map, 'every', f.every)
     if (f.kinds !== undefined) {
       const cur = map.get('kinds', true)
       const now = isSeq(cur) ? cur.items.map(text) : []
@@ -361,10 +359,27 @@ class Editor {
         this.touch()
       }
     }
+    if (f.folder !== undefined) this.setText(map, 'folder', f.folder)
+    if (f.every !== undefined) this.setText(map, 'every', f.every)
+    if (f.match !== undefined) this.setText(map, 'match', f.match)
+    if (f.batch !== undefined) {
+      const cur = map.get('batch')
+      if (f.batch && cur !== true) {
+        map.set('batch', true)
+        this.touch()
+      } else if (!f.batch && map.has('batch')) {
+        map.delete('batch')
+        this.touch()
+      }
+    }
     // The fields of another trigger go: an ingest's kinds on a schedule.
     const on = text(map.get('on', true)) || 'manual'
-    const keep: Record<string, string[]> = { ingest: ['kinds', 'folder'], schedule: ['every'] }
-    for (const k of ['kinds', 'folder', 'every']) {
+    const keep: Record<string, string[]> = {
+      ingest: ['kinds', 'folder'],
+      schedule: ['every'],
+      in: ['kinds', 'folder', 'match', 'batch'],
+    }
+    for (const k of ['kinds', 'folder', 'every', 'match', 'batch']) {
       if (map.has(k) && !(keep[on] ?? []).includes(k)) {
         map.delete(k)
         this.touch()

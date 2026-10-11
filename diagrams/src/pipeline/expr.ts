@@ -24,6 +24,30 @@ const TRIGGER_FIELDS: Record<string, [string, string][]> = {
     ['project', 'its project'],
   ],
   schedule: [['slot', 'the time slot of the run']],
+  // A file of the project's IN folder (gosidian IMP-172), one run each.
+  in: [
+    ['file', 'the file, its vault path'],
+    ['name', 'its file name'],
+    ['stem', 'its name without the extension'],
+    ['ext', 'its extension'],
+    ['dir', 'its folder, in the IN folder'],
+    ['size', 'its size, in bytes'],
+    ['sha256', 'its SHA-256'],
+    ['source', 'where it came from'],
+    ['project', 'its project'],
+  ],
+  // A batch of files of the IN folder, one run for all (batch: true).
+  'in:batch': [
+    ['batch', 'the batch: in.list reads its files with batch'],
+    ['dir', 'its folder, in the IN folder'],
+    ['count', 'how many files'],
+    ['bytes', 'their size, in bytes'],
+    ['files', 'the files, when they fit in the input'],
+    ['files.0.file', 'a file, its vault path'],
+    ['files.0.name', 'a file\'s name'],
+    ['files_listed', 'whether files holds them all'],
+    ['project', 'its project'],
+  ],
 }
 
 const RUN_FIELDS: [string, string][] = [
@@ -54,7 +78,7 @@ function fields(s: JsonSchema | undefined, prefix: string, depth = 2): ExprSugge
  */
 export function exprSuggestions(p: Pipeline, nodeId: string, catalog: NodeTypeInfo[] = []): ExprSuggestion[] {
   const out: ExprSuggestion[] = []
-  const tf = TRIGGER_FIELDS[p.trigger.on]
+  const tf = TRIGGER_FIELDS[p.trigger.on === 'in' && p.trigger.batch ? 'in:batch' : p.trigger.on]
   if (tf) for (const [k, d] of tf) out.push({ ref: `trigger.${k}`, detail: d })
   else out.push({ ref: 'trigger', detail: 'the input the run was started with' })
   for (const [k, d] of RUN_FIELDS) out.push({ ref: `run.${k}`, detail: d })
