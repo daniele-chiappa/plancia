@@ -27,7 +27,7 @@ edges:
 ## Install
 
 ```bash
-npm install https://github.com/daniele-chiappa/plancia/releases/download/diagrams-v0.1.0/plancia-diagrams-0.1.0.tgz
+npm install https://github.com/daniele-chiappa/plancia/releases/download/diagrams-v0.2.0/plancia-diagrams-0.2.0.tgz
 # peer: vue ^3.5
 ```
 
@@ -73,6 +73,31 @@ out.
 short forms included (`diagramSchema` in the package). The reader checks what a
 schema cannot: ids used once, edges to nodes that exist, a Gantt's dates.
 
+## The editor
+
+```vue
+<DiagramEditor v-model:source="yaml" :link-suggest="suggest" />
+```
+
+`<DiagramEditor>` edits the YAML, and only what changes in it: comments,
+short forms and the order of the fields stay as written, what it adds is in
+the full form, positions go to `layout:`. Its Drawing tab edits a flow on
+its drawing (drag, add, join from a node's dot, delete, a panel for the
+label, shape, class, link and group of a node and the label and line of an
+edge, groups, lay out again) and a tree, a mind map or a fishbone as
+indented lines beside their drawing (Enter, Tab, Shift+Tab, Alt+↑↓, drag);
+its YAML tab edits the text, every kind included. Ctrl+Z and Ctrl+Shift+Z
+undo and redo. `linkSuggest(query)` gives the `{label, link}` the link
+fields offer: the page knows its notes, the package does not.
+
+The same changes are functions, for a page or a script: `editDiagram(source,
+ops)` applies operations (`move`, `addNode`, `updateEdge`, `moveBranch`…)
+and gives the new text, the same text when nothing changed.
+`findDiagramBlocks(markdown)` finds the ```` ```diagram ```` blocks of a
+markdown note as gosidian's server does, and `replaceDiagramBlock` puts one
+back. `diagramTemplate(kind, words)` is a small diagram of a kind to start
+from.
+
 ## API
 
 | Export | |
@@ -82,6 +107,10 @@ schema cannot: ids used once, edges to nodes that exist, a Gantt's dates.
 | `diagramText(d)` | the diagram in words, the drawing's text alternative |
 | `diagramLinks(d)` | the links of a diagram |
 | `toMermaid(d)` | Mermaid source of a mind map or a fishbone |
+| `<DiagramEditor>` | props `source` (`v-model:source`), `labels`, `linkSuggest`, `height`; `undo()` and `redo()` through a template ref |
+| `editDiagram(source, ops)` | `{source, changed, ids}`: the YAML with the operations applied, the ids given to what they added |
+| `findDiagramBlocks(md)`, `replaceDiagramBlock(md, block, yaml)` | the diagram blocks of a markdown text, and one replaced |
+| `diagramTemplate(kind, words?, today?)` | a diagram of a kind to start from |
 | `flowGraph`, `treeGraph`, `layoutGraph`, `flowToSVG` | the steps of a flow's drawing, for a page that draws it itself |
 
 ## Theme

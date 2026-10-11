@@ -16,3 +16,10 @@ export { createMeasure, wrapLabel, nodeSize, shapePaths, type Measure } from './
 export { toMermaid, mermaidText, MERMAID_KINDS } from './mermaid/convert'
 export { flowToSVG } from './svg/flowSvg'
 export { readPalette, DEFAULT_PALETTE, type Palette } from './theme'
+
+export { editDiagram, DiagramEditError, type DiagramOp, type EditResult, type EdgeRef, type BranchPath, type LayoutPosition } from './edit/edit'
+export { findDiagramBlocks, replaceDiagramBlock, type MarkdownDiagramBlock } from './markdown'
+export { default as DiagramEditor } from './components/DiagramEditor.vue'
+export { DEFAULT_EDITOR_LABELS, type DiagramEditorLabels } from './labels'
+export { diagramTemplate, DEFAULT_TEMPLATE_WORDS, type TemplateWords } from './templates'
+export { curved } from './layout/layout'

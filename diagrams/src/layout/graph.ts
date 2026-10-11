@@ -23,6 +23,8 @@ export interface GraphEdge {
   to: string
   label: string
   style: EdgeStyle
+  /** Among the edges with the same ends, this one's order (0 first): how an edit names it. */
+  nth: number
 }
 
 export interface GraphGroup {
@@ -63,9 +65,13 @@ export function flowGraph(d: Diagram): Graph {
     groups.push({ id: g.id, label: g.label, nodes: members })
   }
   const edges: GraphEdge[] = []
+  const ends = new Map<string, number>()
   d.edges.forEach((e, i) => {
+    const key = `${e.from}\u0000${e.to}`
+    const nth = ends.get(key) ?? 0
+    ends.set(key, nth + 1)
     if (seen.has(e.from) && seen.has(e.to)) {
-      edges.push({ id: `e${i}`, from: e.from, to: e.to, label: e.label, style: e.style })
+      edges.push({ id: `e${i}`, from: e.from, to: e.to, label: e.label, style: e.style, nth })
     }
   })
   return { direction: d.direction, nodes, edges, groups }
@@ -94,7 +100,7 @@ export function treeGraph(d: Diagram): Graph {
       group: '',
       depth,
     })
-    if (parent !== '') edges.push({ id: `e${edges.length}`, from: parent, to: id, label: '', style: 'solid' })
+    if (parent !== '') edges.push({ id: `e${edges.length}`, from: parent, to: id, label: '', style: 'solid', nth: 0 })
     for (const c of b.children) walk(c, depth + 1, id)
   }
   if (d.root) walk(d.root, 0, '')

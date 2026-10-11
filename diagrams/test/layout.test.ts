@@ -36,7 +36,7 @@ describe('layoutGraph', () => {
     expect(a!.x - b!.x).toBe(400)
     expect(b!.y - a!.y).toBe(260)
     expect([b!.w, b!.h]).toEqual([200, 60])
-    expect(laid.edges[0]!.points).toHaveLength(2)
+    expect(laid.edges[0]!.points).toHaveLength(4)
   })
 
   it('draws a group around its nodes, and an edge to a group', () => {

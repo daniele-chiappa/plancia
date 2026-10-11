@@ -8,8 +8,18 @@ import type { Direction } from '../model/types'
 // A node of a flow or a tree: its shape as SVG behind its label. A node
 // with a link is a button over the whole shape. The handles are only there
 // for Vue Flow to attach edges; the edges draw their own paths.
+// In the editor (editable) the handles join nodes and a click selects; in
+// the view a node with a link is a button that opens it.
 const props = defineProps<{
-  data: { node: LaidNode; direction: Direction; tree: boolean; open: (n: LaidNode) => void; openLabel: string }
+  data: {
+    node: LaidNode
+    direction: Direction
+    tree: boolean
+    open: (n: LaidNode) => void
+    openLabel: string
+    editable?: boolean
+    selected?: boolean
+  }
 }>()
 
 const n = computed(() => props.data.node)
@@ -36,6 +46,8 @@ const ends = computed((): [Position, Position] => {
     :data-class="n.cls || undefined"
     :data-link="n.link ? '' : undefined"
     :data-root="data.tree && n.depth === 0 ? '' : undefined"
+    :data-editable="data.editable ? '' : undefined"
+    :data-selected="data.selected ? '' : undefined"
     :style="{ width: `${n.w}px`, height: `${n.h}px` }"
   >
     <svg class="pd-node__shape" :width="n.w" :height="n.h" aria-hidden="true">
@@ -46,14 +58,14 @@ const ends = computed((): [Position, Position] => {
       <span v-for="(line, i) in n.lines" :key="i">{{ line }}</span>
     </div>
     <button
-      v-if="n.link"
+      v-if="n.link && !data.editable"
       type="button"
       class="pd-node__open nodrag nopan"
       :aria-label="`${data.openLabel}: ${n.label}`"
       :title="n.link"
       @click.stop="data.open(n)"
     />
-    <Handle type="target" :position="ends[0]" :connectable="false" />
-    <Handle type="source" :position="ends[1]" :connectable="false" />
+    <Handle type="target" :position="ends[0]" :connectable="!!data.editable" />
+    <Handle type="source" :position="ends[1]" :connectable="!!data.editable" />
   </div>
 </template>

@@ -31,6 +31,8 @@ export interface LaidEdge extends GraphEdge {
   /** The size of the label's box, 0 × 0 without a label. */
   labelW: number
   labelH: number
+  /** How far the edge bends aside, in px: two edges between the same nodes must not lie on each other. */
+  bend: number
 }
 
 export interface Laid {
@@ -172,20 +174,76 @@ export function layoutGraph(g: Graph, measure: Measure, fixed: Record<string, La
       }
       if (lines.length > 0 && de.x !== undefined && de.y !== undefined) labelAt = { x: de.x, y: de.y }
     } else {
-      points = straight(a, b, shapeOf(e.from), shapeOf(e.to))
+      points = curved(a, b)
     }
     if (lines.length > 0 && !labelAt) labelAt = middle(points)
-    edges.push({ ...e, points, labelAt, labelLines: lines, labelW: label.w, labelH: label.h })
+    edges.push({ ...e, points, labelAt, labelLines: lines, labelW: label.w, labelH: label.h, bend: 0 })
+  }
+  // Two or more edges between the same two nodes (either way) bend apart,
+  // and those drawn from the boxes take the bend now; dagre already routed
+  // its own apart.
+  const pairs = new Map<string, LaidEdge[]>()
+  for (const e of edges) {
+    const key = [e.from, e.to].sort().join('\u0000')
+    pairs.set(key, [...(pairs.get(key) ?? []), e])
+  }
+  for (const list of pairs.values()) {
+    if (list.length < 2) continue
+    list.forEach((e, i) => {
+      // One each way: each to its own side. More: fanned out.
+      e.bend = list.length === 2 && list[0]!.from !== list[1]!.from ? 22 : (i - (list.length - 1) / 2) * 28
+      const a = boxOf(e.from)!
+      const b = boxOf(e.to)!
+      const own = byId.has(e.from) && byId.has(e.to) && !moved.has(e.from) && !moved.has(e.to)
+      if (!own && e.from !== e.to) {
+        e.points = curved(a, b, e.bend)
+        if (e.labelLines.length) e.labelAt = middle(e.points)
+      }
+    })
   }
 
   return place(nodes, edges, groups)
 }
 
-/** A straight edge between two boxes, from border to border. */
-function straight(a: Box, b: Box, sa: NodeShape, sb: NodeShape): Point[] {
+/**
+ * An edge between two boxes placed by hand: from the middle of the side of
+ * one that faces the other to the middle of the side facing back, through
+ * two points that leave each side square, so the spline curves softly and
+ * the arrow meets the box straight. The middle of a side lies on every
+ * shape (a rhombus's corner, a circle's edge, a pill's flat).
+ */
+export function curved(a: Box, b: Box, bend = 0): Point[] {
   const ca = { x: a.x + a.w / 2, y: a.y + a.h / 2 }
   const cb = { x: b.x + b.w / 2, y: b.y + b.h / 2 }
-  return [border(a, cb, sa), border(b, ca, sb)]
+  const dx = cb.x - ca.x
+  const dy = cb.y - ca.y
+  // Up or down when the boxes are more one above the other than side by side.
+  const vertical = Math.abs(dy) - (a.h + b.h) / 2 >= Math.abs(dx) - (a.w + b.w) / 2
+  let p0: Point, p3: Point, ux: number, uy: number
+  if (vertical) {
+    const down = dy >= 0
+    p0 = { x: ca.x, y: down ? a.y + a.h : a.y }
+    p3 = { x: cb.x, y: down ? b.y : b.y + b.h }
+    ux = 0
+    uy = down ? 1 : -1
+  } else {
+    const right = dx >= 0
+    p0 = { x: right ? a.x + a.w : a.x, y: ca.y }
+    p3 = { x: right ? b.x : b.x + b.w, y: cb.y }
+    ux = right ? 1 : -1
+    uy = 0
+  }
+  const reach = Math.max(18, Math.min(80, Math.hypot(p3.x - p0.x, p3.y - p0.y) / 3))
+  // Bent aside to the right hand of its way: two edges either way between
+  // the same nodes go to opposite sides.
+  const px = -uy * bend
+  const py = ux * bend
+  return [
+    { x: p0.x + px / 2, y: p0.y + py / 2 },
+    { x: p0.x + ux * reach + px, y: p0.y + uy * reach + py },
+    { x: p3.x - ux * reach + px, y: p3.y - uy * reach + py },
+    { x: p3.x + px / 2, y: p3.y + py / 2 },
+  ]
 }
 
 /**

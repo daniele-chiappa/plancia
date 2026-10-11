@@ -281,3 +281,233 @@
   height: 0;
   overflow: hidden;
 }
+
+/* --- the editor --- */
+
+.plancia-diagram-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0;
+}
+.pd-editor__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.pd-editor__tabs {
+  display: inline-flex;
+  border: 1px solid var(--pd-border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.pd-editor__tabs button {
+  padding: 0.25rem 0.75rem;
+  border: 0;
+  background: var(--pd-surface);
+  color: var(--pd-muted);
+  font: inherit;
+  cursor: pointer;
+}
+.pd-editor__tabs button[aria-selected='true'] {
+  background: var(--pd-accent-soft);
+  color: var(--pd-text);
+}
+.pd-editor__actions,
+.pd-editor__branch-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+.pd-editor__actions button,
+.pd-editor__branch-tools button,
+.pd-editor__problems button {
+  height: 28px;
+  padding: 0 0.5rem;
+  border: 1px solid var(--pd-border);
+  border-radius: 4px;
+  background: var(--pd-surface);
+  color: var(--pd-text);
+  font: inherit;
+  cursor: pointer;
+}
+.pd-editor__problems button {
+  height: auto;
+  padding: 0 0.25rem;
+  color: var(--pd-accent);
+}
+.plancia-diagram-editor button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.plancia-diagram-editor button:focus-visible,
+.plancia-diagram-editor input:focus-visible,
+.plancia-diagram-editor select:focus-visible,
+.plancia-diagram-editor textarea:focus-visible {
+  outline: 2px solid var(--pd-accent);
+  outline-offset: 1px;
+}
+.pd-editor__main[data-mode='flow'] {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 15rem;
+  gap: 0.5rem;
+  align-items: start;
+}
+.pd-editor__main[data-mode='outline'] {
+  display: grid;
+  grid-template-columns: minmax(14rem, 1fr) minmax(0, 1.4fr);
+  gap: 0.75rem;
+  align-items: start;
+}
+@media (max-width: 720px) {
+  .pd-editor__main[data-mode='flow'],
+  .pd-editor__main[data-mode='outline'] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.pd-editor__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--pd-border);
+  border-radius: 6px;
+  background: var(--pd-surface);
+}
+.pd-editor__panel h3 {
+  margin: 0;
+  font-size: 13px;
+}
+.pd-editor__panel label,
+.pd-editor__branch-link {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12px;
+  color: var(--pd-muted);
+}
+.pd-editor__panel input,
+.pd-editor__panel select,
+.pd-editor__branch-link input {
+  padding: 3px 6px;
+  border: 1px solid var(--pd-border);
+  border-radius: 4px;
+  background: var(--pd-surface);
+  color: var(--pd-text);
+  font: inherit;
+  font-size: 13px;
+}
+.pd-editor__outline {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.pd-editor__textarea {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--pd-border);
+  border-radius: 6px;
+  background: var(--pd-surface);
+  color: var(--pd-text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  tab-size: 2;
+  resize: vertical;
+}
+.pd-editor__problems,
+.pd-editor__hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--pd-muted);
+}
+.pd-editor__problems ul {
+  margin: 0.25rem 0 0;
+  padding-left: 1.25rem;
+}
+
+.pd-outline {
+  padding: 0.25rem;
+  border: 1px solid var(--pd-border);
+  border-radius: 6px;
+  background: var(--pd-surface);
+}
+.pd-outline__row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: 4px;
+}
+.pd-outline__row[data-selected] {
+  background: var(--pd-accent-soft);
+}
+.pd-outline__grip {
+  width: 1rem;
+  color: var(--pd-muted);
+  font-size: 11px;
+  text-align: center;
+  cursor: grab;
+  user-select: none;
+}
+.pd-outline__input {
+  flex: 1;
+  min-width: 0;
+  padding: 2px 4px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--pd-text);
+  font: inherit;
+}
+.pd-outline__input:focus {
+  border-color: var(--pd-accent);
+  outline: none;
+  background: var(--pd-surface);
+}
+.pd-outline__link {
+  color: var(--pd-accent);
+}
+
+.plancia-diagram__flow--edit .vue-flow__node-shape {
+  cursor: grab;
+}
+.pd-node[data-selected] .pd-node__fill {
+  stroke: var(--pd-accent);
+  stroke-width: 2.5;
+}
+.pd-node[data-editable] .vue-flow__handle {
+  width: 10px;
+  height: 10px;
+  min-width: 10px;
+  min-height: 10px;
+  border: 2px solid var(--pd-surface);
+  border-radius: 50%;
+  background: var(--pd-accent);
+  opacity: 0;
+  pointer-events: auto;
+  cursor: crosshair;
+}
+.pd-node[data-editable]:hover .vue-flow__handle,
+.pd-node[data-selected] .vue-flow__handle {
+  opacity: 1;
+}
+.pd-edge__hit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 14;
+  pointer-events: stroke;
+}
+.pd-edge[data-selected] .pd-edge__path {
+  stroke: var(--pd-accent);
+  stroke-width: 2.4;
+}
+.vue-flow__node.pd-selected .pd-group {
+  border-color: var(--pd-accent);
+  border-style: solid;
+}
+.plancia-diagram-editor:focus {
+  outline: none;
+}

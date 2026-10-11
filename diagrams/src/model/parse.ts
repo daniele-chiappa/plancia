@@ -47,7 +47,7 @@ import {
 // too, and the other way round.
 
 const idRe = /^[A-Za-z][A-Za-z0-9_-]{0,39}$/
-const edgeRe = /^\s*([^\s:>-][^\s>]*?)\s*->\s*([^\s:]+)\s*(?::\s*(.*))?$/
+export const edgeRe = /^\s*([^\s:>-][^\s>]*?)\s*->\s*([^\s:]+)\s*(?::\s*(.*))?$/
 const wikiLinkRe = /\[\[([^\]]+)\]\]/g
 const floatRe = /^[+-]?(?:(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?|inf(?:inity)?|nan)$/i
 const intRe = /^[+-]?\d+$/
