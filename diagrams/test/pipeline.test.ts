@@ -38,7 +38,7 @@ describe('readPipeline', () => {
   it('reads a pipeline: trigger, nodes, after from the order', () => {
     const { pipeline, problems } = readPipeline(ARRIVALS)
     expect(problems).toEqual([])
-    expect(pipeline!.trigger).toEqual({ on: 'ingest', kinds: ['png', 'jpg'], folder: 'inbox', every: '', match: '', batch: false })
+    expect(pipeline!.trigger).toEqual({ on: 'ingest', kinds: ['png', 'jpg'], folder: 'inbox', every: '', match: '', batch: false, skip: [], status: [], pipelines: '' })
     expect(pipeline!.nodes.map((n) => [n.id, n.use, n.after, n.afterWritten, n.line])).toEqual([
       ['describe', 'llm.describe', [], false, 4],
       ['file', 'note.write', ['describe'], false, 9],
@@ -217,5 +217,26 @@ describe('pipelineGraph', () => {
     const g = pipelineGraph(readPipeline('nodes:\n  - {id: a, use: x}\n  - {id: b, use: y, after: []}\n  - {id: c, use: z, after: [a, b]}\n').pipeline!)
     expect(g.nodes.map((n) => n.id)).toEqual(['trigger', 'a', 'b', 'c'])
     expect(g.edges.map((e) => e.id)).toEqual(['trigger->a', 'trigger->b', 'a->c', 'b->c'])
+  })
+})
+
+describe('the commit, run and chat triggers', () => {
+  it('reads the fields of commit and run', () => {
+    const c = readPipeline('trigger: {on: commit, folder: documents, match: "*.md", skip: [pipelines/import]}\nnodes:\n  - {id: a, use: x}\n').pipeline!
+    expect([c.trigger.on, c.trigger.folder, c.trigger.match, c.trigger.skip]).toEqual(['commit', 'documents', '*.md', ['pipelines/import']])
+    const r = readPipeline('trigger: {on: run, status: [failed, canceled], pipelines: "pipelines/*"}\nnodes:\n  - {id: a, use: x}\n').pipeline!
+    expect([r.trigger.on, r.trigger.status, r.trigger.pipelines]).toEqual(['run', ['failed', 'canceled'], 'pipelines/*'])
+  })
+
+  it('writes them, and takes away the fields of another trigger', () => {
+    const src = 'trigger: {on: commit, folder: documents, match: "*.md", skip: [pipelines/import]}\nnodes:\n  - {id: a, use: x}\n'
+    const run = apply(src, [{ op: 'setTrigger', on: 'run', status: ['failed', 'canceled'], pipelines: 'pipelines/*' }])
+    expect(run.source.startsWith('trigger: {on: run, status: [failed, canceled], pipelines: pipelines/*}\n')).toBe(true)
+    expect(run.p.trigger.pipelines).toBe('pipelines/*')
+    const chat = apply(run.source, { op: 'setTrigger', on: 'chat' })
+    expect(chat.source.startsWith('trigger: {on: chat}\n')).toBe(true)
+    const back = apply(src, { op: 'setTrigger', skip: [] })
+    expect(back.p.trigger.skip).toEqual([])
+    expect(back.source).not.toContain('skip')
   })
 })

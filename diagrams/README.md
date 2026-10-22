@@ -153,7 +153,12 @@ each with its type (`use`), its settings (`with`) and the nodes it waits for
 - On the drawing a node is added from the types, dragged (the first drag
   fixes them all, in `layout:`, which the server ignores), joined to the
   node it waits for, and deleted with its waits handed on. The trigger is
-  a node too, and its panel sets its kind and fields.
+  a node too, and its panel sets its kind and fields: the kinds and folder
+  of `ingest` and `in`, the name glob and batch of `in`, the time of
+  `schedule`, the folder, glob and pipelines left out (`skip`) of `commit`,
+  the ends (`status`) and pipelines of `run`. The menu offers
+  `TRIGGER_KINDS`, or the server's own list in `triggerKinds`; a trigger
+  that is neither stays in it by its name.
 - `run` (`{status, steps: {id: {status, error, output, …}}}`) colours each
   node by how it went, and a node's panel shows its error and output.
 - `problems` are the page's (the server's checks of the text as it is);

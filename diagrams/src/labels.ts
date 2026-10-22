@@ -239,6 +239,12 @@ export interface PipelineLabels {
   every: string
   match: string
   batch: string
+  /** commit: the pipelines whose writes do not start it. */
+  skip: string
+  /** run: the ends of a run it takes. */
+  runEnds: string
+  /** run: the pipeline notes whose runs it takes. */
+  pipelines: string
   required: string
   structured: string
   invalidValue: string
@@ -266,7 +272,16 @@ export interface PipelineLabels {
 
 export const DEFAULT_PIPELINE_LABELS: PipelineLabels = {
   trigger: 'Start',
-  triggers: { manual: 'By hand', external: 'From outside', ingest: 'On arrival', schedule: 'On schedule', in: 'In the IN folder' },
+  triggers: {
+    manual: 'By hand',
+    external: 'From outside',
+    chat: 'From a chat',
+    ingest: 'On arrival',
+    schedule: 'On schedule',
+    in: 'In the IN folder',
+    commit: 'On a commit',
+    run: 'When a run ends',
+  },
   statuses: {
     pending: 'Pending',
     queued: 'Queued',
@@ -313,6 +328,9 @@ export const DEFAULT_PIPELINE_LABELS: PipelineLabels = {
   every: 'Every',
   match: 'Name matching',
   batch: 'One run per batch',
+  skip: 'Not for the writes of',
+  runEnds: 'Run ends',
+  pipelines: 'Pipelines',
   required: 'needed',
   structured: 'YAML or JSON',
   invalidValue: 'Not valid YAML:',

@@ -28,8 +28,10 @@ const props = withDefaults(
     problems?: string[]
     labels?: Partial<PipelineLabels>
     height?: number
+    /** The triggers the menu offers, as the server knows them; default TRIGGER_KINDS. */
+    triggerKinds?: readonly string[]
   }>(),
-  { catalog: () => [], run: null, problems: () => [], labels: () => ({}), height: 520 },
+  { catalog: () => [], run: null, problems: () => [], labels: () => ({}), height: 520, triggerKinds: () => TRIGGER_KINDS },
 )
 const emit = defineEmits<{ 'update:source': [source: string] }>()
 
@@ -39,6 +41,16 @@ const words = computed<PipelineLabels>(() => ({
   triggers: { ...DEFAULT_PIPELINE_LABELS.triggers, ...props.labels.triggers },
   statuses: { ...DEFAULT_PIPELINE_LABELS.statuses, ...props.labels.statuses },
 }))
+
+// The menu's triggers: the consumer's, and the pipeline's own when it is
+// none of them, so that a trigger the menu does not know is not lost.
+const triggerMenu = computed(() => {
+  const on = p.value?.trigger.on ?? ''
+  const kinds = [...props.triggerKinds]
+  return on && !kinds.includes(on) ? [...kinds, on] : kinds
+})
+const triggerWord = (k: string) => (words.value.triggers as Record<string, string>)[k] ?? k
+const list = (s: string) => s.split(/[,\s]+/).map((x) => x.trim()).filter(Boolean)
 
 const tab = ref<'drawing' | 'yaml'>('drawing')
 const read = computed(() => readPipeline(props.source))
@@ -354,22 +366,35 @@ defineExpose({ undo, redo })
             <h3>{{ words.trigger }}</h3>
             <label>{{ words.triggerOn }}
               <select data-field="trigger-on" :value="p.trigger.on" @change="apply([{ op: 'setTrigger', on: value($event) }])">
-                <option v-for="k in TRIGGER_KINDS" :key="k" :value="k">{{ words.triggers[k] }}</option>
+                <option v-for="k in triggerMenu" :key="k" :value="k">{{ triggerWord(k) }}</option>
               </select>
             </label>
-            <template v-if="p.trigger.on === 'ingest' || p.trigger.on === 'in'">
-              <label>{{ words.kinds }}
-                <input data-field="trigger-kinds" placeholder="pdf, docx" :value="p.trigger.kinds.join(', ')"
-                  @change="apply([{ op: 'setTrigger', kinds: value($event).split(/[,\s]+/).map((k) => k.replace(/^\./, '').trim()).filter(Boolean) }])" />
+            <label v-if="p.trigger.on === 'ingest' || p.trigger.on === 'in'">{{ words.kinds }}
+              <input data-field="trigger-kinds" placeholder="pdf, docx" :value="p.trigger.kinds.join(', ')"
+                @change="apply([{ op: 'setTrigger', kinds: value($event).split(/[,\s]+/).map((k) => k.replace(/^\./, '').trim()).filter(Boolean) }])" />
+            </label>
+            <label v-if="p.trigger.on === 'ingest' || p.trigger.on === 'in' || p.trigger.on === 'commit'">{{ words.folder }}
+              <input data-field="trigger-folder" :value="p.trigger.folder" @change="apply([{ op: 'setTrigger', folder: value($event).trim() }])" />
+            </label>
+            <label v-if="p.trigger.on === 'in' || p.trigger.on === 'commit'">{{ words.match }}
+              <input data-field="trigger-match" :placeholder="p.trigger.on === 'commit' ? '*.md' : '*.pdf'" :value="p.trigger.match"
+                @change="apply([{ op: 'setTrigger', match: value($event).trim() }])" />
+            </label>
+            <label v-if="p.trigger.on === 'commit'">{{ words.skip }}
+              <input data-field="trigger-skip" placeholder="pipelines/import" :value="p.trigger.skip.join(', ')"
+                @change="apply([{ op: 'setTrigger', skip: list(value($event)) }])" />
+            </label>
+            <template v-if="p.trigger.on === 'run'">
+              <label>{{ words.runEnds }}
+                <input data-field="trigger-status" placeholder="failed" :value="p.trigger.status.join(', ')"
+                  @change="apply([{ op: 'setTrigger', status: list(value($event)) }])" />
               </label>
-              <label>{{ words.folder }}
-                <input data-field="trigger-folder" :value="p.trigger.folder" @change="apply([{ op: 'setTrigger', folder: value($event).trim() }])" />
+              <label>{{ words.pipelines }}
+                <input data-field="trigger-pipelines" placeholder="pipelines/*" :value="p.trigger.pipelines"
+                  @change="apply([{ op: 'setTrigger', pipelines: value($event).trim() }])" />
               </label>
             </template>
             <template v-if="p.trigger.on === 'in'">
-              <label>{{ words.match }}
-                <input data-field="trigger-match" placeholder="*.pdf" :value="p.trigger.match" @change="apply([{ op: 'setTrigger', match: value($event).trim() }])" />
-              </label>
               <label>{{ words.batch }}
                 <select data-field="trigger-batch" :value="p.trigger.batch ? 'yes' : 'no'"
                   @change="apply([{ op: 'setTrigger', batch: value($event) === 'yes' }])">

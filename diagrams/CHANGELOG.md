@@ -3,6 +3,28 @@
 All notable changes to this package. It follows [Semantic Versioning](https://semver.org);
 its tags are `diagrams-vX.Y.Z`.
 
+## [0.6.0] - 2026-10-22
+
+### Added
+
+- The `chat`, `commit` and `run` triggers of gosidian's pipelines (its
+  IMP-207): `TRIGGER_KINDS` lists the eight its server knows. The trigger
+  panel sets the folder, the name glob (`match`) and the pipelines whose
+  writes do not start it (`skip`) of `commit`, and the ends (`status`) and
+  the pipelines (`pipelines`, a glob) of `run`; `chat` has no fields.
+- `<PipelineEditor>` takes `triggerKinds`, the triggers the menu offers
+  (default `TRIGGER_KINDS`): a consumer can pass its server's list. A
+  pipeline's trigger that the menu does not list stays in it, by its name,
+  instead of leaving the menu empty.
+
+### Changed
+
+- `PipelineTrigger` has `skip`, `status` and `pipelines`; `setTrigger`
+  writes them, and takes them away from a trigger that has none.
+  `PipelineLabels.triggers` is keyed by the eight `TriggerKind`s, and the
+  labels have `skip`, `runEnds` and `pipelines`: a consumer passing its own
+  words adds them.
+
 ## [0.5.0] - 2026-10-11
 
 ### Added

@@ -38,7 +38,8 @@ export function readPipeline(source: string): PipelineReadResult {
   }
   const t = root.get('trigger', true)
   const trig = (isMap(t) ? (t.toJSON() as Record<string, unknown>) : {}) ?? {}
-  const kinds = Array.isArray(trig.kinds) ? trig.kinds.map(str).filter(Boolean) : []
+  const list = (v: unknown) => (Array.isArray(v) ? v.map(str).filter(Boolean) : [])
+  const kinds = list(trig.kinds)
   const pipeline: Pipeline = {
     trigger: {
       on: str(trig.on) || 'manual',
@@ -47,6 +48,9 @@ export function readPipeline(source: string): PipelineReadResult {
       every: str(trig.every),
       match: str(trig.match),
       batch: trig.batch === true,
+      skip: list(trig.skip),
+      status: list(trig.status),
+      pipelines: str(trig.pipelines),
     },
     nodes: [],
     form: 'list',

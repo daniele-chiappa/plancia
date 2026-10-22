@@ -8,21 +8,28 @@ import type { LayoutPoint } from '../model/types'
  * an editor sets in `layout:`, which the server ignores.
  */
 
-export type TriggerKind = 'manual' | 'external' | 'ingest' | 'schedule' | 'in'
-export const TRIGGER_KINDS: readonly TriggerKind[] = ['manual', 'external', 'ingest', 'schedule', 'in']
+export type TriggerKind = 'manual' | 'external' | 'chat' | 'ingest' | 'schedule' | 'in' | 'commit' | 'run'
+/** The triggers of gosidian's pipelines, in the order of its docs; an editor may take its own list (`triggerKinds`). */
+export const TRIGGER_KINDS: readonly TriggerKind[] = ['manual', 'external', 'chat', 'ingest', 'schedule', 'in', 'commit', 'run']
 
 export interface PipelineTrigger {
   on: string
   /** ingest, in: the file extensions it takes. */
   kinds: string[]
-  /** ingest: the folder of the note a document comes with; in: a folder of the IN folder. */
+  /** ingest: the folder of the note a document comes with; in: a folder of the IN folder; commit: the folder whose files it watches. */
   folder: string
   /** schedule: "monday 09:00". */
   every: string
-  /** in: a glob on the file name. */
+  /** in, commit: a glob on the file name. */
   match: string
   /** in: one run per batch of files, instead of one per file. */
   batch: boolean
+  /** commit: the pipelines whose writes do not start it. */
+  skip: string[]
+  /** run: the ends of a run it takes (done, failed, canceled); none is failed. */
+  status: string[]
+  /** run: a glob on the pipeline notes whose runs it takes; empty, all of the project's. */
+  pipelines: string
 }
 
 export interface PipelineRetry {

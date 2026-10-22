@@ -119,6 +119,40 @@ describe('PipelineEditor', () => {
     w.unmount()
   })
 
+  it('offers every trigger of the server, and the fields of commit and run', async () => {
+    const { source, w } = host(SRC)
+    await settle()
+    await nodeEl(w, 'trigger').trigger('click')
+    await settle()
+    const menu = w.findAll('[data-field="trigger-on"] option').map((o) => o.attributes('value'))
+    expect(menu).toEqual(['manual', 'external', 'chat', 'ingest', 'schedule', 'in', 'commit', 'run'])
+    await w.find('[data-field="trigger-on"]').setValue('commit')
+    await settle()
+    await w.find('[data-field="trigger-folder"]').setValue('documents')
+    await w.find('[data-field="trigger-folder"]').trigger('change')
+    await w.find('[data-field="trigger-skip"]').setValue('pipelines/import, pipelines/cut')
+    await w.find('[data-field="trigger-skip"]').trigger('change')
+    expect(source.value.startsWith('trigger: {on: commit, folder: documents, skip: [pipelines/import, pipelines/cut]}\n')).toBe(true)
+    await w.find('[data-field="trigger-on"]').setValue('run')
+    await settle()
+    expect(w.find('[data-field="trigger-folder"]').exists()).toBe(false)
+    await w.find('[data-field="trigger-status"]').setValue('failed, canceled')
+    await w.find('[data-field="trigger-status"]').trigger('change')
+    expect(source.value.startsWith('trigger: {on: run, status: [failed, canceled]}\n')).toBe(true)
+    w.unmount()
+  })
+
+  it('takes the menu from the consumer, and keeps a trigger it does not list', async () => {
+    const { w } = host('trigger: {on: webhook}\nnodes:\n  - {id: a, use: note.write, with: {path: x}}\n', { triggerKinds: ['manual', 'schedule'] })
+    await settle()
+    await nodeEl(w, 'trigger').trigger('click')
+    await settle()
+    const opts = w.findAll('[data-field="trigger-on"] option')
+    expect(opts.map((o) => o.attributes('value'))).toEqual(['manual', 'schedule', 'webhook'])
+    expect(opts[2]!.text()).toBe('webhook')
+    w.unmount()
+  })
+
   it('shows how the nodes went in a run, and the server’s problem', async () => {
     const run: RunState = { status: 'failed', steps: { ask: { status: 'done', output: { text: 'Hi' } }, write: { status: 'failed', error: 'no access' } } }
     const { w } = host(SRC, { run, problems: ['node "write": there is no node type "note.write"'] })

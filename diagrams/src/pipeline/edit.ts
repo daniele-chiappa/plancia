@@ -26,7 +26,18 @@ export type PipelineOp =
   | { op: 'setWith'; id: string; key: string; value: unknown }
   | { op: 'setNodeField'; id: string; field: 'when' | 'unless' | 'each' | 'timeout' | 'on_error'; value: string }
   | { op: 'setRetry'; id: string; attempts?: number; backoff?: string }
-  | { op: 'setTrigger'; on?: string; kinds?: string[]; folder?: string; every?: string; match?: string; batch?: boolean }
+  | {
+      op: 'setTrigger'
+      on?: string
+      kinds?: string[]
+      folder?: string
+      every?: string
+      match?: string
+      batch?: boolean
+      skip?: string[]
+      status?: string[]
+      pipelines?: string
+    }
 
 export interface PipelineEditResult {
   source: string
@@ -336,7 +347,17 @@ class Editor {
     this.touch()
   }
 
-  setTrigger(f: { on?: string; kinds?: string[]; folder?: string; every?: string; match?: string; batch?: boolean }) {
+  setTrigger(f: {
+    on?: string
+    kinds?: string[]
+    folder?: string
+    every?: string
+    match?: string
+    batch?: boolean
+    skip?: string[]
+    status?: string[]
+    pipelines?: string
+  }) {
     let t: unknown = this.root.get('trigger', true)
     if (!isMap(t)) {
       t = this.doc.createNode({}, { flow: true })
@@ -346,19 +367,10 @@ class Editor {
     }
     const map = t as YAMLMap
     if (f.on !== undefined) this.setText(map, 'on', f.on)
-    if (f.kinds !== undefined) {
-      const cur = map.get('kinds', true)
-      const now = isSeq(cur) ? cur.items.map(text) : []
-      if (f.kinds.length === 0) {
-        if (map.has('kinds')) {
-          map.delete('kinds')
-          this.touch()
-        }
-      } else if (now.join('\u0000') !== f.kinds.join('\u0000')) {
-        map.set('kinds', this.doc.createNode(f.kinds, { flow: true }))
-        this.touch()
-      }
-    }
+    if (f.kinds !== undefined) this.setList(map, 'kinds', f.kinds)
+    if (f.skip !== undefined) this.setList(map, 'skip', f.skip)
+    if (f.status !== undefined) this.setList(map, 'status', f.status)
+    if (f.pipelines !== undefined) this.setText(map, 'pipelines', f.pipelines)
     if (f.folder !== undefined) this.setText(map, 'folder', f.folder)
     if (f.every !== undefined) this.setText(map, 'every', f.every)
     if (f.match !== undefined) this.setText(map, 'match', f.match)
@@ -378,12 +390,29 @@ class Editor {
       ingest: ['kinds', 'folder'],
       schedule: ['every'],
       in: ['kinds', 'folder', 'match', 'batch'],
+      commit: ['folder', 'match', 'skip'],
+      run: ['status', 'pipelines'],
     }
-    for (const k of ['kinds', 'folder', 'every', 'match', 'batch']) {
+    for (const k of ['kinds', 'folder', 'every', 'match', 'batch', 'skip', 'status', 'pipelines']) {
       if (map.has(k) && !(keep[on] ?? []).includes(k)) {
         map.delete(k)
         this.touch()
       }
+    }
+  }
+
+  /** setList writes key as a flow list, or deletes it when list is empty. */
+  private setList(map: YAMLMap, key: string, list: string[]) {
+    const cur = map.get(key, true)
+    const now = isSeq(cur) ? cur.items.map(text) : []
+    if (list.length === 0) {
+      if (map.has(key)) {
+        map.delete(key)
+        this.touch()
+      }
+    } else if (now.join('\u0000') !== list.join('\u0000')) {
+      map.set(key, this.doc.createNode(list, { flow: true }))
+      this.touch()
     }
   }
 
