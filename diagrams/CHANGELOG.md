@@ -3,7 +3,7 @@
 All notable changes to this package. It follows [Semantic Versioning](https://semver.org);
 its tags are `diagrams-vX.Y.Z`.
 
-## [0.6.1] - unreleased
+## [0.6.1] - 2026-10-25
 
 ### Fixed
 
