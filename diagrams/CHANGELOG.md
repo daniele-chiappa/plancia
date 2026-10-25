@@ -3,6 +3,24 @@
 All notable changes to this package. It follows [Semantic Versioning](https://semver.org);
 its tags are `diagrams-vX.Y.Z`.
 
+## [0.6.1] - unreleased
+
+### Fixed
+
+- The node types of `<PipelineEditor>` ("Add a node") wrote over each
+  other: the menu sits in the toolbar, whose buttons are 28px high, and
+  its entries took that height whatever their text. They are as high as
+  their text now, and a description shows two lines (the rest in its
+  title); the menu is wider and fits the window.
+
+### Added
+
+- A search on top of the node types, by type or description, case
+  aside: a server with its plugins gives dozens (77 in gosidian's lab).
+  It takes the focus when the menu opens; Enter adds the first type
+  found, Escape closes, and so does a click outside the menu.
+  `PipelineLabels` has `searchNodes` and `noNodes`.
+
 ## [0.6.0] - 2026-10-22
 
 ### Added

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import PipelineCanvas, { type PipelineSelection } from './PipelineCanvas.vue'
 import SchemaForm from './SchemaForm.vue'
 import ExprInput from './ExprInput.vue'
@@ -142,6 +142,48 @@ const groups = computed(() => {
 const canvas = ref<{ center: () => { x: number; y: number }; fit: () => void } | null>(null)
 const frozen = computed(() => !!p.value?.layout && Object.keys(p.value.layout).length > 0)
 const paletteOpen = ref(false)
+const paletteQuery = ref('')
+const paletteSearch = ref<HTMLInputElement | null>(null)
+const paletteEl = ref<HTMLElement | null>(null)
+
+// The node types the search finds, by group: in the type or in the
+// description, case aside. A server with its plugins gives dozens.
+const shownGroups = computed(() => {
+  const q = paletteQuery.value.trim().toLowerCase()
+  if (!q) return groups.value
+  return groups.value
+    .map(([g, list]) => [g, list.filter((t) => t.type.toLowerCase().includes(q) || (t.description ?? '').toLowerCase().includes(q))] as const)
+    .filter(([, list]) => list.length > 0)
+})
+
+// Opened, the palette empties and focuses its search; a click outside it
+// closes it.
+function outside(e: PointerEvent) {
+  if (paletteEl.value && !paletteEl.value.contains(e.target as Node)) paletteOpen.value = false
+}
+watch(paletteOpen, async (open) => {
+  if (!open) {
+    document.removeEventListener('pointerdown', outside, true)
+    return
+  }
+  paletteQuery.value = ''
+  document.addEventListener('pointerdown', outside, true)
+  await nextTick()
+  paletteSearch.value?.focus()
+})
+onBeforeUnmount(() => document.removeEventListener('pointerdown', outside, true))
+
+// Enter in the search adds the first type found; Escape closes.
+function paletteKey(e: KeyboardEvent) {
+  if (e.key === 'Escape') {
+    e.preventDefault()
+    paletteOpen.value = false
+  } else if (e.key === 'Enter' && e.target === paletteSearch.value) {
+    e.preventDefault()
+    const first = shownGroups.value[0]?.[1][0]
+    if (first) addNode(first.type)
+  }
+}
 
 function addNode(use: string) {
   paletteOpen.value = false
@@ -228,10 +270,20 @@ defineExpose({ undo, redo })
       </div>
       <div class="pd-editor__actions">
         <template v-if="tab === 'drawing' && p">
-          <span class="pd-palette">
+          <span ref="paletteEl" class="pd-palette">
             <button type="button" data-action="add-node" :aria-expanded="paletteOpen" @click="paletteOpen = !paletteOpen">{{ words.addNode }} ▾</button>
-            <span v-if="paletteOpen" class="pd-palette__menu" role="menu" :aria-label="words.palette">
-              <template v-for="[g, list] in groups" :key="g">
+            <span v-if="paletteOpen" class="pd-palette__menu" role="menu" :aria-label="words.palette" @keydown="paletteKey">
+              <input
+                ref="paletteSearch"
+                v-model="paletteQuery"
+                class="pd-palette__search"
+                type="search"
+                data-field="palette-search"
+                :placeholder="words.searchNodes"
+                :aria-label="words.searchNodes"
+              />
+              <span v-if="!shownGroups.length" class="pd-palette__none">{{ words.noNodes }}</span>
+              <template v-for="[g, list] in shownGroups" :key="g">
                 <span class="pd-palette__group">{{ g === 'base' ? words.base : g }}</span>
                 <button
                   v-for="t in list"

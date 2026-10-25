@@ -214,6 +214,9 @@ export interface PipelineLabels {
   zoomIn: string
   zoomOut: string
   palette: string
+  /** The search of the palette, and what it says when it finds nothing. */
+  searchNodes: string
+  noNodes: string
   base: string
   node: string
   id: string
@@ -303,6 +306,8 @@ export const DEFAULT_PIPELINE_LABELS: PipelineLabels = {
   zoomIn: 'Zoom in',
   zoomOut: 'Zoom out',
   palette: 'Node types',
+  searchNodes: 'Search the node types',
+  noNodes: 'No node type matches.',
   base: 'Base',
   node: 'Node',
   id: 'Id',
