@@ -47,11 +47,27 @@ import {
 // too, and the other way round.
 
 const idRe = /^[A-Za-z][A-Za-z0-9_-]{0,39}$/
-export const edgeRe = /^\s*([^\s:>-][^\s>]*?)\s*->\s*([^\s:]+)\s*(?::\s*(.*))?$/
+const edgeRe = /^\s*([^\s:>-][^\s>]*?)\s*->\s*([^\s:]+)\s*(?::([\s\S]*))?$/
+const lineEndRe = /[\n\r\u2028\u2029]/
 const wikiLinkRe = /\[\[([^\]]+)\]\]/g
 const floatRe = /^[+-]?(?:(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?|inf(?:inity)?|nan)$/i
 const intRe = /^[+-]?\d+$/
 const dateRe = /^(\d{4})-(\d{2})-(\d{2})$/
+
+/**
+ * An edge in its short form, "from -> to" or "from -> to: label": its two
+ * ends and its label, trimmed, or null. The strings it reads are those of
+ * gosidian's pattern, whose tail `:\s*(.*)$` is taken whole here and
+ * checked after: as a pattern it backtracks polynomially on a run of
+ * blanks before a line end.
+ */
+export function readEdge(s: string): [string, string, string] | null {
+  const m = edgeRe.exec(s)
+  if (!m) return null
+  const label = (m[3] ?? '').trimStart()
+  if (lineEndRe.test(label)) return null
+  return [m[1]!, m[2]!, label.trimEnd()]
+}
 
 /**
  * A node of the YAML as gosidian's reader sees it (yaml.v3's Node): its
@@ -325,14 +341,12 @@ class Reader {
     for (const n of edges) {
       const e: DiagramEdge = { from: '', to: '', label: '', style: 'solid', line: n.line }
       if (n.kind === 'scalar') {
-        const m = edgeRe.exec(n.text)
+        const m = readEdge(n.text)
         if (!m) {
           this.bad(n, `edge ${q(n.text)} is "from -> to" or "from -> to: label"`)
           continue
         }
-        e.from = m[1]!
-        e.to = m[2]!
-        e.label = (m[3] ?? '').trim()
+        ;[e.from, e.to, e.label] = m
       } else {
         const f = this.fields(n, 'an edge', 'from', 'to', 'label', 'style')
         e.from = this.str(f.get('from'), 'from')

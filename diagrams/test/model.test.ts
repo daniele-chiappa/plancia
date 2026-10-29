@@ -4,6 +4,7 @@ import Ajv from 'ajv'
 import { parse as parseYaml } from 'yaml'
 import { describe, expect, it } from 'vitest'
 import { parseDiagram, diagramText, diagramLinks, diagramSchema, MAX_BYTES, MAX_ITEMS } from '../src'
+import { readEdge } from '../src/model/parse'
 
 // The tests of gosidian's internal/diagram/diagram_test.go, ported.
 describe('parseDiagram', () => {
@@ -59,6 +60,22 @@ children:
     )
     expect(diagram!.sections[0]!.tasks[0]!.label).toBe('1.10')
     expect(problems.map((p) => p.message)).toEqual(['start "2026-02-30" is a date, YYYY-MM-DD'])
+  })
+
+  it('reads the short form of an edge as gosidian does, fast on a run of blanks', () => {
+    // gosidian's pattern (internal/diagram/parse.go), which backtracks here on long blanks.
+    const goRe = /^\s*([^\s:>-][^\s>]*?)\s*->\s*([^\s:]+)\s*(?::\s*(.*))?$/
+    const go = (s: string) => {
+      const m = goRe.exec(s)
+      return m ? [m[1], m[2], (m[3] ?? '').trim()] : null
+    }
+    for (const s of ['a -> b', ' a->b ', 'a -> b: go', 'a -> b:  go now \t', 'a -> b:', 'b->c-1: go: now', 'a -> b:\n  go', 'a -> b:\r\n go',
+      'a -> b: go\nmore', 'a -> b \n', 'a -> b: \n\t', 'a -> b:\t\tx\n', 'a -> b:\tgo\r', 'a -> b: go\u2028', 'a-b -> c', 'a -> b c', '-a -> b', 'a -> :b', 'a -> b\u00a0: go']) {
+      expect(readEdge(s), JSON.stringify(s)).toEqual(go(s))
+    }
+    expect(readEdge(`!->!:${'\t'.repeat(100_000)}x\n`)).toBeNull()
+    expect(readEdge(`!->!:${'\t'.repeat(100_000)}\n`)).toEqual(['!', '!', ''])
+    expect(readEdge(`a -> b:${' '.repeat(100_000)}go`)).toEqual(['a', 'b', 'go'])
   })
 
   it('lists the links', () => {

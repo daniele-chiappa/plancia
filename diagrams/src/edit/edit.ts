@@ -1,5 +1,5 @@
 import { parseDocument, isMap, isPair, isScalar, isSeq, Pair, Scalar, YAMLMap, YAMLSeq, type Document, type Node as YamlNode } from 'yaml'
-import { edgeRe, parseDiagram } from '../model/parse'
+import { parseDiagram, readEdge } from '../model/parse'
 import type { Diagram, DiagramBranch, EdgeStyle, NodeClass, NodeShape, TaskStatus } from '../model/types'
 
 // The editor's changes to a diagram's YAML (IMP-169, F2). They work on the
@@ -287,10 +287,7 @@ class Editor {
   // --- edges ---
 
   private edgeEnds(it: unknown): [string, string, string] | null {
-    if (isScalar(it)) {
-      const m = edgeRe.exec(text(it))
-      return m ? [m[1]!, m[2]!, (m[3] ?? '').trim()] : null
-    }
+    if (isScalar(it)) return readEdge(text(it))
     if (isMap(it)) return [text(it.get('from', true)), text(it.get('to', true)), text(it.get('label', true))]
     return null
   }

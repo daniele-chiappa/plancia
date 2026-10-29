@@ -63,7 +63,7 @@ function sides(a: Box, b: Box): [Side, Side] {
 function cardText(label: string, link: string): string {
   const l = linkTarget(link, label)
   if (!l) return label
-  if (l.kind === 'url') return `[${label.replace(/[[\]]/g, '\\$&')}](${l.target})`
+  if (l.kind === 'url') return `[${label.replace(/[\\[\]]/g, '\\$&')}](${l.target})`
   return l.target === label ? `[[${l.target}]]` : `[[${l.target}|${label.replace(/[|\]]/g, ' ')}]]`
 }
 
@@ -114,8 +114,9 @@ function labelOf(text: string): { label: string; link: string } {
   const t = text.trim()
   const wiki = /^\[\[([^\]|]+)(?:\|([^\]]+))?\]\]$/.exec(t)
   if (wiki) return { label: (wiki[2] ?? wiki[1]!.split('/').pop()!).trim(), link: `[[${wiki[1]!.trim()}]]` }
-  const md = /^\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)$/.exec(t)
-  if (md) return { label: md[1]!, link: md[2]! }
+  const md = /^\[((?:\\.|[^\\\]])+)\]\((https?:\/\/[^)\s]+)\)$/.exec(t)
+  // Markdown's escapes: a backslash before ASCII punctuation, as cardText writes them.
+  if (md) return { label: md[1]!.replace(/\\([!-/:-@[-`{-~])/g, '$1'), link: md[2]! }
   const label = t
     .split('\n')
     .map((l) => l.replace(/^\s{0,3}(#{1,6}\s+|[-*+]\s+|>\s?)/, ''))

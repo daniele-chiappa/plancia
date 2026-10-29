@@ -87,6 +87,12 @@ describe('editPipeline', () => {
     expect(apply('nodes: []\n', { op: 'addNode', use: 'starlark' }).source).toBe('nodes:\n  - {id: starlark, use: starlark}\n')
   })
 
+  it('makes an id without the underscores at its end, fast on a long run of them', () => {
+    expect(editPipeline('nodes: []\n', { op: 'addNode', use: 'x.Read me!__' }).ids).toEqual(['read_me'])
+    const use = `a${'_'.repeat(100_000)}b`
+    expect(editPipeline('nodes: []\n', { op: 'addNode', use }).ids).toEqual([use])
+  })
+
   it('connects and disconnects, writing after out', () => {
     const one = apply(CHAIN, { op: 'connect', from: 'a', to: 'c' })
     expect(one.source).toContain('{id: c, use: starlark, after: [b, a]}')

@@ -192,6 +192,14 @@ describe('JSON Canvas', () => {
     expect(Object.keys(back.layout!)).toEqual(['a', 'b', 'c'])
   })
 
+  it('escapes the backslashes and brackets of a link card, and reads them back', () => {
+    const src = 'kind: flow\nnodes:\n  - {id: a, label: "C:\\\\docs [old]\\\\", link: "https://x.org"}\n'
+    expect(read(src).nodes[0]!.label).toBe('C:\\docs [old]\\')
+    const c = JSON.parse(toCanvas(read(src), measure))
+    expect(c.nodes[0].text).toBe('[C:\\\\docs \\[old\\]\\\\](https://x.org)')
+    expect(read(fromCanvas(JSON.stringify(c)).source).nodes[0]).toMatchObject({ label: 'C:\\docs [old]\\', link: 'https://x.org' })
+  })
+
   it('reads an Obsidian canvas: file and link cards, ids made valid, and says what it leaves out', () => {
     const r = fromCanvas(
       JSON.stringify({

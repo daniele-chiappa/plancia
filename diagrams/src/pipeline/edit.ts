@@ -136,7 +136,12 @@ class Editor {
 
   private fresh(base: string): string {
     const taken = new Set(this.entries().map((e) => e.id))
-    let b = base.toLowerCase().replace(/[^a-z0-9_]+/g, '_').replace(/^[^a-z]+/, '').replace(/_+$/, '') || 'node'
+    // The trailing underscores go by hand: /_+$/ is quadratic on a long
+    // run of them that something follows.
+    let b = base.toLowerCase().replace(/[^a-z0-9_]+/g, '_').replace(/^[^a-z]+/, '')
+    let end = b.length
+    while (end > 0 && b[end - 1] === '_') end--
+    b = b.slice(0, end) || 'node'
     if (RESERVED.includes(b)) b = `${b}_node`
     if (!taken.has(b)) return b
     let i = 2

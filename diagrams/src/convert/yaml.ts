@@ -1,5 +1,5 @@
 import { Document, isMap, isScalar, isSeq, visit, Scalar, YAMLMap, YAMLSeq, type Node as YamlNode } from 'yaml'
-import { edgeRe } from '../model/parse'
+import { readEdge } from '../model/parse'
 
 // The YAML a conversion writes: the fields in the order of the docs, each
 // node, edge, set or task on a line of its own as a flow mapping, an edge
@@ -78,8 +78,8 @@ export class YamlOut {
   /** An edge: "from -> to: label" when that reads back the same, else a mapping. */
   static edge(from: string, to: string, label = '', style = 'solid'): unknown {
     const short = label ? `${from} -> ${to}: ${label}` : `${from} -> ${to}`
-    const m = edgeRe.exec(short)
-    if (style === 'solid' && !/\n/.test(label) && m && m[1] === from && m[2] === to && (m[3] ?? '').trim() === label.trim() && label === label.trim()) {
+    const m = readEdge(short)
+    if (style === 'solid' && !/\n/.test(label) && m && m[0] === from && m[1] === to && m[2] === label && label === label.trim()) {
       return short
     }
     return { from, to, label, style: style === 'solid' ? '' : style }

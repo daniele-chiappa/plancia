@@ -3,6 +3,21 @@
 All notable changes to this package. It follows [Semantic Versioning](https://semver.org);
 its tags are `diagrams-vX.Y.Z`.
 
+## [0.6.2] - unreleased
+
+### Fixed
+
+- Three findings of CodeQL. The short form of an edge (`a -> b: label`)
+  took a time quadratic in a run of blanks after its colon when a line
+  end followed (20,000 tabs, 0.7 s): the label is matched whole and
+  checked after, and the forms read are the same as gosidian's. An id
+  that `PipelineEditor` makes from a node type dropped its trailing
+  underscores in quadratic time too. A link card of an Obsidian canvas
+  escaped the brackets of its label but not its backslashes, so a label
+  ending in `\` broke the link: both are escaped now, and read back.
+- Development dependencies: vitest 5.0.5 (it was 4.1.11), undici 8.12.2
+  for its advisory, jsdom 30.1.3 and the type tools.
+
 ## [0.6.1] - 2026-10-25
 
 ### Fixed
