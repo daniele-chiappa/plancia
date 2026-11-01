@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **`PlanciaModal` adds no landmarks to the page** — the title bar was a
+  `<header>` and the actions a `<footer>`, inside a dialog teleported to
+  `body`, outside any `main`: a screen reader found a second banner and a
+  contentinfo on the page, and axe flagged a duplicate banner. They are
+  now `div`s with the same classes, and look the same.
+
 ## [0.3.3] - 2026-10-11
 
 ### Fixed

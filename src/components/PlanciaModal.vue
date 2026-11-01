@@ -155,7 +155,10 @@ const slotProps = computed<ModalSlotProps>(() => ({ close: requestClose }))
           :aria-describedby="bodyId"
           tabindex="-1"
         >
-          <header v-if="hasHeader" class="plancia-modal__header">
+          <!-- Divs, not header and footer: the dialog is teleported to body,
+               outside any main, where those would be a banner and a
+               contentinfo of the page (IMP-010). -->
+          <div v-if="hasHeader" class="plancia-modal__header">
             <h2 :id="titleId" class="plancia-modal__title">
               <slot name="title">{{ title }}</slot>
             </h2>
@@ -179,15 +182,15 @@ const slotProps = computed<ModalSlotProps>(() => ({ close: requestClose }))
                 <line x1="6" y1="6" x2="18" y2="18" />
               </svg>
             </button>
-          </header>
+          </div>
 
           <div :id="bodyId" class="plancia-modal__body">
             <slot v-bind="slotProps" />
           </div>
 
-          <footer v-if="$slots.footer" class="plancia-modal__footer">
+          <div v-if="$slots.footer" class="plancia-modal__footer">
             <slot name="footer" v-bind="slotProps" />
-          </footer>
+          </div>
         </div>
       </div>
     </Transition>

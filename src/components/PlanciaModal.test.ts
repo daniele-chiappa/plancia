@@ -87,6 +87,19 @@ describe('PlanciaModal', () => {
     void w
   })
 
+  it('adds no banner or contentinfo to the page (IMP-010)', async () => {
+    mount(PlanciaModal, {
+      props: { open: true, title: 'Hello' },
+      slots: { default: () => h('p', 'body'), footer: () => h('button', 'OK') },
+    })
+    await nextTick()
+    // Teleported to body, outside any main: a header there is a banner and
+    // a footer a contentinfo, for screen readers and axe alike.
+    const p = panel()!
+    expect(p.querySelector('.plancia-modal__header')).not.toBeNull()
+    expect(p.querySelector('header, footer, [role="banner"], [role="contentinfo"]')).toBeNull()
+  })
+
   it('ref-counts the scroll-lock across stacked modals', async () => {
     const a = mount(PlanciaModal, { props: { open: true } })
     const b = mount(PlanciaModal, { props: { open: true } })
