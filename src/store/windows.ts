@@ -26,11 +26,16 @@ interface WindowsState {
   widthCycle: WindowWidth[]
   /** Width assigned to a window opened without an explicit `width`. */
   defaultWidth: WindowWidth
+  /** Selector of the element that takes the focus in a window's body
+   *  (`usePlanciaFocus`); null: the window itself. */
+  focusTarget: string | null
 }
 
 export interface WindowsConfig {
   widthCycle?: WindowWidth[]
   defaultWidth?: WindowWidth
+  /** null clears it; omitted leaves it as it is. */
+  focusTarget?: string | null
 }
 
 export const useWindowsStore = defineStore('plancia-windows', {
@@ -41,6 +46,7 @@ export const useWindowsStore = defineStore('plancia-windows', {
     dataVersion: 0,
     widthCycle: [...DEFAULT_WIDTH_CYCLE],
     defaultWidth: DEFAULT_WIDTH,
+    focusTarget: null,
   }),
   getters: {
     visible: (s): WindowInstance[] => s.windows.filter((w) => !w.minimized),
@@ -49,10 +55,11 @@ export const useWindowsStore = defineStore('plancia-windows', {
       s.windows.find((w) => w.id === s.focusedId) ?? null,
   },
   actions: {
-    /** Set width behaviour. Called once by the manager from its props. */
+    /** Set width and focus behaviour. Called by the manager from its props. */
     configure(cfg: WindowsConfig): void {
       if (cfg.widthCycle && cfg.widthCycle.length) this.widthCycle = [...cfg.widthCycle]
       if (cfg.defaultWidth) this.defaultWidth = cfg.defaultWidth
+      if (cfg.focusTarget !== undefined) this.focusTarget = cfg.focusTarget
     },
     _byId(id: string): WindowInstance | undefined {
       return this.windows.find((w) => w.id === id)
@@ -170,7 +177,7 @@ export const useWindowsStore = defineStore('plancia-windows', {
     touch(): void {
       this.dataVersion += 1
     },
-    /** Clear all windows (keeps the configured width behaviour). */
+    /** Clear all windows (keeps the configured width and focus behaviour). */
     reset(): void {
       this.windows = []
       this.focusedId = null

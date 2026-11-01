@@ -31,6 +31,7 @@ ones. Fills its parent, so give the parent a height.
 | `v-model:view-mode` | `'strip' \| 'tabs'` | `'strip'` (or config) | Layout mode. `strip` = the tiling strip; `tabs` = a scrollable tab bar over a single focused pane. See [View mode](./view-mode.md). |
 | `keepAliveMax` | `number` | `5` | In `tabs` mode, how many window subtrees stay mounted (LRU). The lever for hosting many windows cheaply. |
 | `showViewToggle` | `boolean` | `true` | Render the built-in view toggle in the tab bar (override its content with the `view-toggle` slot). |
+| `focusTarget` | `string` | — | Selector of the element that takes the focus in a window's body, such as its heading (`[data-window-heading]`). Omitted, or not drawn yet: the window itself takes it. Applied to the store via `configure()`; see [Recipes → Focus a window](./recipes.md#focus-a-window). |
 
 ### Slots
 
@@ -81,6 +82,10 @@ component rendered inside `<Plancia>`, so `useOpenWindow()` resolves (see
 - Footer lists minimized windows; clicking restores + focuses one.
 - Keyboard: `Alt + ArrowLeft` / `Alt + ArrowRight` move focus between visible
   windows.
+- Each window is a named region: its title (with the module of a foreign
+  window) names it, and it can take the focus itself (`tabindex="-1"`). A focus
+  that enters a window, by Tab or by script, makes it the focused one, as a
+  click does.
 - Clickable header **tags** open their `open` target — but only if that type is
   registered in this plancia (otherwise the tag stays informational).
 

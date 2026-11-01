@@ -5,7 +5,7 @@
  * styling. Extra per-window buttons go through the `actions` slot (this is how
  * domain-specific actions like gosidian's ego-graph button stay OUT of the lib).
  */
-import { computed, inject, onBeforeUnmount, ref } from 'vue'
+import { computed, inject, onBeforeUnmount, ref, useId } from 'vue'
 import { useWindowsStore } from '../store/windows'
 import { OPEN_WINDOW, CAN_OPEN_TYPE } from '../composables/openWindow'
 import { DEFAULT_MIN_WIDTH, useWindowResize } from '../composables/useWindowResize'
@@ -50,6 +50,12 @@ const focused = computed(() => store.focusedId === props.win.id)
 const titleAttr = computed(() =>
   props.foreignLabel ? `${props.foreignLabel}: ${props.win.title}` : props.win.title,
 )
+// The window is named by its title, with the module of a foreign one, and
+// without the unsaved mark (F-03).
+const uid = useId()
+const badgeId = `plancia-window-${uid}-module`
+const nameId = `plancia-window-${uid}-title`
+const labelledBy = computed(() => (props.foreignLabel ? `${badgeId} ${nameId}` : nameId))
 
 function toneClass(tone?: string): string {
   return props.resolveTone ? props.resolveTone(tone) : ''
@@ -202,13 +208,18 @@ onBeforeUnmount(() => {
     class="plancia-window"
     :class="{ 'plancia-window--focused': focused }"
     :style="rootStyle"
+    :aria-labelledby="labelledBy"
+    tabindex="-1"
     @mousedown="store.focus(win.id)"
+    @focusin="store.focus(win.id)"
   >
     <header class="plancia-window__header">
       <div class="plancia-window__titlerow">
         <span class="plancia-window__title" :title="titleAttr">
-          <span v-if="foreignLabel" class="plancia-window__badge">{{ foreignLabel }}</span>
-          {{ win.title || '—' }}
+          <!-- The spaces between module, title and unsaved mark are text:
+               Vue drops the white space between tags on separate lines. -->
+          <span v-if="foreignLabel" :id="badgeId" class="plancia-window__badge">{{ foreignLabel }}</span>
+          {{ ' ' }}<span :id="nameId">{{ win.title || '—' }}</span>{{ ' ' }}
           <span v-if="win.dirty" class="plancia-window__dirty" :title="labels.dirty">•</span>
         </span>
 

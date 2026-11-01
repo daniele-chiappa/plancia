@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **A window is a place for the focus** — a screen reader could not tell
+  which window the focus was in, and a host had no window to put the focus
+  on:
+  - each window is a region named by its title (with the module of a
+    foreign window, without the unsaved mark), and can take the focus
+    itself (`tabindex="-1"`, with an accent ring from the keyboard);
+  - a focus that enters a window, by Tab or by script, makes it the
+    focused one, as a click does;
+  - new `focusTarget` prop on `<Plancia>`: the selector of the element that
+    takes the focus in a window's body, such as its heading;
+  - new `usePlanciaFocus()` → `focusWindow(id, { wait })`: focuses that
+    target, or the window itself; waits up to `wait` ms for a view loaded on
+    demand; moves the focus only if nothing moved it meanwhile, and only for
+    the last call. Callable from outside `<Plancia>` too.
+
 ### Fixed
 
 - **`PlanciaModal` adds no landmarks to the page** — the title bar was a

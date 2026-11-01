@@ -136,6 +136,41 @@ emit('dirty', true)   // editing started
 emit('dirty', false)  // saved
 ```
 
+## Focus a window
+
+A window opened by a gesture should take the focus, so a screen reader says
+which window it is and Tab goes on to its first control. `usePlanciaFocus()`
+gives `focusWindow(id, { wait })`: it focuses the element `<Plancia
+focus-target>` selects in the window's body, or the window itself. Views loaded
+on demand draw their heading later, so `wait` gives them that long (ms).
+
+```vue
+<!-- the shell -->
+<Plancia :registry="registry" focus-target="[data-window-heading]" />
+
+<!-- each view -->
+<h1 data-window-heading tabindex="-1">{{ title }}</h1>
+```
+
+```ts
+import { useWindowsStore, usePlanciaFocus } from 'plancia'
+
+const windows = useWindowsStore()
+const { focusWindow } = usePlanciaFocus()
+
+function openNote(path: string) {
+  const id = windows.open({ type: 'note', key: `note:${path}`, props: { path } })
+  void focusWindow(id, { wait: 2000 })
+}
+```
+
+The focus moves only if it is still where it was when `focusWindow` was called
+(or on the page, once that element went): a key pressed meanwhile keeps it. Only
+the last call moves it. It resolves to `true` when the focus landed in the
+window. It works from anywhere under the same Pinia — a bar or a palette outside
+`<Plancia>` too — since the selector comes from the store. The window must be on
+screen: in `tabs` mode, the focused one.
+
 ## Keyboard
 
 Built in: `Alt + ArrowLeft` / `Alt + ArrowRight` move focus between visible

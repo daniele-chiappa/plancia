@@ -46,6 +46,7 @@ interface WindowTag {
 | `dataVersion` | `number` | Bumped by `touch()`; watch it to refresh dependent views. |
 | `widthCycle` | `('s'\|'m'\|'full')[]` | Order cycled by `cycleWidth`. |
 | `defaultWidth` | `'s'\|'m'\|'full'` | Width applied when `open()` has no `width`. |
+| `focusTarget` | `string \| null` | Selector of the element that takes the focus in a window's body (`usePlanciaFocus`); `null`: the window itself. |
 
 ## Getters
 
@@ -59,7 +60,7 @@ interface WindowTag {
 
 | Action | Signature | Notes |
 |---|---|---|
-| `configure` | `(cfg: { widthCycle?; defaultWidth? }) => void` | Set width behaviour. `<Plancia>` calls this from its props; call it yourself only if you use the store without the component. |
+| `configure` | `(cfg: { widthCycle?; defaultWidth?; focusTarget? }) => void` | Set width and focus behaviour. `<Plancia>` calls this from its props; call it yourself only if you use the store without the component. `focusTarget: null` clears it, omitted leaves it. |
 | `open` | `(spec: OpenSpec) => string` | Opens, or focuses/restores if `key` exists. Inserts the new window **immediately right of the focused one**. Returns the window id. |
 | `close` | `(id: string) => void` | Removes the window; re-focuses a neighbour. |
 | `minimize` | `(id: string) => void` | Sends to the footer; focus moves to the last visible window. |
@@ -72,7 +73,7 @@ interface WindowTag {
 | `setTags` | `(id: string, tags: WindowTag[]) => void` | — |
 | `identify` | `(id: string, key: string, props) => void` | Re-keys a window and merges `props` (e.g. after a draft is saved and gains an id) → correct de-dup and URL sync afterwards. |
 | `touch` | `() => void` | Bumps `dataVersion`. |
-| `reset` | `() => void` | Clears all windows + focus. Keeps the configured width behaviour. |
+| `reset` | `() => void` | Clears all windows + focus. Keeps the configured width and focus behaviour. |
 
 ## Examples
 

@@ -302,6 +302,12 @@
   border-color: var(--plancia-accent);
   box-shadow: 0 0 0 2px var(--plancia-accent-soft);
 }
+/* The window itself has the focus when its view has no focus target (F-03):
+   the same ring as the resize handle, instead of the browser's own. */
+.plancia-window:focus-visible {
+  outline: 2px solid var(--plancia-accent);
+  outline-offset: -2px;
+}
 
 .plancia-window__header {
   display: flex;

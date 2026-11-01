@@ -58,6 +58,10 @@ const props = withDefaults(
   /** Render the built-in view toggle in the tab bar. Default true. Override its
    *  content with the `view-toggle` slot ({ mode, toggle }). */
   showViewToggle?: boolean
+  /** Selector of the element that takes the focus in a window's body, such as
+   *  its heading (`usePlanciaFocus`). Omitted, or not drawn yet: the window
+   *  itself takes it. */
+  focusTarget?: string
   }>(),
   { showViewToggle: true },
 )
@@ -87,11 +91,13 @@ const keepAliveMax = computed(
   () => props.keepAliveMax ?? cfg?.value.components?.window?.defaults?.keepAliveMax ?? 5,
 )
 
-// Apply (and keep in sync) the width configuration from props (or config).
+// Apply (and keep in sync) the width and focus configuration from props (or
+// config).
 watchEffect(() =>
   store.configure({
     widthCycle: props.widthCycle ?? cfg?.value.components?.window?.defaults?.widthCycle,
     defaultWidth: props.defaultWidth ?? cfg?.value.components?.window?.defaults?.defaultWidth,
+    focusTarget: props.focusTarget ?? null,
   }),
 )
 

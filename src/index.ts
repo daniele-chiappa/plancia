@@ -26,6 +26,9 @@ export type {
   WindowResizeEventType,
 } from './composables/useWindowResize'
 
+export { usePlanciaFocus } from './composables/usePlanciaFocus'
+export type { FocusWindowOptions } from './composables/usePlanciaFocus'
+
 export { usePlanciaSync, createArgCodec } from './composables/usePlanciaSync'
 export type {
   PlanciaCodec,

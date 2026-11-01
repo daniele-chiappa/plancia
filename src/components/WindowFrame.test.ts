@@ -122,3 +122,48 @@ describe('WindowFrame drag-resize', () => {
     expect(win.widthPx).toBeNull()
   })
 })
+
+describe('WindowFrame as a focus point (F-03)', () => {
+  /** The accessible name given by aria-labelledby, resolved in the frame. */
+  const nameOf = (section: Element) =>
+    (section.getAttribute('aria-labelledby') ?? '')
+      .split(' ')
+      .filter(Boolean)
+      .map((id) => section.querySelector(`[id="${id}"]`)?.textContent?.trim())
+      .join(' ')
+
+  it('is named by its title, without the unsaved mark, and can take the focus', () => {
+    const win = openWin()
+    store.setTitle(win.id, 'Note')
+    store.setDirty(win.id, true)
+    const section = mountFrame(win).get('section').element
+    expect(nameOf(section)).toBe('Note')
+    expect(section.getAttribute('tabindex')).toBe('-1')
+  })
+
+  it('a foreign window is named with its module too', () => {
+    const win = openWin()
+    store.setTitle(win.id, 'Note')
+    const w = mountFrame(win, { foreignLabel: 'Products' })
+    expect(nameOf(w.get('section').element)).toBe('Products Note')
+  })
+
+  it('keeps the spaces of the title bar between module, title and unsaved mark', () => {
+    const win = openWin()
+    store.setTitle(win.id, 'Note')
+    store.setDirty(win.id, true)
+    const w = mountFrame(win, { foreignLabel: 'Products' })
+    expect(w.get('.plancia-window__title').element.textContent?.replace(/\s+/g, ' ').trim()).toBe(
+      'Products Note •',
+    )
+  })
+
+  it('a focus that enters the window makes it the focused one', async () => {
+    const first = store.open({ type: 't', key: 'a' })
+    store.open({ type: 't', key: 'b' }) // takes the focus
+    const w = mountFrame(store._byId(first)!)
+    w.get('button').element.dispatchEvent(new FocusEvent('focusin', { bubbles: true }))
+    await nextTick()
+    expect(store.focusedId).toBe(first)
+  })
+})
