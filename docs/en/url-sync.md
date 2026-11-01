@@ -29,6 +29,13 @@ It writes `?w=<tokens>&f=<focus>` (debounced) on every change, and—on
 back/forward—re-hydrates the store from the URL. On `hydrate()` the URL is
 primary; if empty and `useLocalStorage` is on, it restores the last session.
 
+The URL is the shell's only while the route record that renders it is matched
+(its child pages included). A shell unmounted before the debounced write
+(say, sent to a login page) saves to `localStorage` only; a shell kept alive
+on another page (`<KeepAlive>`) neither writes nor reads that page's query,
+and picks its windows up again when it is back. A shell rendered outside any
+`<RouterView>` has no page of its own, and syncs on every route.
+
 ### Options
 
 | Option | Default | Meaning |
