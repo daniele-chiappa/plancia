@@ -37,6 +37,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **The width separator reports the drawn width** — its `aria-valuenow` was
+  0 while the window had a preset width; it is now the width on screen.
 - **`PlanciaModal` adds no landmarks to the page** — the title bar was a
   `<header>` and the actions a `<footer>`, inside a dialog teleported to
   `body`, outside any `main`: a screen reader found a second banner and a

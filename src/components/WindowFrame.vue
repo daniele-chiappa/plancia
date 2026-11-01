@@ -5,7 +5,7 @@
  * styling. Extra per-window buttons go through the `actions` slot (this is how
  * domain-specific actions like gosidian's ego-graph button stay OUT of the lib).
  */
-import { computed, inject, onBeforeUnmount, ref, useId } from 'vue'
+import { computed, inject, onBeforeUnmount, onMounted, ref, useId } from 'vue'
 import { useWindowsStore } from '../store/windows'
 import { OPEN_WINDOW, CAN_OPEN_TYPE } from '../composables/openWindow'
 import { DEFAULT_MIN_WIDTH, useWindowResize } from '../composables/useWindowResize'
@@ -103,7 +103,22 @@ const rootStyle = computed<Record<string, string>>(() => {
   else if (renderWidth.value) s['--plancia-window-w'] = renderWidth.value
   return s
 })
-const ariaNow = computed(() => Math.round(props.win.widthPx ?? 0))
+// The separator's value is the drawn width, also while the width is a
+// preset (it said 0 then). Measured on mount and on every resize.
+const drawnPx = ref(0)
+function measure() {
+  drawnPx.value = sectionRef.value?.getBoundingClientRect().width ?? 0
+}
+let ro: ResizeObserver | undefined
+onMounted(() => {
+  if (props.fill) return
+  measure()
+  if (typeof ResizeObserver !== 'undefined' && sectionRef.value) {
+    ro = new ResizeObserver(measure)
+    ro.observe(sectionRef.value)
+  }
+})
+const ariaNow = computed(() => Math.round(props.win.widthPx ?? drawnPx.value))
 
 let startX = 0
 let startWidth = 0
@@ -193,6 +208,7 @@ function onResizeDblClick() {
 }
 
 onBeforeUnmount(() => {
+  ro?.disconnect()
   clearDwell()
   window.removeEventListener('pointermove', onPointerMove)
   window.removeEventListener('pointerup', onPointerUp)

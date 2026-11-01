@@ -167,3 +167,19 @@ describe('WindowFrame as a focus point (F-03)', () => {
     expect(store.focusedId).toBe(first)
   })
 })
+
+describe('WindowFrame width separator value (F-33)', () => {
+  it('reports the drawn width, also while the width is a preset', async () => {
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({
+      width: 512.4,
+    } as DOMRect)
+    const win = openWin({ width: 'm' })
+    const w = mountFrame(win)
+    await nextTick()
+    expect(w.get('.plancia-window__resize').attributes('aria-valuenow')).toBe('512')
+    store.setWidthPx(win.id, 600)
+    await nextTick()
+    expect(w.get('.plancia-window__resize').attributes('aria-valuenow')).toBe('600')
+    vi.restoreAllMocks()
+  })
+})
