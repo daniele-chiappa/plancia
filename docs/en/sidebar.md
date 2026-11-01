@@ -159,8 +159,8 @@ content); override with the `peek` prop.
 
 `:responsive="768"` makes the sidebar an overlay **drawer** below that viewport
 width: it switches to `overlay`, pins to the viewport, and (by default) shows a
-`backdrop` that closes it on click. Above the breakpoint it returns to its
-declared `mode`.
+`backdrop` that closes it on click. `Esc` closes it too, at once. Above the
+breakpoint it returns to its declared `mode`.
 
 ## Draggable floating
 
@@ -236,8 +236,13 @@ Pass `:labels="{ collapse: 'Comprimi', … }"` (merged over the English defaults
 
 - Configurable landmark `role` (`navigation` for menus, `complementary`…).
 - The toggle carries `aria-expanded` + `aria-controls`; the reveal tab too.
+  Both are at least 24 × 24.
 - `Esc` closes/steps-down an overlay/floating sidebar (non-modal — no focus
-  trap; it never blocks the page).
+  trap; it never blocks the page); a responsive drawer closes at once.
+- The focus follows the panel: opened from the reveal tab, it goes to the
+  first control of the content; when the sidebar closes while it holds the
+  focus (`Esc`, the backdrop, or your own `state`), it goes to the reveal tab.
+  An open you ask for leaves the focus where it is.
 - Size transitions are disabled under `prefers-reduced-motion`.
 - The resize handle is a focusable `separator` with arrow-key support.
 

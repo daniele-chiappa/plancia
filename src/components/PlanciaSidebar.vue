@@ -12,7 +12,7 @@
  * (`useSidebarController`) and is exposed as `v-model:state` / `v-model:size` and
  * via provide/inject (`usePlanciaSidebar`).
  */
-import { computed, onBeforeUnmount, onMounted, provide, ref, useId, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, provide, ref, useId, watch } from 'vue'
 import '../style.css'
 import { useSidebarController } from '../sidebar/useSidebarController'
 import { SIDEBAR_CONTROL } from '../sidebar/usePlanciaSidebar'
@@ -243,9 +243,14 @@ function onPointerLeave() {
     ctrl.setPeeking(false)
   }, props.peekDelay.close)
 }
-/** Esc steps the sidebar down (peek → collapsed → closed), overlay/floating only. */
+/** Esc steps the sidebar down (peek → collapsed → closed), overlay/floating
+ *  only; a responsive drawer closes at once, as its backdrop does. */
 function onEsc() {
   if (effectiveMode.value === 'inline') return
+  if (isNarrow.value) {
+    ctrl.close()
+    return
+  }
   if (ctrl.peeking.value) {
     ctrl.setPeeking(false)
     return
@@ -253,6 +258,41 @@ function onEsc() {
   if (ctrl.state.value === 'expanded') ctrl.collapse()
   else if (ctrl.state.value === 'collapsed') ctrl.close()
 }
+
+/* --- the focus across open and close (F-15) ------------------------------- */
+// The reveal button goes when the sidebar opens, and the panel when it
+// closes: the focus goes with them, onto the page, unless it is moved.
+const revealRef = ref<HTMLElement | null>(null)
+const panelRef = ref<HTMLElement | null>(null)
+// Same as PlanciaModal's.
+const FOCUSABLE =
+  'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])'
+
+/** Opened from the reveal button: the focus goes to the first control of
+ *  the content, else of the panel. An open the host asks for leaves it. */
+function onReveal() {
+  const fromReveal = document.activeElement === revealRef.value
+  ctrl.open()
+  if (!fromReveal) return
+  nextTick(() => {
+    const panel = panelRef.value
+    const first =
+      panel?.querySelector<HTMLElement>(`.plancia-sidebar__body :is(${FOCUSABLE})`) ??
+      panel?.querySelector<HTMLElement>(FOCUSABLE)
+    first?.focus()
+  })
+}
+
+// Closed while it held the focus (Esc, the backdrop, the host): the focus
+// goes to the reveal button. Checked before the render hides the panel.
+watch(
+  () => ctrl.state.value,
+  (s, prev) => {
+    if (s !== 'closed' || prev === 'closed') return
+    if (!asideRef.value?.contains(document.activeElement)) return
+    nextTick(() => revealRef.value?.focus())
+  },
+)
 
 // A committed state change away from `collapsed` must cancel any peek.
 watch(
@@ -428,13 +468,14 @@ provide(SIDEBAR_CONTROL, {
     <!-- Reveal tab: the only affordance left when closed. -->
     <button
       v-if="ctrl.state.value === 'closed'"
+      ref="revealRef"
       type="button"
       class="plancia-btn plancia-sidebar__reveal"
       :title="labels.open"
       :aria-label="labels.open"
       :aria-expanded="false"
       :aria-controls="panelId"
-      @click="ctrl.open()"
+      @click="onReveal"
     >
       <slot name="reveal" v-bind="slotProps">
         <svg
@@ -451,7 +492,7 @@ provide(SIDEBAR_CONTROL, {
       </slot>
     </button>
 
-    <div v-show="ctrl.state.value !== 'closed'" :id="panelId" class="plancia-sidebar__panel">
+    <div v-show="ctrl.state.value !== 'closed'" :id="panelId" ref="panelRef" class="plancia-sidebar__panel">
       <header class="plancia-sidebar__header" @pointerdown="onHeaderPointerDown">
         <slot name="header" v-bind="slotProps" />
         <slot name="toggle" v-bind="slotProps">
@@ -502,7 +543,9 @@ provide(SIDEBAR_CONTROL, {
     />
 
     <Teleport to="body">
-      <div v-if="showBackdrop" class="plancia-sidebar__backdrop" @click="onBackdrop" />
+      <!-- The press keeps the focus in the panel, so the close can give it
+           to the reveal button. -->
+      <div v-if="showBackdrop" class="plancia-sidebar__backdrop" @mousedown.prevent @click="onBackdrop" />
     </Teleport>
   </aside>
 </template>

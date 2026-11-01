@@ -207,3 +207,86 @@ describe('PlanciaSidebar', () => {
     expect(aside(w).attributes('data-dragging')).toBeUndefined()
   })
 })
+
+// F-15: the responsive drawer and the focus. The reveal button goes when the
+// sidebar opens, and the panel when it closes: the focus went with them, onto
+// the page.
+describe('PlanciaSidebar drawer focus (F-15)', () => {
+  const narrow = () => {
+    const mql = { matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() }
+    window.matchMedia = vi.fn().mockReturnValue(mql) as unknown as typeof window.matchMedia
+  }
+  const content = () =>
+    h('nav', [h('button', { class: 'item' }, 'One'), h('button', { class: 'item' }, 'Two')])
+
+  async function drawer(props: Record<string, unknown> = {}) {
+    narrow()
+    const outside = document.createElement('button')
+    document.body.append(outside)
+    const w = mount(PlanciaSidebar, {
+      props: { responsive: 640, ...props },
+      slots: { default: content },
+      attachTo: document.body,
+    })
+    await nextTick()
+    const reveal = () => document.querySelector<HTMLElement>('.plancia-sidebar__reveal')
+    const item = () => document.querySelector<HTMLElement>('.item')!
+    return { w, outside, reveal, item }
+  }
+
+  it('opening from the reveal button puts the focus on the first control of the content', async () => {
+    const { w, reveal, item } = await drawer({ defaultState: 'closed' })
+    reveal()!.focus()
+    reveal()!.click()
+    await nextTick()
+    await nextTick()
+    expect(aside(w).attributes('data-state')).toBe('expanded')
+    expect(document.activeElement).toBe(item())
+    w.unmount()
+  })
+
+  it('an open the host asks for leaves the focus alone', async () => {
+    const { w, outside } = await drawer({ state: 'closed' })
+    outside.focus()
+    await w.setProps({ state: 'expanded' })
+    await nextTick()
+    expect(document.activeElement).toBe(outside)
+    w.unmount()
+  })
+
+  it('Esc in the drawer closes it at once and gives the focus to the reveal button', async () => {
+    const { w, reveal, item } = await drawer({ defaultState: 'expanded' })
+    item().focus()
+    item().dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+    await nextTick()
+    await nextTick()
+    expect(aside(w).attributes('data-state')).toBe('closed')
+    expect(document.activeElement).toBe(reveal())
+    w.unmount()
+  })
+
+  it('the backdrop closes the drawer and gives the focus to the reveal button', async () => {
+    const { w, reveal, item } = await drawer({ defaultState: 'expanded' })
+    item().focus()
+    const backdrop = document.querySelector<HTMLElement>('.plancia-sidebar__backdrop')!
+    // The press does not take the focus off the panel first.
+    const press = new MouseEvent('mousedown', { bubbles: true, cancelable: true })
+    backdrop.dispatchEvent(press)
+    expect(press.defaultPrevented).toBe(true)
+    backdrop.click()
+    await nextTick()
+    await nextTick()
+    expect(aside(w).attributes('data-state')).toBe('closed')
+    expect(document.activeElement).toBe(reveal())
+    w.unmount()
+  })
+
+  it('a close the host asks for, with the focus in the panel, gives it to the reveal button', async () => {
+    const { w, reveal, item } = await drawer({ state: 'expanded' })
+    item().focus()
+    await w.setProps({ state: 'closed' })
+    await nextTick()
+    expect(document.activeElement).toBe(reveal())
+    w.unmount()
+  })
+})

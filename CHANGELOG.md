@@ -49,6 +49,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - the close button stays for the mouse, at 24 × 24, out of the Tab
     sequence and hidden from assistive technology;
   - the pane is the `tabpanel` of the active tab, which every tab controls.
+- **The sidebar drawer keeps the focus** — the reveal button went when the
+  sidebar opened and the panel when it closed, and the focus went with
+  them, onto the page; `Esc` stepped a drawer down to its rail before
+  closing it; the toggle was 22 × 22:
+  - opened from the reveal button, the focus goes to the first control of
+    the content; an open the host asks for leaves it where it is;
+  - closed while it holds the focus (`Esc`, the backdrop, or the host's
+    `state`), the focus goes to the reveal button; a press on the backdrop
+    no longer takes the focus off the panel first;
+  - `Esc` closes a responsive drawer at once, as its backdrop does;
+  - the toggle is 24 × 24, with the header and its icon where they were.
 - **The width separator reports the drawn width** — its `aria-valuenow` was
   0 while the window had a preset width; it is now the width on screen.
 - **`PlanciaModal` adds no landmarks to the page** — the title bar was a

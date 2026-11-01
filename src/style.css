@@ -528,6 +528,12 @@ button.plancia-tag:hover {
 }
 .plancia-sidebar__toggle {
   margin-inline-start: auto;
+  /* 24 × 24: the minimum target size (WCAG 2.5.8, F-15). The negative
+     margins keep the header and the icon where the 22px button had them. */
+  min-width: 1.5rem;
+  min-height: 1.5rem;
+  margin-block: -0.0625rem;
+  margin-inline-end: -0.0625rem;
 }
 .plancia-sidebar__toggle svg {
   transition: transform var(--plancia-sidebar-transition) ease;
