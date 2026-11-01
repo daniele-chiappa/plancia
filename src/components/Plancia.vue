@@ -15,7 +15,7 @@
  * with all app-specific concerns (Tailwind tokens, i18n, lucide icons, module
  * label/tone maps, domain buttons) lifted out into props/slots.
  */
-import { computed, nextTick, onBeforeUnmount, onMounted, provide, ref, watch, watchEffect } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, provide, ref, useId, watch, watchEffect } from 'vue'
 import '../style.css'
 import WindowFrame from './WindowFrame.vue'
 import { useWindowsStore } from '../store/windows'
@@ -142,6 +142,40 @@ function foreignLabel(w: WindowInstance): string | null {
 function closeWindow(w: WindowInstance): void {
   if (w.dirty && !window.confirm(labels.value.unsavedClose)) return
   store.close(w.id)
+}
+
+/* --- tabs: the ARIA tabs pattern (F-33) ----------------------------------- */
+const uid = useId()
+const panelId = `plancia-${uid}-panel`
+const tabId = (id: string) => `plancia-${uid}-tab-${id}`
+
+function focusTab(id: string | null): void {
+  if (id) tabsEl.value?.querySelector<HTMLElement>(`[data-tab-id="${id}"] [role="tab"]`)?.focus()
+}
+
+/** Arrows, Home and End move between the tabs and activate them; Delete
+ *  closes one. Alt+arrows are left to the window keys (onKey). The focus
+ *  moves at once, onto a tab already drawn: before the render, so the focus
+ *  of a closed window never looks lost (refocus). */
+function onTabKey(e: KeyboardEvent, w: WindowInstance): void {
+  if (e.altKey || e.ctrlKey || e.metaKey) return
+  const vis = store.visible
+  const i = vis.findIndex((x) => x.id === w.id)
+  let next: WindowInstance | undefined
+  if (e.key === 'ArrowRight') next = vis[(i + 1) % vis.length]
+  else if (e.key === 'ArrowLeft') next = vis[(i - 1 + vis.length) % vis.length]
+  else if (e.key === 'Home') next = vis[0]
+  else if (e.key === 'End') next = vis[vis.length - 1]
+  else if (e.key === 'Delete') {
+    e.preventDefault()
+    closeWindow(w)
+    if (!store.windows.some((x) => x.id === w.id)) focusTab(store.focusedId)
+    return
+  } else return
+  e.preventDefault()
+  if (!next) return
+  store.focus(next.id)
+  focusTab(next.id)
 }
 
 const rootEl = ref<HTMLElement | null>(null)
@@ -314,21 +348,30 @@ onBeforeUnmount(() => {
                 :data-tab-id="w.id"
               >
                 <button
+                  :id="tabId(w.id)"
                   type="button"
                   class="plancia__tab-name"
                   role="tab"
                   :aria-selected="store.focusedId === w.id"
+                  :aria-controls="panelId"
+                  aria-keyshortcuts="Delete"
+                  :tabindex="store.focusedId === w.id ? 0 : -1"
                   :title="w.title || '—'"
                   @click="store.focus(w.id)"
+                  @keydown="onTabKey($event, w)"
                 >
                   <span class="plancia__tab-text">{{ w.title || '—' }}</span>
                   <span v-if="w.dirty" class="plancia__tab-dirty" :title="labels.dirty">•</span>
                 </button>
+                <!-- For the mouse: from the keyboard, Delete on the tab. Out
+                     of the tab list for assistive technology, which holds
+                     only tabs. -->
                 <button
                   type="button"
                   class="plancia__tab-close"
+                  tabindex="-1"
+                  aria-hidden="true"
                   :title="labels.close"
-                  :aria-label="labels.close"
                   @click="closeWindow(w)"
                 >
                   ✕
@@ -355,7 +398,12 @@ onBeforeUnmount(() => {
             </slot>
           </div>
 
-          <div class="plancia__content plancia__content--tabs">
+          <div
+            :id="panelId"
+            class="plancia__content plancia__content--tabs"
+            :role="store.focused ? 'tabpanel' : undefined"
+            :aria-labelledby="store.focused ? tabId(store.focused.id) : undefined"
+          >
             <KeepAlive :max="keepAliveMax">
               <WindowFrame
                 v-if="store.focused"

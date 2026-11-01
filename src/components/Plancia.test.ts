@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { defineComponent, h, markRaw } from 'vue'
+import { defineComponent, h, markRaw, nextTick } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
 import { enableAutoUnmount, mount } from '@vue/test-utils'
 import Plancia from './Plancia.vue'
@@ -9,6 +9,8 @@ import { useWindowsStore } from '../store/windows'
 
 // jsdom doesn't implement scrollIntoView (Plancia scrolls the focused window).
 Element.prototype.scrollIntoView = () => {}
+
+enableAutoUnmount(afterEach)
 
 const registry = { x: markRaw(defineComponent({ render: () => h('div', { class: 'winbody' }, 'hi') })) }
 
@@ -179,7 +181,6 @@ describe('Plancia window events go to the window that sent them', () => {
 // opened it, else to the window that takes over, else to the host
 // (focus-out); Alt+arrows carry the focus, not only the highlight.
 describe('Plancia focus follows the windows (F-03)', () => {
-  enableAutoUnmount(afterEach)
   afterEach(() => {
     vi.useRealTimers()
     document.body.innerHTML = ''
@@ -329,5 +330,108 @@ describe('Plancia focus follows the windows (F-03)', () => {
     await settle()
     expect(store.focusedId).toBe(a)
     expect(document.activeElement).toBe(other)
+  })
+})
+
+// F-33, F-18: the tabs mode follows the ARIA tabs pattern. Only tabs in the
+// tab list, one of them in the Tab sequence; arrows, Home and End move and
+// activate; Delete closes; the pane is the tab panel of the active tab.
+describe('Plancia tabs follow the ARIA tabs pattern (F-33, F-18)', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+    document.body.innerHTML = ''
+  })
+
+  function setup(keys = ['a', 'b', 'c']) {
+    const store = useWindowsStore()
+    const ids = keys.map((k) => store.open({ type: 'x', key: k, title: k.toUpperCase() }))
+    const w = mount(Plancia, {
+      props: { registry, viewMode: 'tabs' },
+      global: { plugins: [pinia] },
+      attachTo: document.body,
+    })
+    const tab = (id: string) => document.querySelector<HTMLElement>(`[data-tab-id="${id}"] [role="tab"]`)!
+    const key = async (el: HTMLElement, k: string, init: KeyboardEventInit = {}) => {
+      el.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true, ...init }))
+      await nextTick()
+    }
+    return { w, store, ids, tab, key }
+  }
+
+  it('the tab list holds only tabs: the close buttons are for the mouse', () => {
+    setup()
+    const list = document.querySelector('[role="tablist"]')!
+    const closes = list.querySelectorAll('.plancia__tab-close')
+    expect(closes).toHaveLength(3)
+    for (const c of closes) {
+      expect(c.getAttribute('tabindex')).toBe('-1')
+      expect(c.getAttribute('aria-hidden')).toBe('true')
+    }
+    const exposed = list.querySelectorAll('button:not([aria-hidden="true"])')
+    expect([...exposed].every((b) => b.getAttribute('role') === 'tab')).toBe(true)
+  })
+
+  it('one tab in the Tab sequence, the active one, controlling the panel', () => {
+    const { ids, tab } = setup()
+    expect(ids.map((id) => tab(id).getAttribute('tabindex'))).toEqual(['-1', '-1', '0'])
+    const panel = document.querySelector('[role="tabpanel"]')!
+    expect(panel).not.toBeNull()
+    expect(panel.getAttribute('aria-labelledby')).toBe(tab(ids[2]!).id)
+    expect(ids.every((id) => tab(id).getAttribute('aria-controls') === panel.id)).toBe(true)
+    expect(panel.querySelector('.winbody')).not.toBeNull()
+  })
+
+  it('arrows, Home and End move between the tabs and activate them', async () => {
+    const { store, ids, tab, key } = setup()
+    const [a, b, c] = ids as [string, string, string]
+    tab(c).focus()
+    await key(tab(c), 'ArrowRight') // wraps
+    expect(store.focusedId).toBe(a)
+    expect(document.activeElement).toBe(tab(a))
+    await key(tab(a), 'ArrowLeft') // wraps back
+    expect(document.activeElement).toBe(tab(c))
+    await key(tab(c), 'Home')
+    expect(document.activeElement).toBe(tab(a))
+    await key(tab(a), 'End')
+    expect(document.activeElement).toBe(tab(c))
+    await key(tab(c), 'ArrowLeft')
+    expect(store.focusedId).toBe(b)
+    expect(document.activeElement).toBe(tab(b))
+    expect(tab(b).getAttribute('tabindex')).toBe('0')
+  })
+
+  it('Delete closes the tab and focuses the tab that takes over', async () => {
+    const { store, ids, tab, key } = setup(['a', 'b'])
+    const [a, b] = ids as [string, string]
+    expect(tab(b).getAttribute('aria-keyshortcuts')).toBe('Delete')
+    tab(b).focus()
+    await key(tab(b), 'Delete')
+    await nextTick()
+    expect(store.windows.map((x) => x.id)).toEqual([a])
+    expect(document.activeElement).toBe(tab(a))
+  })
+
+  it('Delete asks first when the window has unsaved changes', async () => {
+    const { store, ids, tab, key } = setup(['a', 'b'])
+    const b = ids[1]!
+    store.setDirty(b, true)
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false)
+    tab(b).focus()
+    await key(tab(b), 'Delete')
+    expect(confirm).toHaveBeenCalledOnce()
+    expect(store.windows).toHaveLength(2)
+    expect(document.activeElement).toBe(tab(b))
+  })
+
+  it('Alt+arrows on a tab are the window keys: one step, into the window', async () => {
+    vi.useFakeTimers()
+    const { store, ids, tab } = setup()
+    const b = ids[1]!
+    tab(ids[2]!).focus()
+    tab(ids[2]!).dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', altKey: true, bubbles: true }))
+    await vi.advanceTimersByTimeAsync(0)
+    expect(store.focusedId).toBe(b)
+    expect(document.activeElement).toBe(document.querySelector(`[data-win-id="${b}"]`))
+    vi.useRealTimers()
   })
 })

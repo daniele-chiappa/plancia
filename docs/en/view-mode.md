@@ -11,6 +11,22 @@
 Strip is best for comparing windows side by side; tabs is best for focusing on
 one window at a time and for **hosting many windows cheaply** (see *Performance*).
 
+## Keyboard and screen readers (tabs)
+
+The tab bar follows the [ARIA tabs pattern](https://www.w3.org/WAI/ARIA/apg/patterns/tabs/):
+
+- the tab list holds only tabs; one of them, the active one, is in the Tab
+  sequence;
+- `←` / `→` move to the previous / next tab (wrapping), `Home` / `End` to the
+  first / last, and activate it;
+- `Delete` closes the tab, asking first if the window has unsaved changes
+  (`aria-keyshortcuts="Delete"`), and the focus goes to the tab that takes
+  over;
+- the close button (`✕`, 24 × 24) is for the mouse: out of the Tab sequence and
+  hidden from assistive technology;
+- the pane is the `tabpanel` of the active tab;
+- `Alt + ←/→` stay the window keys: they move into the next window.
+
 ## Switching mode
 
 `viewMode` is a `v-model`, so the host owns (and can persist) the choice:
@@ -83,7 +99,7 @@ Optional labels used by the tab bar / toggle (merged over the English defaults):
 
 | Label | Default | Where |
 |---|---|---|
-| `close` | `Close` | tab close button (shared with the window header) |
+| `close` | `Close` | tab close button's tooltip (shared with the window header) |
 | `dirty` | `Unsaved changes` | unsaved-dot title on a tab |
 | `viewStrip` | `Strip` | reserved for host toggles |
 | `viewTabs` | `Tabs` | reserved for host toggles |

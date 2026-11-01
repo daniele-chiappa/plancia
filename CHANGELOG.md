@@ -37,6 +37,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **The tabs mode follows the ARIA tabs pattern** — the tab list held the
+  close buttons too (axe `aria-required-children`), every tab and every
+  close button was a Tab stop, there were no arrow keys and no tab panel,
+  and the close button was 18 × 18:
+  - the tab list holds only tabs, and only the active one is in the Tab
+    sequence; `←` / `→`, `Home` and `End` move between the tabs and activate
+    them;
+  - `Delete` on a tab closes it, asking first for unsaved changes
+    (`aria-keyshortcuts`), and the focus goes to the tab that takes over;
+  - the close button stays for the mouse, at 24 × 24, out of the Tab
+    sequence and hidden from assistive technology;
+  - the pane is the `tabpanel` of the active tab, which every tab controls.
 - **The width separator reports the drawn width** — its `aria-valuenow` was
   0 while the window had a preset width; it is now the width on screen.
 - **`PlanciaModal` adds no landmarks to the page** — the title bar was a
