@@ -85,6 +85,14 @@ describe('usePlanciaFocus — focusWindow (F-03)', () => {
     await expect(done).resolves.toBe(true)
   })
 
+  it('without a target set, focuses the window at once, whatever the wait', async () => {
+    const { open, section, focusWindow } = setup()
+    const id = open('a', 0)
+    void focusWindow(id, { wait: 1000 })
+    await vi.advanceTimersByTimeAsync(0)
+    expect(document.activeElement).toBe(section(id))
+  })
+
   it('falls back to the window itself when the target never comes', async () => {
     const { open, section, focusWindow } = setup('[data-heading]')
     const id = open('a', -1)

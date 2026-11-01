@@ -38,7 +38,9 @@ export function usePlanciaFocus() {
         const win = document.querySelector<HTMLElement>(`[data-win-id="${id}"]`)
         const body = win?.querySelector('.plancia-window__body')
         const target = store.focusTarget ? body?.querySelector<HTMLElement>(store.focusTarget) : null
-        if (!target && Date.now() < until) {
+        // Waits for the window, and for its target only if one is set.
+        const ready = !!win && (!!target || !store.focusTarget)
+        if (!ready && Date.now() < until) {
           setTimeout(tick, STEP_MS)
           return
         }
