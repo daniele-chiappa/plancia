@@ -81,13 +81,26 @@ component rendered inside `<Plancia>`, so `useOpenWindow()` resolves (see
   **close** (confirms first if the window is `dirty`).
 - Footer lists minimized windows; clicking restores + focuses one.
 - Keyboard: `Alt + ArrowLeft` / `Alt + ArrowRight` move focus between visible
-  windows.
+  windows — the DOM focus too, when it is in the plancia (or on the page), not
+  when it is in a dialog or a bar of the host.
+- The focus follows the windows: a window that closes or goes to the footer
+  while it holds the focus (in it, on its tab or on its chip) gives it back to
+  the control that opened it, if that is still on the page; else to the window
+  that takes over; else the host gets `focus-out`. Restoring a window from its
+  chip puts the focus in it. A host that moved the focus itself keeps it.
 - Each window is a named region: its title (with the module of a foreign
   window) names it, and it can take the focus itself (`tabindex="-1"`). A focus
   that enters a window, by Tab or by script, makes it the focused one, as a
   click does.
 - Clickable header **tags** open their `open` target — but only if that type is
   registered in this plancia (otherwise the tag stays informational).
+
+### Events
+
+| Event | Payload | When |
+|---|---|---|
+| `update:viewMode` | `'strip' \| 'tabs'` | The view mode changed (`v-model:view-mode`). |
+| `focus-out` | — | A window that held the focus went, and no window is left to take it. Put the focus somewhere, e.g. your `main`; otherwise it stays on the page. |
 
 ### Provides
 

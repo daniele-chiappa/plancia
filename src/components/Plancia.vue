@@ -20,6 +20,7 @@ import '../style.css'
 import WindowFrame from './WindowFrame.vue'
 import { useWindowsStore } from '../store/windows'
 import { OPEN_WINDOW, CAN_OPEN_TYPE } from '../composables/openWindow'
+import { usePlanciaFocus } from '../composables/usePlanciaFocus'
 import { usePlanciaConfig } from '../config/usePlanciaConfig'
 import {
   DEFAULT_LABELS,
@@ -69,6 +70,12 @@ const props = withDefaults(
 /** Layout mode. Controlled with `v-model:view-mode`; otherwise an internal ref
  *  that falls back to the config default, then 'strip'. */
 const viewModelRaw = defineModel<ViewMode | undefined>('viewMode', { default: undefined })
+
+const emit = defineEmits<{
+  /** A window that held the focus went, and no window is left to take it:
+   *  the host puts it somewhere (its main, say). */
+  'focus-out': []
+}>()
 
 const store = useWindowsStore()
 const cfg = usePlanciaConfig()
@@ -137,6 +144,7 @@ function closeWindow(w: WindowInstance): void {
   store.close(w.id)
 }
 
+const rootEl = ref<HTMLElement | null>(null)
 const stripEl = ref<HTMLElement | null>(null)
 const tabsEl = ref<HTMLElement | null>(null)
 
@@ -189,15 +197,88 @@ watchEffect(() => {
 // Re-attach the strip observer whenever we (re)enter strip mode.
 watch(viewMode, () => nextTick(observeStrip))
 
+/* --- the focus follows the windows (F-03) --------------------------------- */
+const { focusWindow } = usePlanciaFocus()
+// How long a window's view may take to draw its focus target.
+const FOCUS_WAIT_MS = 1000
+// The element that had the focus when each window was opened: the focus goes
+// back there when the window goes. Kept here, not in the store, which stays
+// free of DOM.
+const openers = new Map<string, HTMLElement>()
+
+const focusLost = () => document.activeElement === document.body || document.activeElement === null
+
+/** Whether the focus is in window `id`, on its tab or on its footer chip. */
+function holdsFocus(id: string): boolean {
+  const a = document.activeElement
+  if (!a || !rootEl.value?.contains(a)) return false
+  return !!a.closest(`[data-win-id="${id}"], [data-tab-id="${id}"], [data-chip-id="${id}"]`)
+}
+
+/** Into window `id`; to the host if it cannot take the focus. */
+function focusInto(id: string | null): void {
+  if (!id || !store.visible.some((w) => w.id === id)) {
+    emit('focus-out')
+    return
+  }
+  void focusWindow(id, { wait: FOCUS_WAIT_MS }).then((ok) => {
+    if (!ok && focusLost()) emit('focus-out')
+  })
+}
+
+/** After the window that held the focus went: back to its opener if it is
+ *  still on the page, else into the focused window, else to the host. Only
+ *  if the focus is lost: a host that put it somewhere keeps it there. */
+function refocus(opener: HTMLElement | undefined): void {
+  nextTick(() => {
+    if (!focusLost()) return
+    if (opener?.isConnected) {
+      opener.focus()
+      if (document.activeElement === opener) return
+    }
+    focusInto(store.focusedId)
+  })
+}
+
+store.$onAction(({ name, args, after }) => {
+  if (name === 'open') {
+    const a = document.activeElement
+    if (a instanceof HTMLElement && a !== document.body) after((id) => void openers.set(id, a))
+  } else if (name === 'close' || name === 'minimize') {
+    const id = args[0] as string
+    const opener = openers.get(id)
+    const held = holdsFocus(id)
+    after(() => {
+      if (name === 'close') openers.delete(id)
+      if (held) refocus(opener)
+    })
+  } else if (name === 'restore') {
+    const id = args[0] as string
+    // From its chip, which goes: into the window.
+    if (holdsFocus(id)) {
+      after(() =>
+        nextTick(() => {
+          if (focusLost()) focusInto(id)
+        }),
+      )
+    }
+  } else if (name === 'reset') {
+    after(() => openers.clear())
+  }
+})
+
 function onKey(e: KeyboardEvent) {
   if (!e.altKey) return
-  if (e.key === 'ArrowLeft') {
-    e.preventDefault()
-    store.focusAdjacent(-1)
-  } else if (e.key === 'ArrowRight') {
-    e.preventDefault()
-    store.focusAdjacent(1)
-  }
+  const dir = e.key === 'ArrowLeft' ? -1 : e.key === 'ArrowRight' ? 1 : 0
+  if (!dir) return
+  e.preventDefault()
+  // The focus follows only from the plancia (or the page): not from a dialog
+  // or a bar of the host.
+  const a = document.activeElement
+  const ours = !a || a === document.body || !!rootEl.value?.contains(a)
+  const was = store.focusedId
+  store.focusAdjacent(dir)
+  if (ours && store.focusedId && store.focusedId !== was) focusInto(store.focusedId)
 }
 onMounted(() => {
   document.addEventListener('keydown', onKey)
@@ -211,7 +292,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="plancia">
+  <div ref="rootEl" class="plancia">
     <!-- Edge sidebar slots. Drop a <PlanciaSidebar position="…"> (or anything)
          in the matching slot; top/bottom span the full width, left/right flank
          the strip. Slot content is inside <Plancia>, so it can `useOpenWindow()`. -->
@@ -358,7 +439,7 @@ onBeforeUnmount(() => {
 
         <footer v-if="store.minimizedList.length" class="plancia__footer">
           <span class="plancia__footer-label">{{ labels.minimizedLabel }}</span>
-          <span v-for="w in store.minimizedList" :key="w.id" class="plancia__chip">
+          <span v-for="w in store.minimizedList" :key="w.id" class="plancia__chip" :data-chip-id="w.id">
             <button type="button" class="plancia__chip-name" :title="labels.restore" @click="store.restore(w.id)">
               {{ w.title || '—' }}
             </button>

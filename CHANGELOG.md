@@ -23,6 +23,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     target, or the window itself; waits up to `wait` ms for a view loaded on
     demand; moves the focus only if nothing moved it meanwhile, and only for
     the last call. Callable from outside `<Plancia>` too.
+- **The focus follows the windows** — a window that closed or went to the
+  footer took the focus with it, onto the page, and `Alt + ←/→` moved the
+  highlight but left the focus where it was:
+  - a window that closes or is minimized while it holds the focus (in it, on
+    its tab or on its chip) gives it back to the control that opened it, if
+    that is still on the page; else to the window that takes over; else the
+    host gets the new **`focus-out`** event, to place it (its `main`, say);
+  - a window restored from its chip takes the focus;
+  - `Alt + ←/→` carry the focus into the next window, when it is in the
+    plancia or on the page (not in a dialog or a bar of the host);
+  - a host that moved the focus itself keeps it there.
 
 ### Fixed
 

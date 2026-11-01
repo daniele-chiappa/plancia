@@ -171,6 +171,16 @@ window. It works from anywhere under the same Pinia — a bar or a palette outsi
 `<Plancia>` too — since the selector comes from the store. The window must be on
 screen: in `tabs` mode, the focused one.
 
+`<Plancia>` uses it itself: after a close or a minimize that took the focus with
+it, after a restore from the footer, and on `Alt + ←/→`. When no window is left
+to take the focus it emits `focus-out`, for the host to place it:
+
+```vue
+<main ref="mainEl" tabindex="-1">
+  <Plancia :registry="registry" focus-target="[data-window-heading]" @focus-out="mainEl?.focus()" />
+</main>
+```
+
 ## Keyboard
 
 Built in: `Alt + ArrowLeft` / `Alt + ArrowRight` move focus between visible
