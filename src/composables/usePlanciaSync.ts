@@ -11,8 +11,8 @@
  * Requires `vue-router` (an optional peer dependency) — only pulled in when this
  * composable is imported.
  */
-import { computed, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { computed, inject, onScopeDispose, watch } from 'vue'
+import { matchedRouteKey, useRoute, useRouter } from 'vue-router'
 import { useWindowsStore } from '../store/windows'
 import type { OpenSpec, WindowInstance } from '../types'
 
@@ -42,6 +42,10 @@ export function usePlanciaSync(codec: PlanciaCodec, options: PlanciaSyncOptions 
   const store = useWindowsStore()
   const route = useRoute()
   const router = useRouter()
+  // The route record whose RouterView renders the shell, if any: the URL is
+  // the shell's only while that record is matched (IMP-009).
+  const ownRecord = inject(matchedRouteKey, null)?.value
+  const onOwnPage = () => !ownRecord || route.matched.includes(ownRecord)
 
   const winTokens = computed(() =>
     store.windows.map((w) => codec.encode(w)).filter((t): t is string => t != null),
@@ -71,16 +75,29 @@ export function usePlanciaSync(codec: PlanciaCodec, options: PlanciaSyncOptions 
 
   let pushT: ReturnType<typeof setTimeout> | null = null
   function pushUrl() {
+    pushT = null
     const w = winTokens.value.join(separator)
-    const query: Record<string, string> = {}
-    if (w) query.w = w
-    if (focusToken.value != null) query.f = focusToken.value
-    router.replace({ query }).catch(() => {})
+    // Another page's query is not ours to rewrite: the windows only go to
+    // localStorage (IMP-009).
+    if (onOwnPage()) {
+      const query: Record<string, string> = {}
+      if (w) query.w = w
+      if (focusToken.value != null) query.f = focusToken.value
+      router.replace({ query }).catch(() => {})
+    }
     persistLocal(w, focusToken.value)
   }
   watch([winTokens, focusToken], () => {
     if (pushT) clearTimeout(pushT)
     pushT = setTimeout(pushUrl, debounceMs)
+  })
+  // A shell that is gone leaves the URL alone: a pending write only goes to
+  // localStorage, now.
+  onScopeDispose(() => {
+    if (!pushT) return
+    clearTimeout(pushT)
+    pushT = null
+    persistLocal(winTokens.value.join(separator), focusToken.value)
   })
 
   function openToken(tok: string, wantFocus = true): void {
@@ -112,10 +129,12 @@ export function usePlanciaSync(codec: PlanciaCodec, options: PlanciaSyncOptions 
     }
   }
 
-  // Back/forward: re-hydrate only if the URL token set actually changed.
+  // Back/forward: re-hydrate only if the URL token set actually changed, and
+  // only from the shell's own page (IMP-009).
   watch(
     () => [route.query.w, route.query.f],
     () => {
+      if (!onOwnPage()) return
       const urlW = String(route.query.w ?? '')
       if (urlW !== winTokens.value.join(separator)) {
         hydrate()

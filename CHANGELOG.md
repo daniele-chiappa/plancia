@@ -14,6 +14,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `body`, outside any `main`: a screen reader found a second banner and a
   contentinfo on the page, and axe flagged a duplicate banner. They are
   now `div`s with the same classes, and look the same.
+- **`usePlanciaSync` writes only its own page's URL** — the URL write waits
+  200 ms after a window change, and ran even when the shell had gone in
+  the meantime, on whatever page was there: a shell that opened a window
+  and then sent the browser to a login page rewrote that page's query, and
+  lost its parameters. The URL is now the shell's only while the route
+  record that renders it is matched (its child pages included):
+  - a shell that is unmounted cancels the pending write, and saves its
+    windows to localStorage only;
+  - a shell kept alive on another page (`KeepAlive`) leaves that page's
+    query alone, both writing and reading it, and picks its windows up
+    again when it is back.
 
 ## [0.3.3] - 2026-10-11
 
