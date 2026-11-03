@@ -172,7 +172,7 @@ each with its type (`use`), its settings (`with`) and the nodes it waits for
 
 | Export | |
 |---|---|
-| `<DiagramView>` | props `source` (the YAML) or `diagram` (already read), `labels` (the component's words, English by default), `maxHeight`; event `link`; `exportSVG()` and `text` through a template ref |
+| `<DiagramView>` | props `source` (the YAML) or `diagram` (already read), `labels` (the component's words, English by default, the help of a node and an edge for a screen reader among them: `nodeHelp`, `edgeHelp`), `maxHeight`; event `link`; `exportSVG()` and `text` through a template ref |
 | `parseDiagram(src)` | `{diagram, problems}`: the diagram as far as it reads, and what is wrong in it, each problem on its line |
 | `diagramText(d)` | the diagram in words, the drawing's text alternative |
 | `diagramLinks(d)` | the links of a diagram |

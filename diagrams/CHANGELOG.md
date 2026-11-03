@@ -3,6 +3,19 @@
 All notable changes to this package. It follows [Semantic Versioning](https://semver.org);
 its tags are `diagrams-vX.Y.Z`.
 
+## [0.7.0] - unreleased
+
+### Added
+
+- `nodeHelp` and `edgeHelp` in the labels of `<DiagramView>`,
+  `<DiagramEditor>`, `<PipelineView>` and `<PipelineEditor>` (and
+  `FlowA11yLabels`, `DEFAULT_FLOW_A11Y_LABELS`): the help a screen reader
+  says on a node or an edge of a drawing. Vue Flow wrote it in English
+  whatever the page's language, and named Enter, Space and the arrow
+  keys, which do nothing here, where a click selects: by default it now
+  says *A click selects the node and Delete removes it; the YAML tab
+  edits the diagram from the keyboard.*
+
 ## [0.6.2] - 2026-10-29
 
 ### Fixed

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, shallowRef, useId } from 'vue'
 import { VueFlow, useVueFlow, ConnectionMode, type Connection, type Edge, type Node } from '@vue-flow/core'
+import { useFlowA11y } from './flowA11y'
 import '@vue-flow/core/dist/style.css'
 import FlowNode from './FlowNode.vue'
 import FlowGroup from './FlowGroup.vue'
@@ -78,6 +79,7 @@ const edges = computed<Edge[]>(() =>
 )
 
 const { fitView, getNodes, screenToFlowCoordinate, onNodesInitialized } = useVueFlow(flowId)
+useFlowA11y(flowId, () => props.labels)
 let fitted = false
 onNodesInitialized(() => {
   if (!fitted) fitView({ padding: 0.1, maxZoom: 1 })

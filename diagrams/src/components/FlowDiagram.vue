@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, useId } from 'vue'
 import { VueFlow, useVueFlow, type Edge, type Node } from '@vue-flow/core'
+import { useFlowA11y } from './flowA11y'
 import '@vue-flow/core/dist/style.css'
 import FlowNode from './FlowNode.vue'
 import FlowGroup from './FlowGroup.vue'
@@ -87,6 +88,7 @@ const height = computed(() => {
 })
 
 const { fitView, zoomIn, zoomOut, onNodesInitialized } = useVueFlow(flowId)
+useFlowA11y(flowId, () => props.labels)
 const fit = () => fitView({ padding: 0.02, maxZoom: 1 })
 onNodesInitialized(() => fit())
 

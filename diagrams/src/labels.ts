@@ -1,7 +1,22 @@
 import type { TriggerKind } from './pipeline/types'
 
+/**
+ * The help Vue Flow points its nodes and edges to (aria-describedby),
+ * which it writes in English with keys these components do not use:
+ * here it says what works.
+ */
+export interface FlowA11yLabels {
+  nodeHelp: string
+  edgeHelp: string
+}
+
+export const DEFAULT_FLOW_A11Y_LABELS: FlowA11yLabels = {
+  nodeHelp: 'A click selects the node and Delete removes it; the YAML tab edits the diagram from the keyboard.',
+  edgeHelp: 'A click selects the link and Delete removes it.',
+}
+
 /** The words of the component, English by default; a consumer passes its own. */
-export interface DiagramLabels {
+export interface DiagramLabels extends FlowA11yLabels {
   problems: string
   line: string
   pending: string
@@ -15,6 +30,7 @@ export interface DiagramLabels {
 }
 
 export const DEFAULT_DIAGRAM_LABELS: DiagramLabels = {
+  ...DEFAULT_FLOW_A11Y_LABELS,
   problems: 'This diagram has problems:',
   line: 'line',
   pending: 'This kind of diagram is not drawn yet; it reads:',
@@ -199,7 +215,7 @@ export const DEFAULT_EDITOR_LABELS: DiagramEditorLabels = {
 }
 
 /** The words of the pipeline drawing and editor, English by default. */
-export interface PipelineLabels {
+export interface PipelineLabels extends FlowA11yLabels {
   trigger: string
   triggers: Record<TriggerKind, string>
   statuses: Record<'pending' | 'queued' | 'running' | 'waiting' | 'done' | 'failed' | 'skipped' | 'canceled', string>
@@ -274,6 +290,7 @@ export interface PipelineLabels {
 }
 
 export const DEFAULT_PIPELINE_LABELS: PipelineLabels = {
+  ...DEFAULT_FLOW_A11Y_LABELS,
   trigger: 'Start',
   triggers: {
     manual: 'By hand',

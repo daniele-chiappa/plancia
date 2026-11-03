@@ -7,7 +7,7 @@ export { diagramText } from './model/text'
 export { default as diagramSchema } from './model/diagram.schema.json'
 
 export { default as DiagramView } from './components/DiagramView.vue'
-export { DEFAULT_DIAGRAM_LABELS, type DiagramLabels } from './labels'
+export { DEFAULT_DIAGRAM_LABELS, DEFAULT_FLOW_A11Y_LABELS, type DiagramLabels, type FlowA11yLabels } from './labels'
 export { linkTarget, type DiagramLinkEvent } from './links'
 
 export { flowGraph, treeGraph, type Graph, type GraphNode, type GraphEdge, type GraphGroup } from './layout/graph'
