@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **A step of history for each window opened** — the URL followed the
+  windows in place, so the browser's Back left the app instead of closing
+  the last window. New `history: 'push'` option of `usePlanciaSync` (the
+  default stays `'replace'`):
+  - each window opened adds a step: Back closes it, Forward opens it again;
+  - closing the window of the last step goes back a step, so that Forward
+    opens it again;
+  - any other change (the focus, a window's props, closing another window)
+    rewrites the current step.
+- New `confirmClose` option of `usePlanciaSync`, asked before back/forward
+  closes windows with unsaved changes; on no they stay, and so does their
+  step. Default: `window.confirm` with `DEFAULT_LABELS.unsavedClose`.
+
+### Changed
+
+- **Back/forward keeps the windows that stay** — it reset the store and
+  opened every window of the URL again, losing their state, and the unsaved
+  changes of the ones it closed. Now it closes the windows the URL lacks,
+  opens the ones it has, and leaves the others as they are. A step of
+  back/forward without windows has none, instead of the last session from
+  `localStorage`; a navigation of the host to the page without them still
+  restores it.
+
 ## [0.4.0] - 2026-11-01
 
 ### Added

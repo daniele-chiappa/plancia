@@ -26,8 +26,34 @@ onMounted(hydrate)
 ```
 
 It writes `?w=<tokens>&f=<focus>` (debounced) on every change, and—on
-back/forward—re-hydrates the store from the URL. On `hydrate()` the URL is
-primary; if empty and `useLocalStorage` is on, it restores the last session.
+back/forward—brings the windows to the URL's: it closes the ones the URL
+lacks, opens the ones it has, and leaves the others as they are, with their
+state. On `hydrate()` the URL is primary; if empty and `useLocalStorage` is
+on, it restores the last session, and so does a navigation of the host to
+the page without `w`. A step of back/forward without `w` has no windows.
+
+Before back/forward closes windows with unsaved changes (`dirty`) it asks,
+with `confirmClose`. On no the windows stay, and the URL goes back to them.
+
+### History
+
+By default (`history: 'replace'`) the URL follows the windows in place:
+the browser's Back leaves the page. With `history: 'push'` the windows make
+steps of their own:
+
+- each window opened adds a step: Back closes it, Forward opens it again;
+- closing the window of the last step, so that the windows left are those
+  of the step before, goes back a step: Forward opens it again;
+- any other change rewrites the current step: the focus, a window's props
+  (as a filter that changed), closing another window. Back after closing
+  another window opens it again, as the step before had it.
+
+```ts
+usePlanciaSync(codec, { history: 'push', confirmClose: () => confirm(t('unsaved')) })
+```
+
+The windows `hydrate()` opens add no step. A step pushed by the sync keeps
+the `w` of the step before in `history.state.planciaBack`.
 
 The URL is the shell's only while the route record that renders it is matched
 (its child pages included). A shell unmounted before the debounced write
@@ -44,6 +70,8 @@ and picks its windows up again when it is back. A shell rendered outside any
 | `storageKey` | `'plancia'` | localStorage key. |
 | `debounceMs` | `200` | Delay before writing the URL. |
 | `separator` | `','` | Token separator in the `w` query param. |
+| `history` | `'replace'` | `'push'`: a step of history for each window opened (see History). |
+| `confirmClose` | `window.confirm(DEFAULT_LABELS.unsavedClose)` | `(dirty: WindowInstance[]) => boolean`, asked before back/forward closes windows with unsaved changes. |
 
 ### Returns
 

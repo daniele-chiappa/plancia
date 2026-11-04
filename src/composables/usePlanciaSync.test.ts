@@ -1,12 +1,18 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { KeepAlive, defineComponent, h, nextTick, type Component } from 'vue'
+import { KeepAlive, defineComponent, h, nextTick, onMounted, type Component } from 'vue'
 import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia } from 'pinia'
-import { RouterView, createMemoryHistory, createRouter, type RouteRecordRaw } from 'vue-router'
-import { createArgCodec, usePlanciaSync } from './usePlanciaSync'
+import {
+  RouterView,
+  createMemoryHistory,
+  createRouter,
+  type RouteRecordRaw,
+  type Router,
+} from 'vue-router'
+import { createArgCodec, usePlanciaSync, type PlanciaSyncOptions } from './usePlanciaSync'
 import { useWindowsStore } from '../store/windows'
-import type { WindowInstance } from '../types'
+import { DEFAULT_LABELS, type WindowInstance } from '../types'
 
 const win = (p: Partial<WindowInstance>): WindowInstance => ({
   id: '1',
@@ -203,5 +209,180 @@ describe('usePlanciaSync — the URL belongs to the shell (IMP-009)', () => {
     await flushPromises()
     expect(store.windows.map((w) => w.key)).toEqual(['note:a.md'])
     expect(router.currentRoute.value.query).toEqual({ w: 'note:a.md', f: 'note:a.md' })
+  })
+})
+
+describe('usePlanciaSync — a step of history for each window opened (IMP-012)', () => {
+  const codec = createArgCodec({
+    types: {
+      note: {
+        arg: (p) => (typeof p.path === 'string' ? p.path : null),
+        props: (a) => (a ? { path: a } : {}),
+      },
+    },
+  })
+  const Page = defineComponent({ render: () => h('p') })
+
+  afterEach(() => {
+    vi.useRealTimers()
+    vi.restoreAllMocks()
+    localStorage.clear()
+  })
+
+  /** A shell on '/' that hydrates on mount, with a login page beside it. */
+  async function setup(options: PlanciaSyncOptions = {}, at = '/') {
+    vi.useFakeTimers()
+    const Shell = defineComponent({
+      setup() {
+        const { hydrate } = usePlanciaSync(codec, options)
+        onMounted(hydrate)
+        return () => h('div')
+      },
+    })
+    const routes: RouteRecordRaw[] = [
+      { path: '/', name: 'home', component: Shell },
+      { path: '/login', name: 'login', component: Page },
+    ]
+    const router = createRouter({ history: createMemoryHistory(), routes })
+    router.push(at)
+    await router.isReady()
+    const pinia = createPinia()
+    mount(RouterView, { global: { plugins: [router, pinia] } })
+    const store = useWindowsStore(pinia)
+    await settle()
+    return { router, store }
+  }
+
+  /** The debounced write, and the navigation it makes. */
+  async function settle() {
+    await nextTick()
+    vi.advanceTimersByTime(200)
+    await flushPromises()
+  }
+  /** Back or forward, as the browser's buttons. */
+  async function go(router: Router, delta: number) {
+    router.go(delta)
+    await flushPromises()
+    await settle()
+  }
+  const open = async (store: ReturnType<typeof useWindowsStore>, name: string) => {
+    store.open({ type: 'note', key: `note:${name}`, title: name, props: { path: name } })
+    await settle()
+  }
+  const keys = (store: ReturnType<typeof useWindowsStore>) => store.windows.map((w) => w.key)
+  const w = (router: Router) => router.currentRoute.value.query.w
+
+  it('adds a step for each window opened: Back closes it, Forward opens it again', async () => {
+    const { router, store } = await setup({ history: 'push' })
+    await open(store, 'a.md')
+    await open(store, 'b.md')
+    expect(w(router)).toBe('note:a.md,note:b.md')
+    await go(router, -1)
+    expect(keys(store)).toEqual(['note:a.md'])
+    expect(w(router)).toBe('note:a.md')
+    await go(router, -1)
+    expect(keys(store)).toEqual([])
+    await go(router, 1)
+    await go(router, 1)
+    expect(keys(store)).toEqual(['note:a.md', 'note:b.md'])
+    expect(store.focused?.key).toBe('note:b.md')
+  })
+
+  it('leaves the windows a step keeps as they are', async () => {
+    const { router, store } = await setup({ history: 'push' })
+    await open(store, 'a.md')
+    const a = store.windows[0]!
+    store.setDirty(a.id, true)
+    await open(store, 'b.md')
+    await go(router, -1)
+    expect(store.windows).toHaveLength(1)
+    expect(store.windows[0]!.id).toBe(a.id)
+    expect(store.windows[0]!.dirty).toBe(true)
+  })
+
+  it('opens no window from localStorage on a step without windows', async () => {
+    const { router, store } = await setup({ history: 'push', useLocalStorage: true })
+    await open(store, 'a.md')
+    await go(router, -1)
+    expect(keys(store)).toEqual([])
+    expect(w(router)).toBeUndefined()
+  })
+
+  it('opens no step for the windows of the address it starts from', async () => {
+    const { router, store } = await setup({ history: 'push' }, '/?w=note:a.md,note:b.md')
+    expect(keys(store)).toEqual(['note:a.md', 'note:b.md'])
+    await go(router, -1)
+    expect(keys(store)).toEqual(['note:a.md', 'note:b.md'])
+  })
+
+  it('goes back a step when the window of the last step is closed', async () => {
+    const { router, store } = await setup({ history: 'push' })
+    await open(store, 'a.md')
+    await open(store, 'b.md')
+    store.close(store.windows[1]!.id)
+    await settle()
+    await flushPromises()
+    await settle()
+    expect(w(router)).toBe('note:a.md')
+    expect(store.focused?.key).toBe('note:a.md')
+    await go(router, 1)
+    expect(keys(store)).toEqual(['note:a.md', 'note:b.md'])
+  })
+
+  it('rewrites the step when another window is closed, or the focus moves', async () => {
+    const { router, store } = await setup({ history: 'push' })
+    await open(store, 'a.md')
+    await open(store, 'b.md')
+    await open(store, 'c.md')
+    store.focus(store.windows[0]!.id)
+    await settle()
+    expect(router.currentRoute.value.query.f).toBe('note:a.md')
+    store.close(store.windows[1]!.id)
+    await settle()
+    expect(w(router)).toBe('note:a.md,note:c.md')
+    await go(router, -1)
+    expect(keys(store)).toEqual(['note:a.md', 'note:b.md'])
+  })
+
+  it('asks before Back closes a window with unsaved changes, and keeps it on no', async () => {
+    const confirmClose = vi.fn(() => false)
+    const { router, store } = await setup({ history: 'push', confirmClose })
+    await open(store, 'a.md')
+    await open(store, 'b.md')
+    store.setDirty(store.windows[1]!.id, true)
+    await go(router, -1)
+    expect(confirmClose).toHaveBeenCalledWith([store.windows[1]])
+    expect(keys(store)).toEqual(['note:a.md', 'note:b.md'])
+    expect(w(router)).toBe('note:a.md,note:b.md')
+    // The step is back in the history: Back again asks again.
+    confirmClose.mockReturnValue(true)
+    await go(router, -1)
+    expect(confirmClose).toHaveBeenCalledTimes(2)
+    expect(keys(store)).toEqual(['note:a.md'])
+  })
+
+  it("asks with the browser's confirm by default", async () => {
+    const ask = vi.spyOn(window, 'confirm').mockReturnValue(false)
+    const { router, store } = await setup({ history: 'push' })
+    await open(store, 'a.md')
+    await open(store, 'b.md')
+    store.setDirty(store.windows[1]!.id, true)
+    await go(router, -1)
+    expect(ask).toHaveBeenCalledWith(DEFAULT_LABELS.unsavedClose)
+    expect(keys(store)).toEqual(['note:a.md', 'note:b.md'])
+  })
+
+  it('replaces by default, and back/forward keeps the windows that stay', async () => {
+    const { router, store } = await setup()
+    await router.push('/?w=note:a.md')
+    await settle()
+    const a = store.windows[0]!
+    await router.push('/?w=note:a.md,note:b.md')
+    await settle()
+    await open(store, 'c.md')
+    expect(w(router)).toBe('note:a.md,note:b.md,note:c.md')
+    await go(router, -1)
+    expect(keys(store)).toEqual(['note:a.md'])
+    expect(store.windows[0]!.id).toBe(a.id)
   })
 })
