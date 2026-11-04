@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-04
+
 ### Added
 
 - **A step of history for each window opened** — the URL followed the
@@ -296,6 +298,7 @@ products-dc) into a standalone, content-agnostic library.
 - Zero runtime dependencies. Peers: `vue ^3.5`, `pinia ^2.2 || ^3`,
   `vue-router ^4` (optional).
 
+[0.5.0]: https://github.com/daniele-chiappa/plancia/releases/tag/v0.5.0
 [0.4.0]: https://github.com/daniele-chiappa/plancia/releases/tag/v0.4.0
 [0.3.3]: https://github.com/daniele-chiappa/plancia/releases/tag/v0.3.3
 [0.3.2]: https://github.com/daniele-chiappa/plancia/releases/tag/v0.3.2

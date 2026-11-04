@@ -45,7 +45,7 @@ chrome and a pure, testable store.
 ## Quick start
 
 ```bash
-npm install https://github.com/daniele-chiappa/plancia/releases/download/v0.4.0/plancia-0.4.0.tgz
+npm install https://github.com/daniele-chiappa/plancia/releases/download/v0.5.0/plancia-0.5.0.tgz
 # peers: vue ^3.5, pinia ^2.2|^3  (vue-router ^4 optional)
 ```
 
