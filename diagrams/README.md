@@ -87,7 +87,8 @@ short forms and the order of the fields stay as written, what it adds is in
 the full form, positions go to `layout:`. Its Drawing tab edits a flow on
 its drawing (drag, add, join from a node's dot, delete, a panel for the
 label, shape, class, link and group of a node and the label and line of an
-edge, groups, lay out again), a tree, a mind map or a fishbone as
+edge, groups, lay out again; from the keyboard Tab reaches the links and
+the nodes, and Enter or Space selects one), a tree, a mind map or a fishbone as
 indented lines beside their drawing (Enter, Tab, Shift+Tab, Alt+↑↓, drag),
 and a Venn, a matrix or a Gantt as a form beside theirs: sets and shared
 parts; axes, quadrants and points, which are also dragged on the drawing;
@@ -172,7 +173,7 @@ each with its type (`use`), its settings (`with`) and the nodes it waits for
 
 | Export | |
 |---|---|
-| `<DiagramView>` | props `source` (the YAML) or `diagram` (already read), `labels` (the component's words, English by default, the help of a node and an edge for a screen reader among them: `nodeHelp`, `edgeHelp`), `maxHeight`; event `link`; `exportSVG()` and `text` through a template ref |
+| `<DiagramView>` | props `source` (the YAML) or `diagram` (already read), `labels` (the component's words, English by default, what a screen reader says on a node, a group and a link among them: `nodeHelp`, `edgeHelp`, `nodeRole`, `groupRole`, `edgeRole`, `edgeName(from, to)`), `maxHeight`; event `link`; `exportSVG()` and `text` through a template ref |
 | `parseDiagram(src)` | `{diagram, problems}`: the diagram as far as it reads, and what is wrong in it, each problem on its line |
 | `diagramText(d)` | the diagram in words, the drawing's text alternative |
 | `diagramLinks(d)` | the links of a diagram |

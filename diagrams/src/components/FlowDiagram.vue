@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, useId } from 'vue'
 import { VueFlow, useVueFlow, type Edge, type Node } from '@vue-flow/core'
-import { useFlowA11y } from './flowA11y'
+import { named, unreachable, useFlowA11y } from './flowA11y'
 import '@vue-flow/core/dist/style.css'
 import FlowNode from './FlowNode.vue'
 import FlowGroup from './FlowGroup.vue'
@@ -40,7 +40,7 @@ const laid = computed<Laid | null>(() => (measure.value ? layoutGraph(props.grap
 const nodes = computed<Node[]>(() => {
   const l = laid.value
   if (!l) return []
-  const fixedNode = { draggable: false, selectable: false, connectable: false, focusable: false }
+  const fixedNode = { draggable: false, selectable: false, connectable: false, ...unreachable }
   return [
     ...l.groups.map((g) => ({
       id: g.id,
@@ -66,18 +66,24 @@ const nodes = computed<Node[]>(() => {
   ]
 })
 
-const edges = computed<Edge[]>(() =>
-  (laid.value?.edges ?? []).map((e) => ({
-    id: e.id,
-    source: e.from,
-    target: e.to,
-    type: 'routed',
-    data: { edge: e, marker },
-    selectable: false,
-    focusable: false,
-    updatable: false,
-  })),
-)
+// A link is an image a screen reader names, from its two ends.
+const edges = computed<Edge[]>(() => {
+  const name = new Map(laid.value?.nodes.map((n) => [n.id, n.label || n.id]))
+  return (laid.value?.edges ?? []).map((e) => {
+    const said = props.labels.edgeName(name.get(e.from) ?? e.from, name.get(e.to) ?? e.to)
+    return {
+      id: e.id,
+      source: e.from,
+      target: e.to,
+      type: 'routed',
+      data: { edge: e, marker },
+      selectable: false,
+      focusable: false,
+      updatable: false,
+      ...named(e.label ? `${said}, ${e.label}` : said, props.labels.edgeRole),
+    }
+  })
+})
 
 // The box is as tall as the drawing at the scale that fits the width.
 const height = computed(() => {

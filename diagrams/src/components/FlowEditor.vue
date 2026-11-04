@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, shallowRef, useId } from 'vue'
 import { VueFlow, useVueFlow, ConnectionMode, type Connection, type Edge, type Node } from '@vue-flow/core'
-import { useFlowA11y } from './flowA11y'
+import { pressedOn, reachable, useFlowA11y } from './flowA11y'
 import '@vue-flow/core/dist/style.css'
 import FlowNode from './FlowNode.vue'
 import FlowGroup from './FlowGroup.vue'
@@ -52,6 +52,7 @@ const nodes = computed<Node[]>(() => {
       connectable: false,
       zIndex: -1,
       class: isSelected('group', g.id) ? 'pd-selected' : '',
+      ...reachable(g.label || g.id, props.labels.groupRole),
     })),
     ...l.nodes.map((n) => ({
       id: n.id,
@@ -66,17 +67,27 @@ const nodes = computed<Node[]>(() => {
         editable: true,
         selected: isSelected('node', n.id),
       },
+      ...reachable(n.label || n.id, props.labels.nodeRole),
     })),
   ]
 })
 
-const edges = computed<Edge[]>(() =>
-  (laid.value?.edges ?? []).map((e) => {
+const edges = computed<Edge[]>(() => {
+  const name = new Map(laid.value?.nodes.map((n) => [n.id, n.label || n.id]))
+  return (laid.value?.edges ?? []).map((e) => {
     const s = props.selection
     const selected = s?.kind === 'edge' && s.edge.from === e.from && s.edge.to === e.to && (s.edge.nth ?? 0) === e.nth
-    return { id: e.id, source: e.from, target: e.to, type: 'live', data: { edge: e, marker, selected } }
-  }),
-)
+    const said = props.labels.edgeName(name.get(e.from) ?? e.from, name.get(e.to) ?? e.to)
+    return {
+      id: e.id,
+      source: e.from,
+      target: e.to,
+      type: 'live',
+      data: { edge: e, marker, selected },
+      ...reachable(e.label ? `${said}, ${e.label}` : said, props.labels.edgeRole),
+    }
+  })
+})
 
 const { fitView, getNodes, screenToFlowCoordinate, onNodesInitialized } = useVueFlow(flowId)
 useFlowA11y(flowId, () => props.labels)
@@ -133,6 +144,14 @@ function onEdgeClick(e: { edge: Edge }) {
   const le = (e.edge.data as { edge: { from: string; to: string; nth: number } }).edge
   emit('update:selection', { kind: 'edge', edge: { from: le.from, to: le.to, nth: le.nth } })
 }
+/** Enter or Space on a node or a link selects it, as a click does. */
+function onKeydown(e: KeyboardEvent) {
+  const on = pressedOn(e)
+  const node = on?.kind === 'node' ? nodes.value.find((n) => n.id === on.id) : undefined
+  const edge = on?.kind === 'edge' ? edges.value.find((x) => x.id === on.id) : undefined
+  if (node) onNodeClick({ node })
+  if (edge) onEdgeClick({ edge })
+}
 
 /** Where a new node goes: the middle of what is in view. */
 function center(): LayoutPosition {
@@ -145,7 +164,7 @@ defineExpose({ center, fit: () => fitView({ padding: 0.1, maxZoom: 1 }) })
 </script>
 
 <template>
-  <div ref="root" class="plancia-diagram__flow plancia-diagram__flow--edit" :style="{ height: `${height}px` }">
+  <div ref="root" class="plancia-diagram__flow plancia-diagram__flow--edit" :style="{ height: `${height}px` }" @keydown="onKeydown">
     <svg class="plancia-diagram__defs" width="0" height="0" aria-hidden="true">
       <defs>
         <marker :id="marker" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">

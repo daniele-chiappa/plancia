@@ -1,18 +1,29 @@
 import type { TriggerKind } from './pipeline/types'
 
 /**
- * The help Vue Flow points its nodes and edges to (aria-describedby),
- * which it writes in English with keys these components do not use:
- * here it says what works.
+ * What a screen reader says on the nodes and the links of a drawing. Vue
+ * Flow writes it in English: the help it points them to
+ * (aria-describedby), about keys these components did not use, what it
+ * calls them, and a link's name made of the ids ("Edge from a to b").
  */
 export interface FlowA11yLabels {
   nodeHelp: string
   edgeHelp: string
+  /** What a node, a group and a link are called (aria-roledescription). */
+  nodeRole: string
+  groupRole: string
+  edgeRole: string
+  /** A link's name, from the names of its two ends. */
+  edgeName: (from: string, to: string) => string
 }
 
 export const DEFAULT_FLOW_A11Y_LABELS: FlowA11yLabels = {
-  nodeHelp: 'A click selects the node and Delete removes it; the YAML tab edits the diagram from the keyboard.',
-  edgeHelp: 'A click selects the link and Delete removes it.',
+  nodeHelp: 'Enter or a click selects the node, and Delete removes it; the YAML tab edits the whole diagram from the keyboard.',
+  edgeHelp: 'Enter or a click selects the link, and Delete removes it.',
+  nodeRole: 'node',
+  groupRole: 'group',
+  edgeRole: 'link',
+  edgeName: (from, to) => `from ${from} to ${to}`,
 }
 
 /** The words of the component, English by default; a consumer passes its own. */

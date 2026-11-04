@@ -542,6 +542,19 @@
   stroke: var(--pd-accent);
   stroke-width: 2.4;
 }
+/* The node or the link the keyboard is on. */
+.plancia-diagram__flow .vue-flow__node:focus-visible {
+  outline: 2px solid var(--pd-accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+.plancia-diagram__flow .vue-flow__edge:focus {
+  outline: none;
+}
+.plancia-diagram__flow .vue-flow__edge:focus-visible .pd-edge__path {
+  stroke: var(--pd-accent);
+  stroke-dasharray: 6 3;
+}
 .vue-flow__node.pd-selected .pd-group {
   border-color: var(--pd-accent);
   border-style: solid;

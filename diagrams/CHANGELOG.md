@@ -3,6 +3,32 @@
 All notable changes to this package. It follows [Semantic Versioning](https://semver.org);
 its tags are `diagrams-vX.Y.Z`.
 
+## [0.8.0] - unreleased
+
+### Added
+
+- `nodeRole`, `groupRole`, `edgeRole` and `edgeName(from, to)` in
+  `FlowA11yLabels`, so in the labels of the four components: what a
+  screen reader calls a node, a group and a link, and a link's name.
+  Vue Flow called them *node* and *edge* in English, and named a link
+  *Edge from a to b* with the ids; a link is now named after its two
+  ends' texts (*from Start to Check*), and its label after them.
+
+### Fixed
+
+- In `<DiagramEditor>` and `<PipelineEditor>` a node, a group or a link
+  the keyboard reaches has a name, and Enter or Space selects it as a
+  click does: the panel shows it and Delete removes it. They were stops
+  of Tab with no name, and the keyboard selected nothing. A link took no
+  focus at all, since Vue Flow writes `tabIndex`, which an SVG element
+  does not read: it is written as `tabindex` too. A focused node has a
+  ring, a focused link a dashed accent line. The help says *Enter or a
+  click selects the node, and Delete removes it*.
+- In `<PipelineView>` the nodes are no longer stops of Tab that do
+  nothing; in `<DiagramView>` a node no longer says it is a node with a
+  help about keys, and a link, an image for a screen reader, is named
+  in the labels' words.
+
 ## [0.7.0] - 2026-11-03
 
 ### Added

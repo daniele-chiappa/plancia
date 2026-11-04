@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, useId } from 'vue'
 import { VueFlow, useVueFlow, ConnectionMode, type Connection, type Edge, type Node } from '@vue-flow/core'
-import { useFlowA11y } from './flowA11y'
+import { named, pressedOn, reachable, unreachable, useFlowA11y } from './flowA11y'
 import '@vue-flow/core/dist/style.css'
 import PipelineNode from './PipelineNode.vue'
 import FlowEdge from './FlowEdge.vue'
@@ -66,6 +66,7 @@ const nodes = computed<Node[]>(() => {
     const use = trigger ? props.labels.triggers[props.pipeline.trigger.on as keyof PipelineLabels['triggers']] ?? props.pipeline.trigger.on : (pn?.use ?? '')
     const info = types.value.get(pn?.use ?? '')
     const step = trigger ? undefined : props.run?.steps[ln.id]
+    const name = trigger ? props.labels.trigger : ln.id
     return {
       id: ln.id,
       type: 'pnode',
@@ -73,9 +74,10 @@ const nodes = computed<Node[]>(() => {
       draggable: !!props.editable,
       selectable: false,
       connectable: !!props.editable,
+      ...(props.editable ? reachable(`${name}, ${use}`, props.labels.nodeRole) : unreachable),
       data: {
         node: ln,
-        id: trigger ? props.labels.trigger : ln.id,
+        id: name,
         use,
         trigger,
         plugin: !!info && info.group !== 'base',
@@ -89,10 +91,12 @@ const nodes = computed<Node[]>(() => {
   })
 })
 
-const edges = computed<Edge[]>(() =>
-  (laid.value?.edges ?? []).map((e) => {
+const edges = computed<Edge[]>(() => {
+  const name = (id: string) => (id === TRIGGER_ID ? props.labels.trigger : id)
+  return (laid.value?.edges ?? []).map((e) => {
     const s = props.selection
     const selected = s?.kind === 'edge' && s.from === e.from && s.to === e.to
+    const said = props.labels.edgeName(name(e.from), name(e.to))
     return {
       id: e.id,
       source: e.from,
@@ -100,10 +104,10 @@ const edges = computed<Edge[]>(() =>
       type: props.editable ? 'live' : 'routed',
       data: { edge: e, marker, selected },
       selectable: false,
-      focusable: false,
+      ...(props.editable ? reachable(said, props.labels.edgeRole) : { focusable: false, ...named(said, props.labels.edgeRole) }),
     }
-  }),
-)
+  })
+})
 
 const { fitView, zoomIn, zoomOut, getNodes, screenToFlowCoordinate, onNodesInitialized } = useVueFlow(flowId)
 useFlowA11y(flowId, () => props.labels)
@@ -171,6 +175,15 @@ function onNodeClick(e: { node: Node }) {
 function onEdgeClick(e: { edge: Edge }) {
   emit('update:selection', { kind: 'edge', from: e.edge.source, to: e.edge.target })
 }
+/** Enter or Space on a node or a link selects it, as a click does. */
+function onKeydown(e: KeyboardEvent) {
+  if (!props.editable) return
+  const on = pressedOn(e)
+  const node = on?.kind === 'node' ? nodes.value.find((n) => n.id === on.id) : undefined
+  const edge = on?.kind === 'edge' ? edges.value.find((x) => x.id === on.id) : undefined
+  if (node) onNodeClick({ node })
+  if (edge) onEdgeClick({ edge })
+}
 
 /** Where a new node goes: the middle of what is in view. */
 function center(): LayoutPosition {
@@ -188,6 +201,7 @@ defineExpose({ center, fit, zoomIn: () => zoomIn(), zoomOut: () => zoomOut() })
     class="plancia-diagram__flow plancia-pipeline__canvas"
     :class="{ 'plancia-diagram__flow--edit': editable }"
     :style="{ height: `${height}px` }"
+    @keydown="onKeydown"
   >
     <svg class="plancia-diagram__defs" width="0" height="0" aria-hidden="true">
       <defs>
