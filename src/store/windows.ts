@@ -29,6 +29,9 @@ interface WindowsState {
   /** Selector of the element that takes the focus in a window's body
    *  (`usePlanciaFocus`); null: the window itself. */
   focusTarget: string | null
+  /** The focused window covers the page. It follows the focus, and goes with
+   *  the window that had it when that one closes or is minimized. */
+  fullscreen: boolean
 }
 
 export interface WindowsConfig {
@@ -47,6 +50,7 @@ export const useWindowsStore = defineStore('plancia-windows', {
     widthCycle: [...DEFAULT_WIDTH_CYCLE],
     defaultWidth: DEFAULT_WIDTH,
     focusTarget: null,
+    fullscreen: false,
   }),
   getters: {
     visible: (s): WindowInstance[] => s.windows.filter((w) => !w.minimized),
@@ -102,6 +106,7 @@ export const useWindowsStore = defineStore('plancia-windows', {
       if (i < 0) return
       this.windows.splice(i, 1)
       if (this.focusedId === id) {
+        this.fullscreen = false
         const next = this.windows[i] ?? this.windows[i - 1] ?? null
         this.focusedId = next ? next.id : null
       }
@@ -111,6 +116,7 @@ export const useWindowsStore = defineStore('plancia-windows', {
       if (!w) return
       w.minimized = true
       if (this.focusedId === id) {
+        this.fullscreen = false
         const vis = this.windows.filter((x) => !x.minimized)
         const last = vis[vis.length - 1]
         this.focusedId = last ? last.id : null
@@ -134,6 +140,14 @@ export const useWindowsStore = defineStore('plancia-windows', {
       const ni = Math.min(Math.max(base + dir, 0), vis.length - 1)
       const target = vis[ni]
       if (target) this.focusedId = target.id
+    },
+    /** The focused window covers the page, or goes back among the others.
+     *  With no window focused there is nothing to cover it with. */
+    setFullscreen(on: boolean): void {
+      this.fullscreen = on && !!this.focused
+    },
+    toggleFullscreen(): void {
+      this.setFullscreen(!this.fullscreen)
     },
     cycleWidth(id: string): void {
       const w = this._byId(id)
@@ -181,6 +195,7 @@ export const useWindowsStore = defineStore('plancia-windows', {
     reset(): void {
       this.windows = []
       this.focusedId = null
+      this.fullscreen = false
     },
   },
 })

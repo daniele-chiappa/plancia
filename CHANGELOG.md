@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Full screen** — with the new `allowFullscreen` prop each window has a
+  button that makes the focused window cover the page, and the browser go
+  full screen on the whole document, so dialogs stay in sight. Esc or the
+  button again ends it, and so does closing or minimizing that window; a
+  window opened from it takes its place. The window stays the same element,
+  so an iframe in it does not reload; the other windows, the tab bar and the
+  footer are `inert` meanwhile. A browser that refuses leaves the window
+  covering the page. `v-model:fullscreen` lets the host follow it and set its
+  own bars aside. New: the store's `fullscreen`, `setFullscreen` and
+  `toggleFullscreen`, the labels `fullscreen` and `exitFullscreen`, and the
+  CSS variable `--plancia-fullscreen-z`.
+
 ## [0.6.0] - 2026-11-07
 
 ### Added

@@ -62,6 +62,9 @@
   --plancia-dialog-width: 32rem;
   --plancia-dialog-z: 50;
   --plancia-dialog-transition: 160ms;
+
+  /* a window in full screen: over the sidebars, under the dialogs */
+  --plancia-fullscreen-z: 45;
 }
 
 .plancia {
@@ -302,6 +305,18 @@
 .plancia-window--focused {
   border-color: var(--plancia-accent);
   box-shadow: 0 0 0 2px var(--plancia-accent-soft);
+}
+/* Full screen: the window leaves the strip or the pane and covers the page.
+   It stays the same element, so what it holds (an iframe) does not reload. */
+.plancia-window.plancia-window--fullscreen {
+  position: fixed;
+  inset: 0;
+  width: auto;
+  height: auto;
+  z-index: var(--plancia-fullscreen-z);
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 /* The window itself has the focus when its view has no focus target (F-03):
    the same ring as the resize handle, instead of the browser's own. */

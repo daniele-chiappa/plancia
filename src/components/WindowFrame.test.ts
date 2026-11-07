@@ -183,3 +183,44 @@ describe('WindowFrame width separator value (F-33)', () => {
     vi.restoreAllMocks()
   })
 })
+
+describe('WindowFrame full screen', () => {
+  it('has no full-screen button unless the plancia offers it', () => {
+    const w = mountFrame(openWin())
+    expect(w.find('[data-plancia-fullscreen]').exists()).toBe(false)
+  })
+
+  it('the button covers the page with the window, and the button again ends it', async () => {
+    const other = store.open({ type: 't', key: 'other' })
+    const win = openWin()
+    store.focus(other)
+    const w = mountFrame(win, { allowFullscreen: true })
+    const button = w.get('[data-plancia-fullscreen]')
+    expect(button.attributes('aria-pressed')).toBe('false')
+    expect(button.attributes('aria-label')).toBe(DEFAULT_LABELS.fullscreen)
+    await button.trigger('click')
+    expect(store.focusedId).toBe(win.id)
+    expect(store.fullscreen).toBe(true)
+    expect(w.classes()).toContain('plancia-window--fullscreen')
+    expect(w.attributes('data-fullscreen')).toBeDefined()
+    expect(button.attributes('aria-pressed')).toBe('true')
+    expect(button.attributes('aria-label')).toBe(DEFAULT_LABELS.exitFullscreen)
+    // No width to choose while it covers the page.
+    expect(w.find('[role="separator"]').exists()).toBe(false)
+    await button.trigger('click')
+    expect(store.fullscreen).toBe(false)
+    expect(w.classes()).not.toContain('plancia-window--fullscreen')
+  })
+
+  it('a window under the one in full screen is out of reach', async () => {
+    const win = openWin()
+    const w = mountFrame(win, { allowFullscreen: true })
+    store.open({ type: 't', key: 'top' })
+    store.setFullscreen(true)
+    await nextTick()
+    expect(w.attributes('inert')).toBeDefined()
+    store.setFullscreen(false)
+    await nextTick()
+    expect(w.attributes('inert')).toBeUndefined()
+  })
+})

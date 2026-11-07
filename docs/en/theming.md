@@ -38,6 +38,7 @@ import 'plancia/style.css'
   --plancia-tag-bg: color-mix(in srgb, var(--plancia-text-muted) 18%, transparent);
   --plancia-tag-fg: var(--plancia-text-muted);
   --plancia-shadow: 0 1px 2px rgba(0,0,0,.06);
+  --plancia-fullscreen-z: 45;    /* a window in full screen: over the sidebars (40), under the dialogs (50) */
 }
 ```
 
@@ -152,6 +153,12 @@ interface PlanciaLabels {
   minimizedLabel: string
   unknownType: (type: string) => string
   resize: string
+  resizeWidth?: string     // optional: the drag handle
+  viewStrip?: string       // optional: the view mode
+  viewTabs?: string
+  viewToggle?: string
+  fullscreen?: string      // optional: the full-screen button (0.7.0)
+  exitFullscreen?: string
   minimize: string
   close: string
   restore: string

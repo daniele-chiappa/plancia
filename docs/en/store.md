@@ -47,6 +47,7 @@ interface WindowTag {
 | `widthCycle` | `('s'\|'m'\|'full')[]` | Order cycled by `cycleWidth`. |
 | `defaultWidth` | `'s'\|'m'\|'full'` | Width applied when `open()` has no `width`. |
 | `focusTarget` | `string \| null` | Selector of the element that takes the focus in a window's body (`usePlanciaFocus`); `null`: the window itself. |
+| `fullscreen` | `boolean` | The focused window covers the page. It follows the focus, and ends when that window closes or goes to the footer. |
 
 ## Getters
 
@@ -67,6 +68,8 @@ interface WindowTag {
 | `restore` | `(id: string) => void` | Brings back from the footer and focuses it. |
 | `focus` | `(id: string) => void` | Focuses a window. |
 | `focusAdjacent` | `(dir: -1 \| 1) => void` | Moves focus to the adjacent *visible* window (clamped at the ends). |
+| `setFullscreen` | `(on: boolean) => void` | The focused window covers the page, or goes back. No window focused: stays off. `<Plancia>` makes the browser follow. |
+| `toggleFullscreen` | `() => void` | — |
 | `cycleWidth` | `(id: string) => void` | Advances `width` along `widthCycle`. |
 | `setTitle` | `(id: string, title: string) => void` | — |
 | `setDirty` | `(id: string, dirty: boolean) => void` | — |

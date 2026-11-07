@@ -68,13 +68,20 @@ const props = withDefaults(
    *  its heading (`usePlanciaFocus`). Omitted, or not drawn yet: the window
    *  itself takes it. */
   focusTarget?: string
+  /** Offer a full-screen button on each window: the focused window covers
+   *  the page, and the browser goes full screen where it lets it. Esc, or
+   *  the button again, ends it. Off by default. Follow it with
+   *  `v-model:fullscreen`, to set the rest of the page aside. */
+  allowFullscreen?: boolean
   }>(),
-  { showViewToggle: true },
+  { showViewToggle: true, allowFullscreen: false },
 )
 
 /** Layout mode. Controlled with `v-model:view-mode`; otherwise an internal ref
  *  that falls back to the config default, then 'strip'. */
 const viewModelRaw = defineModel<ViewMode | undefined>('viewMode', { default: undefined })
+/** Whether the focused window covers the page (`allowFullscreen`). */
+const fullscreenModel = defineModel<boolean>('fullscreen', { default: false })
 
 const emit = defineEmits<{
   /** A window that held the focus went, and no window is left to take it:
@@ -106,6 +113,52 @@ const keptMounted = computed(() => (props.keepMounted ? store.visible.filter(pro
 const aliveFocused = computed(() =>
   store.focused && !props.keepMounted?.(store.focused) ? store.focused : null,
 )
+
+/* --- full screen ----------------------------------------------------------- */
+// The store says which window covers the page; the browser follows, on the
+// whole document so that dialogs mounted in the body stay in sight. A browser
+// that refuses (no gesture, an iPhone) leaves the window covering the page.
+// Leaving the browser's full screen (Esc) ends the window's too.
+let browserFullscreen = false
+function enterBrowserFullscreen(): void {
+  const root = document.documentElement
+  if (document.fullscreenElement || typeof root.requestFullscreen !== 'function') return
+  root
+    .requestFullscreen()
+    .then(() => {
+      browserFullscreen = true
+    })
+    .catch(() => {})
+}
+function leaveBrowserFullscreen(): void {
+  if (!browserFullscreen) return
+  browserFullscreen = false
+  if (document.fullscreenElement) document.exitFullscreen().catch(() => {})
+}
+function onFullscreenChange(): void {
+  if (document.fullscreenElement || !browserFullscreen) return
+  browserFullscreen = false
+  store.setFullscreen(false)
+}
+watch(
+  () => store.fullscreen,
+  (on) => {
+    fullscreenModel.value = on
+    if (on) enterBrowserFullscreen()
+    else leaveBrowserFullscreen()
+  },
+)
+// The host asks; the store, which may refuse (no window, not offered), says.
+watch(fullscreenModel, (on) => {
+  if (on !== store.fullscreen) store.setFullscreen(on && props.allowFullscreen)
+  if (fullscreenModel.value !== store.fullscreen) fullscreenModel.value = store.fullscreen
+})
+onMounted(() => document.addEventListener('fullscreenchange', onFullscreenChange))
+onBeforeUnmount(() => {
+  document.removeEventListener('fullscreenchange', onFullscreenChange)
+  store.setFullscreen(false)
+  leaveBrowserFullscreen()
+})
 
 // Apply (and keep in sync) the width and focus configuration from props (or
 // config).
@@ -347,7 +400,7 @@ onBeforeUnmount(() => {
       <div class="plancia__main">
         <!-- Tabs mode: a scrollable tab bar over a single full-width pane. -->
         <template v-if="viewMode === 'tabs'">
-          <div class="plancia__tabbar">
+          <div class="plancia__tabbar" :inert="store.fullscreen || undefined">
             <div ref="tabsEl" class="plancia__tabs" role="tablist">
               <div
                 v-for="w in store.visible"
@@ -419,6 +472,7 @@ onBeforeUnmount(() => {
                 :key="aliveFocused.id"
                 :win="aliveFocused"
                 fill
+                :allow-fullscreen="allowFullscreen"
                 :foreign-label="foreignLabel(aliveFocused)"
                 :labels="labels"
                 :resolve-tone="resolveTone"
@@ -450,6 +504,7 @@ onBeforeUnmount(() => {
               :key="win.id"
               :win="win"
               fill
+              :allow-fullscreen="allowFullscreen"
               :foreign-label="foreignLabel(win)"
               :labels="labels"
               :resolve-tone="resolveTone"
@@ -495,6 +550,7 @@ onBeforeUnmount(() => {
             :max-visible-px="stripWidth"
             :min-width-px="minWidthPx"
             :soft-max-delay-ms="softMaxDelayMs"
+            :allow-fullscreen="allowFullscreen"
           >
             <template #actions="slotProps">
               <slot name="window-actions" v-bind="slotProps" />
@@ -524,7 +580,7 @@ onBeforeUnmount(() => {
           </div>
         </div>
 
-        <footer v-if="store.minimizedList.length" class="plancia__footer">
+        <footer v-if="store.minimizedList.length" class="plancia__footer" :inert="store.fullscreen || undefined">
           <span class="plancia__footer-label">{{ labels.minimizedLabel }}</span>
           <span v-for="w in store.minimizedList" :key="w.id" class="plancia__chip" :data-chip-id="w.id">
             <button type="button" class="plancia__chip-name" :title="labels.restore" @click="store.restore(w.id)">

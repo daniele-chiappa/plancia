@@ -28,6 +28,8 @@ const props = withDefaults(
     /** Single-pane mode (tabs): the frame fills the available width and the
      *  width affordances (preset cycle + drag handle) are hidden. */
     fill?: boolean
+    /** Offer the full-screen button: the focused window covers the page. */
+    allowFullscreen?: boolean
   }>(),
   {
     foreignLabel: null,
@@ -37,6 +39,7 @@ const props = withDefaults(
     minWidthPx: undefined,
     softMaxDelayMs: 300,
     fill: false,
+    allowFullscreen: false,
   },
 )
 
@@ -47,6 +50,17 @@ const openWindow = inject(OPEN_WINDOW, () => '')
 const canOpenWindowType = inject(CAN_OPEN_TYPE, () => false)
 
 const focused = computed(() => store.focusedId === props.win.id)
+// The window in full screen covers the page; the others stay under it, out
+// of reach of the keyboard.
+const fullscreen = computed(() => store.fullscreen && focused.value)
+const covered = computed(() => store.fullscreen && !focused.value)
+function onFullscreen() {
+  if (fullscreen.value) store.setFullscreen(false)
+  else {
+    store.focus(props.win.id)
+    store.setFullscreen(true)
+  }
+}
 const titleAttr = computed(() =>
   props.foreignLabel ? `${props.foreignLabel}: ${props.win.title}` : props.win.title,
 )
@@ -66,6 +80,12 @@ function tagClickable(tag: WindowTag): boolean {
 function onTagClick(tag: WindowTag): void {
   if (tagClickable(tag) && tag.open) openWindow(tag.open)
 }
+
+const fullscreenLabel = computed(() =>
+  fullscreen.value
+    ? (labels.value.exitFullscreen ?? DEFAULT_LABELS.exitFullscreen)
+    : (labels.value.fullscreen ?? DEFAULT_LABELS.fullscreen),
+)
 
 function onClose() {
   if (props.win.dirty && !window.confirm(labels.value.unsavedClose)) return
@@ -222,7 +242,9 @@ onBeforeUnmount(() => {
     :data-width="win.width"
     :data-resize-phase="controller.phase.value"
     class="plancia-window"
-    :class="{ 'plancia-window--focused': focused }"
+    :class="{ 'plancia-window--focused': focused, 'plancia-window--fullscreen': fullscreen }"
+    :data-fullscreen="fullscreen || undefined"
+    :inert="covered || undefined"
     :style="rootStyle"
     :aria-labelledby="labelledBy"
     tabindex="-1"
@@ -243,7 +265,7 @@ onBeforeUnmount(() => {
         <slot name="actions" :win="win" />
 
         <button
-          v-if="!fill"
+          v-if="!fill && !fullscreen"
           type="button"
           class="plancia-btn"
           :title="`${labels.resize} (${win.width.toUpperCase()})`"
@@ -256,6 +278,31 @@ onBeforeUnmount(() => {
             <polyline points="9 21 3 21 3 15" />
             <line x1="21" y1="3" x2="14" y2="10" />
             <line x1="3" y1="21" x2="10" y2="14" />
+          </svg>
+        </button>
+        <button
+          v-if="allowFullscreen"
+          type="button"
+          class="plancia-btn"
+          data-plancia-fullscreen
+          :title="fullscreenLabel"
+          :aria-label="fullscreenLabel"
+          :aria-pressed="fullscreen"
+          @click="onFullscreen"
+        >
+          <svg v-if="fullscreen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M8 3v3a2 2 0 0 1-2 2H3" />
+            <path d="M21 8h-3a2 2 0 0 1-2-2V3" />
+            <path d="M3 16h3a2 2 0 0 1 2 2v3" />
+            <path d="M16 21v-3a2 2 0 0 1 2-2h3" />
+          </svg>
+          <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M8 3H5a2 2 0 0 0-2 2v3" />
+            <path d="M21 8V5a2 2 0 0 0-2-2h-3" />
+            <path d="M3 16v3a2 2 0 0 0 2 2h3" />
+            <path d="M16 21h3a2 2 0 0 0 2-2v-3" />
           </svg>
         </button>
         <button
@@ -309,7 +356,7 @@ onBeforeUnmount(() => {
          preset cycle). Keyboard-operable; double-click clears the px width.
          Hidden in single-pane (fill) mode, where width is not user-driven. -->
     <div
-      v-if="!fill"
+      v-if="!fill && !fullscreen"
       class="plancia-window__resize"
       role="separator"
       aria-orientation="vertical"

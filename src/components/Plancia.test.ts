@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, h, markRaw, nextTick } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
-import { enableAutoUnmount, mount } from '@vue/test-utils'
+import { enableAutoUnmount, flushPromises, mount } from '@vue/test-utils'
 import Plancia from './Plancia.vue'
 import { useOpenWindow } from '../composables/openWindow'
 import { useWindowsStore } from '../store/windows'
@@ -536,5 +536,120 @@ describe('Plancia tabs follow the ARIA tabs pattern (F-33, F-18)', () => {
     expect(store.focusedId).toBe(b)
     expect(document.activeElement).toBe(document.querySelector(`[data-win-id="${b}"]`))
     vi.useRealTimers()
+  })
+})
+
+describe('Plancia full screen', () => {
+  // jsdom has no Fullscreen API: a document that goes full screen when asked
+  // and says so, as a browser does.
+  function fakeFullscreen(refuse = false) {
+    let current: Element | null = null
+    Object.defineProperty(document, 'fullscreenElement', { configurable: true, get: () => current })
+    const request = vi.fn(function (this: Element) {
+      if (refuse) return Promise.reject(new Error('no gesture'))
+      current = this
+      document.dispatchEvent(new Event('fullscreenchange'))
+      return Promise.resolve()
+    })
+    const exit = vi.fn(() => {
+      current = null
+      document.dispatchEvent(new Event('fullscreenchange'))
+      return Promise.resolve()
+    })
+    document.documentElement.requestFullscreen = request
+    document.exitFullscreen = exit
+    return { request, exit, leave: () => exit() }
+  }
+  afterEach(() => {
+    delete (document as { fullscreenElement?: unknown }).fullscreenElement
+  })
+
+  const mountFullscreen = (viewMode: 'strip' | 'tabs' = 'strip') =>
+    mount(Plancia, {
+      props: { registry, viewMode, allowFullscreen: true },
+      global: { plugins: [pinia] },
+      attachTo: document.body,
+    })
+
+  it('the window covers the page, the browser goes full screen, the rest is out of reach', async () => {
+    const fs = fakeFullscreen()
+    const store = useWindowsStore()
+    store.open({ type: 'x', key: 'a', title: 'Alpha' })
+    store.open({ type: 'x', key: 'b', title: 'Beta' })
+    store.open({ type: 'x', key: 'c', title: 'Gamma' })
+    store.minimize(store.windows[2]!.id)
+    const w = mountFullscreen('tabs')
+    await w.get('[data-plancia-fullscreen]').trigger('click')
+    await flushPromises()
+    expect(fs.request).toHaveBeenCalledTimes(1)
+    expect(w.emitted('update:fullscreen')?.at(-1)).toEqual([true])
+    expect(w.get('.plancia__tabbar').attributes('inert')).toBeDefined()
+    expect(w.get('.plancia__footer').attributes('inert')).toBeDefined()
+    await w.get('[data-plancia-fullscreen]').trigger('click')
+    await flushPromises()
+    expect(fs.exit).toHaveBeenCalledTimes(1)
+    expect(w.emitted('update:fullscreen')?.at(-1)).toEqual([false])
+    expect(w.get('.plancia__tabbar').attributes('inert')).toBeUndefined()
+  })
+
+  it('leaving the browser full screen (Esc) ends the window\'s', async () => {
+    const fs = fakeFullscreen()
+    const store = useWindowsStore()
+    store.open({ type: 'x', key: 'a', title: 'Alpha' })
+    const w = mountFullscreen()
+    await w.get('[data-plancia-fullscreen]').trigger('click')
+    await flushPromises()
+    fs.leave()
+    await nextTick()
+    expect(store.fullscreen).toBe(false)
+    expect(w.find('.plancia-window--fullscreen').exists()).toBe(false)
+  })
+
+  it('a browser that refuses leaves the window covering the page', async () => {
+    fakeFullscreen(true)
+    const store = useWindowsStore()
+    store.open({ type: 'x', key: 'a', title: 'Alpha' })
+    const w = mountFullscreen()
+    await w.get('[data-plancia-fullscreen]').trigger('click')
+    await flushPromises()
+    expect(store.fullscreen).toBe(true)
+    expect(w.find('.plancia-window--fullscreen').exists()).toBe(true)
+  })
+
+  it('a browser without the API leaves the window covering the page', async () => {
+    const store = useWindowsStore()
+    store.open({ type: 'x', key: 'a', title: 'Alpha' })
+    const keep = document.documentElement.requestFullscreen
+    // @ts-expect-error: a browser without the Fullscreen API
+    document.documentElement.requestFullscreen = undefined
+    const w = mountFullscreen()
+    await w.get('[data-plancia-fullscreen]').trigger('click')
+    await flushPromises()
+    expect(w.find('.plancia-window--fullscreen').exists()).toBe(true)
+    document.documentElement.requestFullscreen = keep
+  })
+
+  it('the host turns it on and off with v-model:fullscreen, and closing the window ends it', async () => {
+    const fs = fakeFullscreen()
+    const store = useWindowsStore()
+    store.open({ type: 'x', key: 'a', title: 'Alpha' })
+    const w = mountFullscreen()
+    await w.setProps({ fullscreen: true })
+    await flushPromises()
+    expect(store.fullscreen).toBe(true)
+    store.close(store.windows[0]!.id)
+    await flushPromises()
+    expect(fs.exit).toHaveBeenCalled()
+    expect(w.emitted('update:fullscreen')?.at(-1)).toEqual([false])
+  })
+
+  it('without allowFullscreen, no button and the host cannot turn it on', async () => {
+    const store = useWindowsStore()
+    store.open({ type: 'x', key: 'a', title: 'Alpha' })
+    const w = mount(Plancia, { props: { registry }, global: { plugins: [pinia] } })
+    await w.setProps({ fullscreen: true })
+    expect(w.find('[data-plancia-fullscreen]').exists()).toBe(false)
+    expect(store.fullscreen).toBe(false)
+    expect(w.emitted('update:fullscreen')?.at(-1)).toEqual([false])
   })
 })

@@ -79,6 +79,9 @@ export interface PlanciaLabels {
   viewStrip?: string
   viewTabs?: string
   viewToggle?: string
+  /** Full-screen button (added in 0.7.0) — optional, falls back to the default. */
+  fullscreen?: string
+  exitFullscreen?: string
   minimize: string
   close: string
   restore: string
@@ -98,6 +101,8 @@ export const DEFAULT_LABELS: Required<PlanciaLabels> = {
   viewStrip: 'Strip',
   viewTabs: 'Tabs',
   viewToggle: 'Toggle view',
+  fullscreen: 'Full screen',
+  exitFullscreen: 'Exit full screen',
   minimize: 'Minimize',
   close: 'Close',
   restore: 'Restore',

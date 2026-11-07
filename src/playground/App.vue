@@ -37,6 +37,8 @@ const labels: Partial<PlanciaLabels> = {
   minimize: 'Riduci',
   close: 'Chiudi',
   restore: 'Ripristina',
+  fullscreen: 'Schermo intero',
+  exitFullscreen: 'Esci dallo schermo intero',
   dirty: 'Modifiche non salvate',
   unsavedClose: 'Modifiche non salvate. Chiudere comunque?',
   openTag: 'Apri',
@@ -215,6 +217,7 @@ openSeveral()
 
         <Plancia
           v-model:view-mode="viewMode"
+          allow-fullscreen
           :registry="registry"
           native-type="note"
           :labels="labels"

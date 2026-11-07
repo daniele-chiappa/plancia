@@ -32,6 +32,8 @@ ones. Fills its parent, so give the parent a height.
 | `keepAliveMax` | `number` | `5` | In `tabs` mode, how many window subtrees stay mounted (LRU). The lever for hosting many windows cheaply. |
 | `keepMounted` | `(win) => boolean` | — | In `tabs` mode, the windows that stay in the page, hidden, while another tab shows: an iframe taken out of the page reloads, and a video stops. They are not counted in `keepAliveMax`. |
 | `showViewToggle` | `boolean` | `true` | Render the built-in view toggle in the tab bar (override its content with the `view-toggle` slot). |
+| `allowFullscreen` | `boolean` | `false` | A **full-screen** button on each window: the focused window covers the page, and the browser goes full screen where it lets it. See [Full screen](#full-screen). |
+| `v-model:fullscreen` | `boolean` | `false` | Whether the focused window covers the page. Follow it to set the rest of your page aside (`inert`); set it to turn full screen on or off (only with `allowFullscreen`, and a window focused). |
 | `focusTarget` | `string` | — | Selector of the element that takes the focus in a window's body, such as its heading (`[data-window-heading]`). Omitted, or not drawn yet: the window itself takes it. Applied to the store via `configure()`; see [Recipes → Focus a window](./recipes.md#focus-a-window). |
 
 ### Slots
@@ -93,6 +95,7 @@ component rendered inside `<Plancia>`, so `useOpenWindow()` resolves (see
   window) names it, and it can take the focus itself (`tabindex="-1"`). A focus
   that enters a window, by Tab or by script, makes it the focused one, as a
   click does.
+- With `allowFullscreen`, a **full-screen** button: see [Full screen](#full-screen).
 - Clickable header **tags** open their `open` target — but only if that type is
   registered in this plancia (otherwise the tag stays informational).
 
@@ -102,6 +105,32 @@ component rendered inside `<Plancia>`, so `useOpenWindow()` resolves (see
 |---|---|---|
 | `update:viewMode` | `'strip' \| 'tabs'` | The view mode changed (`v-model:view-mode`). |
 | `focus-out` | — | A window that held the focus went, and no window is left to take it. Put the focus somewhere, e.g. your `main`; otherwise it stays on the page. |
+| `update:fullscreen` | `boolean` | Full screen began or ended (`v-model:fullscreen`): by the button, by Esc, or because its window closed or went to the footer. |
+
+### Full screen
+
+With `allowFullscreen`, each window's header has a button that makes the
+focused window cover the page (`position: fixed`, over the sidebars and
+under the dialogs, `--plancia-fullscreen-z`).
+
+- **The browser** goes full screen too, on the whole document, so that dialogs
+  mounted in the body stay in sight. A browser that refuses (no user
+  gesture, a phone without the Fullscreen API) leaves the window covering the
+  page.
+- **It ends** with the button again, with Esc (the browser leaves its full
+  screen, and the window follows), or when that window closes or goes to the
+  footer.
+- **It follows the focus**: a window opened from the one in full screen takes
+  its place.
+- **The window stays the same element**, so an iframe in it does not reload.
+  The other windows, the tab bar and the footer are `inert` meanwhile.
+- **The rest of your page** is yours to set aside: bind `v-model:fullscreen`
+  and make your bars `inert` while it is on.
+
+```vue
+<Plancia v-model:fullscreen="full" allow-fullscreen :registry="registry" />
+<header :inert="full || undefined">…</header>
+```
 
 ### Provides
 
