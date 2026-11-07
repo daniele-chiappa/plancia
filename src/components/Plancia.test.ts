@@ -125,6 +125,109 @@ describe('Plancia view mode (strip ↔ tabs)', () => {
     expect(w.emitted('update:viewMode')![0]).toEqual(['strip'])
   })
 
+  // A window put aside by another tab keeps its own content: before, it read
+  // the focused window, so it took the other tab's (and lost its state), and
+  // the last window closed threw on a focus of null.
+  const Field = markRaw(
+    defineComponent({
+      props: { name: { type: String, default: '' } },
+      setup(props) {
+        const mounts = (globalThis as { fieldMounts?: string[] }).fieldMounts ?? []
+        mounts.push(props.name)
+        ;(globalThis as { fieldMounts?: string[] }).fieldMounts = mounts
+        return () => h('input', { class: 'field', 'data-name': props.name })
+      },
+    }),
+  )
+  const kept = { ...registry, field: Field }
+  const mountKept = (errorHandler = vi.fn()) =>
+    mount(Plancia, {
+      props: { registry: kept, viewMode: 'tabs' },
+      global: { plugins: [pinia], config: { errorHandler } },
+      attachTo: document.body,
+    })
+  afterEach(() => {
+    delete (globalThis as { fieldMounts?: string[] }).fieldMounts
+  })
+
+  it('keeps the state of a window while another tab is shown', async () => {
+    const store = useWindowsStore()
+    store.open({ type: 'field', key: 'a', title: 'Alpha', props: { name: 'a' } })
+    const w = mountKept()
+    await nextTick()
+    ;(w.get('.field').element as HTMLInputElement).value = 'typed'
+    store.open({ type: 'x', key: 'b', title: 'Beta' })
+    await nextTick()
+    store.open({ type: 'field', key: 'c', title: 'Gamma', props: { name: 'c' } })
+    await nextTick()
+    expect(w.get('.field').attributes('data-name')).toBe('c')
+    store.focus(store.windows[0]!.id)
+    await nextTick()
+    const field = w.get('.field')
+    expect(field.attributes('data-name')).toBe('a')
+    expect((field.element as HTMLInputElement).value).toBe('typed')
+    expect((globalThis as { fieldMounts?: string[] }).fieldMounts).toEqual(['a', 'c'])
+  })
+
+  it('closes the last window with no error', async () => {
+    const errorHandler = vi.fn()
+    const store = useWindowsStore()
+    store.open({ type: 'field', key: 'a', title: 'Alpha', props: { name: 'a' } })
+    store.open({ type: 'x', key: 'b', title: 'Beta' })
+    const w = mountKept(errorHandler)
+    await nextTick()
+    store.close(store.windows[1]!.id)
+    await nextTick()
+    store.close(store.windows[0]!.id)
+    await nextTick()
+    expect(store.windows).toHaveLength(0)
+    expect(w.find('.plancia__empty').exists()).toBe(true)
+    expect(errorHandler).not.toHaveBeenCalled()
+  })
+
+  // A frame kept alive leaves the page while another tab shows, and a browser
+  // reloads an iframe taken out of the page: keepMounted keeps such a window
+  // in the page, hidden.
+  const Page = markRaw(defineComponent({ render: () => h('iframe', { class: 'page' }) }))
+  const mountKeptMounted = (keepMounted?: (win: { type: string }) => boolean) =>
+    mount(Plancia, {
+      props: { registry: { ...registry, page: Page }, viewMode: 'tabs', keepMounted },
+      global: { plugins: [pinia] },
+      attachTo: document.body,
+    })
+
+  it('keeps a window kept mounted in the page, hidden, while another tab shows', async () => {
+    const store = useWindowsStore()
+    store.open({ type: 'page', key: 'p', title: 'Page' })
+    const w = mountKeptMounted((win) => win.type === 'page')
+    await nextTick()
+    const frame = w.get('.page').element
+    store.open({ type: 'x', key: 'b', title: 'Beta' })
+    await nextTick()
+    expect(frame.isConnected).toBe(true)
+    expect((frame.closest('.plancia-window') as HTMLElement).style.display).toBe('none')
+    expect(w.findAll('.winbody')).toHaveLength(1)
+    store.focus(store.windows[0]!.id)
+    await nextTick()
+    expect(w.get('.page').element).toBe(frame)
+    expect((frame.closest('.plancia-window') as HTMLElement).style.display).toBe('')
+    expect(w.findAll('.plancia-window').filter((f) => f.isVisible())).toHaveLength(1)
+    store.close(store.windows[0]!.id)
+    await nextTick()
+    expect(frame.isConnected).toBe(false)
+  })
+
+  it('without keepMounted, a window leaves the page while another tab shows', async () => {
+    const store = useWindowsStore()
+    store.open({ type: 'page', key: 'p', title: 'Page' })
+    const w = mountKeptMounted()
+    await nextTick()
+    const frame = w.get('.page').element
+    store.open({ type: 'x', key: 'b', title: 'Beta' })
+    await nextTick()
+    expect(frame.isConnected).toBe(false)
+  })
+
   it('never leaves the tabs pane blank: auto-focuses the first visible window', async () => {
     const store = useWindowsStore()
     // Open without focus, then clear focus → tabs mode must still pick one.

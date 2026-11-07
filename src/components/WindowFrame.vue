@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /**
  * WindowFrame — chrome around one plancia window. Content-agnostic: the body is
- * the default <slot/>. Dependency-free icons (inline SVG) and CSS-variable
+ * the default <slot/>, which gets the frame's `win`. Dependency-free icons (inline SVG) and CSS-variable
  * styling. Extra per-window buttons go through the `actions` slot (this is how
  * domain-specific actions like gosidian's ego-graph button stay OUT of the lib).
  */
@@ -302,7 +302,7 @@ onBeforeUnmount(() => {
     </header>
 
     <div class="plancia-window__body">
-      <slot />
+      <slot :win="win" />
     </div>
 
     <!-- Right-edge drag handle: continuous width resize (coexists with the

@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Windows that stay in the page behind a tab** — the new `keepMounted`
+  prop (`(win) => boolean`) keeps those windows in the page, hidden, while
+  another tab shows, where a kept-alive window leaves it: a browser reloads
+  an iframe taken out of the page, so an editor in an iframe lost its work
+  at each change of tab.
+- `<WindowFrame>`'s default slot gets the frame's `win`, as `actions` did.
+
+### Fixed
+
+- **A tab keeps its window** — in the tabs view, a window put aside by
+  another tab rendered the focused window's content: it lost its state
+  (what was typed, its scroll) as soon as the focus moved, and closing the
+  last window threw `Cannot read properties of null`. Each frame now
+  renders its own window.
+
 ## [0.5.0] - 2026-11-04
 
 ### Added

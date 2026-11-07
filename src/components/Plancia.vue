@@ -7,8 +7,9 @@
  *   Every visible window is mounted side by side.
  * - `tabs`: a horizontally-scrollable tab bar (each tab shows the window title
  *   and a direct close button) over a single full-width pane that mounts only
- *   the focused window, kept alive up to `keepAliveMax`. Cheaper with many
- *   windows — see the perf notes in the README.
+ *   the focused window, kept alive up to `keepAliveMax`, and the windows of
+ *   `keepMounted`, hidden. Cheaper with many windows — see the perf notes in
+ *   the README.
  *
  * Generic: the type→component `registry` decides what each window renders.
  * Abstracted from the products-dc and gosidian "WindowManager" implementations,
@@ -56,6 +57,10 @@ const props = withDefaults(
   resolveTone?: (tone?: string) => string
   /** In `tabs` mode, how many window subtrees to keep mounted (LRU). Default 5. */
   keepAliveMax?: number
+  /** In `tabs` mode, the windows that stay in the page, hidden, while another
+   *  tab shows, instead of being kept alive out of it: an iframe taken out of
+   *  the page reloads, and a video stops. None by default. */
+  keepMounted?: (win: WindowInstance) => boolean
   /** Render the built-in view toggle in the tab bar. Default true. Override its
    *  content with the `view-toggle` slot ({ mode, toggle }). */
   showViewToggle?: boolean
@@ -96,6 +101,10 @@ function toggleView(): void {
 }
 const keepAliveMax = computed(
   () => props.keepAliveMax ?? cfg?.value.components?.window?.defaults?.keepAliveMax ?? 5,
+)
+const keptMounted = computed(() => (props.keepMounted ? store.visible.filter(props.keepMounted) : []))
+const aliveFocused = computed(() =>
+  store.focused && !props.keepMounted?.(store.focused) ? store.focused : null,
 )
 
 // Apply (and keep in sync) the width and focus configuration from props (or
@@ -406,11 +415,11 @@ onBeforeUnmount(() => {
           >
             <KeepAlive :max="keepAliveMax">
               <WindowFrame
-                v-if="store.focused"
-                :key="store.focused.id"
-                :win="store.focused"
+                v-if="aliveFocused"
+                :key="aliveFocused.id"
+                :win="aliveFocused"
                 fill
-                :foreign-label="foreignLabel(store.focused)"
+                :foreign-label="foreignLabel(aliveFocused)"
                 :labels="labels"
                 :resolve-tone="resolveTone"
               >
@@ -418,17 +427,47 @@ onBeforeUnmount(() => {
                   <slot name="window-actions" v-bind="slotProps" />
                 </template>
 
-                <component
-                  :is="registry[store.focused.type]"
-                  v-if="registry[store.focused.type]"
-                  v-bind="store.focused.props"
-                  v-on="windowEvents(store.focused.id)"
-                />
-                <div v-else style="padding: 1rem; font-size: 0.875rem; color: var(--plancia-danger)">
-                  {{ labels.unknownType(store.focused.type) }}
-                </div>
+                <!-- The frame's own window, not store.focused: a frame kept
+                     alive behind another tab renders its slot again when the
+                     focus moves, and would take the other window's content. -->
+                <template #default="{ win }">
+                  <component
+                    :is="registry[win.type]"
+                    v-if="registry[win.type]"
+                    v-bind="win.props"
+                    v-on="windowEvents(win.id)"
+                  />
+                  <div v-else style="padding: 1rem; font-size: 0.875rem; color: var(--plancia-danger)">
+                    {{ labels.unknownType(win.type) }}
+                  </div>
+                </template>
               </WindowFrame>
             </KeepAlive>
+
+            <WindowFrame
+              v-for="win in keptMounted"
+              v-show="win.id === store.focused?.id"
+              :key="win.id"
+              :win="win"
+              fill
+              :foreign-label="foreignLabel(win)"
+              :labels="labels"
+              :resolve-tone="resolveTone"
+            >
+              <template #actions="slotProps">
+                <slot name="window-actions" v-bind="slotProps" />
+              </template>
+
+              <component
+                :is="registry[win.type]"
+                v-if="registry[win.type]"
+                v-bind="win.props"
+                v-on="windowEvents(win.id)"
+              />
+              <div v-else style="padding: 1rem; font-size: 0.875rem; color: var(--plancia-danger)">
+                {{ labels.unknownType(win.type) }}
+              </div>
+            </WindowFrame>
 
             <div v-if="!store.visible.length" class="plancia__empty">
               <slot name="empty">

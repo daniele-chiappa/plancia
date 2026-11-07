@@ -84,6 +84,12 @@ In `tabs` mode only the focused window is mounted, wrapped in
   unsaved input) instead of re-mounting/re-fetching it.
 - `keepAliveMax` (prop, or `components.window.defaults.keepAliveMax`, default
   **`5`**) bounds how many window subtrees stay mounted (LRU eviction).
+- A kept-alive window is taken **out of the page** while another tab shows.
+  An iframe taken out of the page reloads, and a video or a WebGL context
+  stops: the `keepMounted` prop (`(win) => boolean`) keeps those windows in
+  the page instead, hidden with `display: none`, until they close or are
+  minimized. They stay mounted outside the `keepAliveMax` count, so keep the
+  test narrow (a window type, say).
 
 > **Caveat.** Kept-alive subtrees are *deactivated* but **still reactive** — their
 > watchers keep firing. Keep `keepAliveMax` modest, and in your window components

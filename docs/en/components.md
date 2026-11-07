@@ -30,6 +30,7 @@ ones. Fills its parent, so give the parent a height.
 | `resolveTone` | `(tone?: string) => string` | `() => ''` | Returns an extra CSS class for a tag/badge, derived from its `tone`. Tags also carry a `data-tone` attribute you can target in CSS. |
 | `v-model:view-mode` | `'strip' \| 'tabs'` | `'strip'` (or config) | Layout mode. `strip` = the tiling strip; `tabs` = a scrollable tab bar over a single focused pane. See [View mode](./view-mode.md). |
 | `keepAliveMax` | `number` | `5` | In `tabs` mode, how many window subtrees stay mounted (LRU). The lever for hosting many windows cheaply. |
+| `keepMounted` | `(win) => boolean` | — | In `tabs` mode, the windows that stay in the page, hidden, while another tab shows: an iframe taken out of the page reloads, and a video stops. They are not counted in `keepAliveMax`. |
 | `showViewToggle` | `boolean` | `true` | Render the built-in view toggle in the tab bar (override its content with the `view-toggle` slot). |
 | `focusTarget` | `string` | — | Selector of the element that takes the focus in a window's body, such as its heading (`[data-window-heading]`). Omitted, or not drawn yet: the window itself takes it. Applied to the store via `configure()`; see [Recipes → Focus a window](./recipes.md#focus-a-window). |
 
@@ -122,8 +123,11 @@ advanced cases (custom layouts).
 | `labels` | `PlanciaLabels` | Fully-resolved labels. |
 | `resolveTone` | `(tone?: string) => string` | Tag/badge tone class. |
 
-Slots: default = the window **body**; `actions` (`{ win }`) = extra header
-buttons (what `<Plancia>`'s `window-actions` forwards into).
+Slots: default (`{ win }`) = the window **body**; `actions` (`{ win }`) =
+extra header buttons (what `<Plancia>`'s `window-actions` forwards into).
+A frame kept alive (tabs mode) renders its slots again while it is hidden:
+read the window from `win`, the frame's own, not from the store's focused
+window.
 
 ## `<PlanciaLayout>`
 
