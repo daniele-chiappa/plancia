@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-11-08
+
 ### Added
 
 - **Full screen** — with the new `allowFullscreen` prop each window has a
@@ -331,6 +333,7 @@ products-dc) into a standalone, content-agnostic library.
 - Zero runtime dependencies. Peers: `vue ^3.5`, `pinia ^2.2 || ^3`,
   `vue-router ^4` (optional).
 
+[0.7.0]: https://github.com/daniele-chiappa/plancia/releases/tag/v0.7.0
 [0.6.0]: https://github.com/daniele-chiappa/plancia/releases/tag/v0.6.0
 [0.5.0]: https://github.com/daniele-chiappa/plancia/releases/tag/v0.5.0
 [0.4.0]: https://github.com/daniele-chiappa/plancia/releases/tag/v0.4.0
