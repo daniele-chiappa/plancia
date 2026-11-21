@@ -1,0 +1,72 @@
+name: Release plancia-calendar
+
+# Attaches the plancia-calendar tarball to the GitHub release of each
+# calendar-vX.Y.Z tag (ADR-007). Consumers install it from
+#   https://github.com/daniele-chiappa/plancia/releases/download/calendar-vX.Y.Z/plancia-calendar-X.Y.Z.tgz
+# As for plancia's own releases, a tarball already attached is never
+# replaced: the integrity consumers locked never changes.
+on:
+  push:
+    tags: ["calendar-v*.*.*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to build, e.g. calendar-v0.1.0"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+      GH_TOKEN: ${{ github.token }}
+    defaults:
+      run:
+        working-directory: calendar
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ env.TAG }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: calendar/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
+      - name: Pack
+        id: pack
+        run: |
+          version="${TAG#calendar-v}"
+          if [ "$(node -p "require('./package.json').version")" != "$version" ]; then
+            echo "calendar/package.json version does not match the tag $TAG"
+            exit 1
+          fi
+          npm pack
+          echo "file=plancia-calendar-$version.tgz" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Attach to the release
+        env:
+          FILE: ${{ steps.pack.outputs.file }}
+          VERSION: ${{ steps.pack.outputs.version }}
+        run: |
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            # The notes are the version's section of calendar/CHANGELOG.md.
+            awk -v ver="$VERSION" '$0 ~ "^## \\[" ver "\\]" {f=1; next} f && /^## \[/ {exit} f {print}' \
+              CHANGELOG.md > notes.md
+            [ -s notes.md ] || echo "See calendar/CHANGELOG.md." > notes.md
+            # Not the latest release: that stays plancia's own.
+            gh release create "$TAG" --verify-tag --latest=false --title "plancia-calendar $VERSION" --notes-file notes.md
+          fi
+          if gh release view "$TAG" --json assets --jq '.assets[].name' | grep -qxF "$FILE"; then
+            echo "$FILE is already attached to $TAG: left as it is"
+          else
+            gh release upload "$TAG" "$FILE"
+          fi

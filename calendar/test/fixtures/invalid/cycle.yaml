@@ -1,0 +1,7 @@
+events:
+  - title: Training
+    date: 2026-11-23
+    repeat: {every: 2 weeks, cycle: {on: 3, off: 1}}
+  - title: Shift
+    date: 2026-11-23
+    repeat: {every: day, cycle: [0, 0]}

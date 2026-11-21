@@ -1,0 +1,16 @@
+calendar: 1
+timezone: Europe/Rome
+events:
+  - title: Board
+    date: 2026-11-10
+    time: 09:00-10:00
+    repeat: {every: month, on: 2nd tue}
+  - title: Payroll
+    date: 2026-11-30
+    repeat: {every: month, on: -1}
+  - title: Newsletter
+    date: 2026-11-15
+    repeat: {every: 2 months, times: 3}
+  - title: Leap day
+    date: 2028-02-29
+    repeat: year

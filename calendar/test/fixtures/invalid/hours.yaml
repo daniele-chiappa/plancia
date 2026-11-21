@@ -1,0 +1,8 @@
+timezone: Mars/Olympus
+events:
+  - title: Meeting
+    date: 2026-11-24
+    time: 25:00
+  - title: Back to front
+    from: 2026-11-27 22:00
+    to: 2026-11-26 06:00

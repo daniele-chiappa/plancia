@@ -1,0 +1,4 @@
+events:
+  - title: Lesson
+    date: 2026-11-25
+    repeat: {every: week, on: [mon, thu]}

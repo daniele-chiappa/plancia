@@ -71,6 +71,36 @@ updates:
       - dependency-name: "mermaid"
         update-types: ["version-update:semver-major"]
 
+  # plancia-calendar (calendar/): its runtime dependency is pinned on
+  # purpose (ADR-007), so only the development ones are grouped here.
+  - package-ecosystem: "npm"
+    directory: "/calendar"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Etc/UTC"
+    open-pull-requests-limit: 5
+    # A release waits two weeks before its pull request: the rule of the
+    # projects for dependencies (security updates are not delayed).
+    cooldown:
+      default-days: 14
+    labels:
+      - "dependencies"
+      - "npm"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+    groups:
+      calendar-dev-dependencies:
+        dependency-type: "development"
+        update-types: ["minor", "patch"]
+    ignore:
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+
   # GitHub Actions used in workflows
   - package-ecosystem: "github-actions"
     directory: "/"

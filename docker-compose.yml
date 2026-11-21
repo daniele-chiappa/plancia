@@ -3,6 +3,7 @@
 #   docker compose up playground        → webui at http://localhost:5180 (HMR)
 #   docker compose up configurator      → configurator at http://localhost:5181
 #   docker compose up diagrams          → plancia-diagrams at http://localhost:5182
+#   docker compose up calendar          → plancia-calendar at http://localhost:5183
 #   docker compose run --rm test        → run the vitest suite once
 #   docker compose --profile test up    → start the test service
 #
@@ -47,6 +48,23 @@ services:
     command: ["npx", "vite", "--config", "vite.playground.config.ts", "--host", "0.0.0.0", "--port", "5173"]
     ports:
       - "5182:5173"
+    volumes:
+      - .:/app
+    restart: unless-stopped
+
+  # plancia-calendar playground (calendar/): the examples in every view,
+  # light and dark, editable. As the diagrams' service, it uses
+  # calendar/node_modules as installed there.
+  calendar:
+    image: node:24-alpine
+    container_name: plancia-calendar
+    user: "1400:1400"
+    working_dir: /app/calendar
+    environment:
+      HOME: /tmp
+    command: ["npx", "vite", "--config", "vite.playground.config.ts", "--host", "0.0.0.0", "--port", "5173"]
+    ports:
+      - "5183:5173"
     volumes:
       - .:/app
     restart: unless-stopped

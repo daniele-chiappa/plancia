@@ -1,0 +1,659 @@
+/*
+ * plancia-calendar — the look of a calendar.
+ *
+ * Every colour comes from a --pc-* variable, set here from an optional
+ * --plancia-calendar-* override, else plancia's semantic core
+ * (--plancia-*), else a value of its own: a page with plancia themes the
+ * calendar with it, light and dark alike, and a page without plancia still
+ * draws it.
+ */
+.plancia-calendar {
+  --pc-surface: var(--plancia-calendar-surface, var(--plancia-surface, #ffffff));
+  --pc-text: var(--plancia-calendar-text, var(--plancia-text, #1f2328));
+  --pc-muted: var(--plancia-calendar-muted, var(--plancia-text-muted, #59636e));
+  --pc-border: var(--plancia-calendar-border, var(--plancia-border, #d0d7de));
+  --pc-accent: var(--plancia-calendar-accent, var(--plancia-accent, #2563eb));
+  --pc-event: var(--plancia-calendar-event, color-mix(in srgb, var(--pc-accent) 16%, var(--pc-surface)));
+  --pc-event-text: var(--plancia-calendar-event-text, var(--pc-text));
+  --pc-changed: var(--plancia-calendar-changed, color-mix(in srgb, var(--plancia-warning, #d97706) 18%, var(--pc-surface)));
+  --pc-outside: color-mix(in srgb, var(--pc-text) 3%, var(--pc-surface));
+  --pc-today: color-mix(in srgb, var(--pc-accent) 8%, var(--pc-surface));
+  --pc-warning: var(--plancia-warning, #d97706);
+  --pc-danger: var(--plancia-danger, #cf222e);
+  --pc-radius: 4px;
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-height: 0;
+  color: var(--pc-text);
+  background: var(--pc-surface);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.plancia-calendar *,
+.plancia-calendar *::before,
+.plancia-calendar *::after {
+  box-sizing: border-box;
+}
+
+/* The bar: back, today, forward; the title; the views; a new event. */
+.plancia-calendar__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+.plancia-calendar__nav,
+.plancia-calendar__views {
+  display: inline-flex;
+  gap: 2px;
+}
+.plancia-calendar__title {
+  flex: 1 1 auto;
+  margin: 0;
+  font-size: 1.15em;
+  font-weight: 600;
+}
+.plancia-calendar__button {
+  min-height: 28px;
+  padding: 0.25rem 0.6rem;
+  border: 1px solid var(--pc-border);
+  border-radius: var(--pc-radius);
+  background: var(--pc-surface);
+  color: var(--pc-text);
+  font: inherit;
+  cursor: pointer;
+}
+.plancia-calendar__button:hover {
+  background: color-mix(in srgb, var(--pc-text) 6%, var(--pc-surface));
+}
+.plancia-calendar__button[aria-pressed='true'] {
+  border-color: var(--pc-accent);
+  background: color-mix(in srgb, var(--pc-accent) 14%, var(--pc-surface));
+  font-weight: 600;
+}
+.plancia-calendar__button--primary {
+  border-color: var(--pc-accent);
+  background: var(--pc-accent);
+  color: #ffffff;
+}
+.plancia-calendar__button--primary:hover {
+  background: color-mix(in srgb, var(--pc-accent) 85%, #000000);
+}
+.plancia-calendar__button--danger {
+  border-color: var(--pc-danger);
+  color: var(--pc-danger);
+}
+.plancia-calendar__button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.plancia-calendar__badge {
+  color: var(--pc-muted);
+}
+.plancia-calendar :focus-visible {
+  outline: 2px solid var(--pc-accent);
+  outline-offset: -2px;
+}
+
+/* The text alternative, for screen readers only. */
+.plancia-calendar__alt {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.plancia-calendar__problems {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border-left: 3px solid var(--pc-warning);
+  border-radius: var(--pc-radius);
+  background: color-mix(in srgb, var(--pc-warning) 8%, var(--pc-surface));
+}
+.plancia-calendar__problems p,
+.plancia-calendar__problems ul {
+  margin: 0;
+}
+.plancia-calendar__problems ul {
+  padding-left: 1.25rem;
+}
+.plancia-calendar__note,
+.plancia-calendar__empty {
+  margin: 0;
+  color: var(--pc-muted);
+}
+
+.plancia-calendar__body {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* The times. */
+.plancia-calendar__event {
+  display: flex;
+  align-items: baseline;
+  gap: 0.3em;
+  width: 100%;
+  min-width: 0;
+  padding: 0 0.3em;
+  border: 0;
+  border-left: 3px solid var(--pc-accent);
+  border-radius: 3px;
+  background: var(--pc-event);
+  color: var(--pc-event-text);
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  cursor: pointer;
+  touch-action: none;
+}
+.plancia-calendar__event--changed {
+  border-left-color: var(--pc-warning);
+  background: var(--pc-changed);
+}
+.plancia-calendar__event--dragging {
+  opacity: 0.45;
+  pointer-events: none;
+}
+.plancia-calendar__event--before {
+  border-left-style: dashed;
+}
+.plancia-calendar__event--after {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+.plancia-calendar__time {
+  color: var(--pc-muted);
+  font-variant-numeric: tabular-nums;
+}
+.plancia-calendar__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.plancia-calendar__place {
+  color: var(--pc-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.plancia-calendar__more {
+  align-self: flex-start;
+  margin-top: auto;
+  padding: 0 0.3em;
+  border: 0;
+  background: none;
+  color: var(--pc-muted);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.plancia-calendar__more:hover {
+  color: var(--pc-text);
+  text-decoration: underline;
+}
+
+/* The month: a row of weekdays, then a row per week. Each cell holds the
+   times that start in it; a bar of several days is as wide as its cells. */
+.plancia-calendar__month {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--pc-border);
+  border-radius: var(--pc-radius);
+  overflow: hidden;
+}
+.plancia-calendar__month-head,
+.plancia-calendar__week {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+.plancia-calendar__weekday {
+  padding: 0.25rem 0.4rem;
+  border-bottom: 1px solid var(--pc-border);
+  color: var(--pc-muted);
+  font-size: 12px;
+  text-transform: capitalize;
+}
+.plancia-calendar__week + .plancia-calendar__week {
+  border-top: 1px solid var(--pc-border);
+}
+.plancia-calendar__day {
+  --lane-height: 20px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(24px + var(--lanes, 3) * var(--lane-height) + 20px);
+  padding: 2px 0 2px;
+  cursor: default;
+}
+.plancia-calendar__day + .plancia-calendar__day {
+  border-left: 1px solid var(--pc-border);
+}
+.plancia-calendar__day--outside {
+  background: var(--pc-outside);
+  color: var(--pc-muted);
+}
+.plancia-calendar__day--today .plancia-calendar__num {
+  border-radius: 999px;
+  background: var(--pc-accent);
+  color: #ffffff;
+}
+.plancia-calendar__day--drop {
+  background: color-mix(in srgb, var(--pc-accent) 12%, var(--pc-surface));
+}
+.plancia-calendar__num {
+  align-self: flex-start;
+  min-width: 22px;
+  margin: 0 0 2px 4px;
+  padding: 0 4px;
+  font-size: 12px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.plancia-calendar__week .plancia-calendar__event {
+  position: absolute;
+  top: calc(24px + var(--lane) * var(--lane-height));
+  left: 2px;
+  z-index: 1;
+  width: calc(var(--span) * 100% + (var(--span) - 1) * 1px - 4px);
+  height: calc(var(--lane-height) - 2px);
+  line-height: calc(var(--lane-height) - 2px);
+}
+.plancia-calendar__week .plancia-calendar__event:not(.plancia-calendar__event--bar) {
+  border-left-width: 0;
+  background: none;
+}
+.plancia-calendar__week .plancia-calendar__event:not(.plancia-calendar__event--bar)::before {
+  content: '';
+  flex: none;
+  align-self: center;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--pc-accent);
+}
+.plancia-calendar__week .plancia-calendar__event--changed:not(.plancia-calendar__event--bar)::before {
+  background: var(--pc-warning);
+}
+.plancia-calendar__week .plancia-calendar__event:not(.plancia-calendar__event--bar):hover {
+  background: color-mix(in srgb, var(--pc-text) 6%, var(--pc-surface));
+}
+.plancia-calendar__week .plancia-calendar__more {
+  margin-left: 4px;
+}
+
+/* The week and the day: the days, the row without hours, then the hours. */
+.plancia-calendar__grid {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  border: 1px solid var(--pc-border);
+  border-radius: var(--pc-radius);
+  overflow: hidden;
+}
+.plancia-calendar__grid-head,
+.plancia-calendar__allday,
+.plancia-calendar__hours {
+  display: grid;
+  grid-template-columns: 56px repeat(var(--days), minmax(0, 1fr));
+}
+.plancia-calendar__grid-head {
+  border-bottom: 1px solid var(--pc-border);
+}
+.plancia-calendar__grid-day {
+  padding: 0.25rem 0.4rem;
+  color: var(--pc-muted);
+  font-size: 12px;
+  text-transform: capitalize;
+}
+.plancia-calendar__grid-day--today {
+  color: var(--pc-accent);
+  font-weight: 600;
+}
+.plancia-calendar__gutter {
+  position: relative;
+  color: var(--pc-muted);
+  font-size: 11px;
+}
+.plancia-calendar__gutter--label {
+  padding: 2px 4px;
+}
+.plancia-calendar__allday {
+  border-bottom: 1px solid var(--pc-border);
+}
+.plancia-calendar__allday-day {
+  --lane-height: 20px;
+  position: relative;
+  min-height: calc(var(--lanes, 1) * var(--lane-height) + 6px);
+  border-left: 1px solid var(--pc-border);
+}
+.plancia-calendar__allday-day .plancia-calendar__event {
+  position: absolute;
+  top: calc(3px + var(--lane) * var(--lane-height));
+  left: 2px;
+  z-index: 1;
+  width: calc(var(--span) * 100% + (var(--span) - 1) * 1px - 4px);
+  height: calc(var(--lane-height) - 2px);
+  line-height: calc(var(--lane-height) - 2px);
+}
+.plancia-calendar__allday-day .plancia-calendar__more {
+  position: absolute;
+  right: 2px;
+  bottom: 0;
+}
+.plancia-calendar__scroll {
+  flex: 1 1 auto;
+  min-height: 240px;
+  max-height: 640px;
+  overflow-y: auto;
+}
+.plancia-calendar__hours {
+  position: relative;
+  height: calc(24 * var(--hour));
+}
+.plancia-calendar__hours > .plancia-calendar__gutter {
+  display: flex;
+  flex-direction: column;
+}
+.plancia-calendar__hour {
+  flex: 0 0 var(--hour);
+  padding-right: 6px;
+  transform: translateY(-0.6em);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.plancia-calendar__column {
+  position: relative;
+  border-left: 1px solid var(--pc-border);
+  background-image: repeating-linear-gradient(
+    to bottom,
+    var(--pc-border) 0,
+    var(--pc-border) 1px,
+    transparent 1px,
+    transparent var(--hour)
+  );
+}
+.plancia-calendar__column--today {
+  background-color: var(--pc-today);
+}
+.plancia-calendar__column--drop {
+  background-color: color-mix(in srgb, var(--pc-accent) 8%, var(--pc-surface));
+}
+.plancia-calendar__column:focus-visible .plancia-calendar__cursor {
+  display: block;
+}
+.plancia-calendar__cursor {
+  display: none;
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: calc(var(--hour) / 2);
+  border: 2px solid var(--pc-accent);
+  border-radius: 3px;
+  pointer-events: none;
+}
+.plancia-calendar__ghost {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  z-index: 2;
+  padding: 0 4px;
+  border-top: 2px solid var(--pc-accent);
+  color: var(--pc-accent);
+  font-size: 11px;
+  pointer-events: none;
+}
+.plancia-calendar__column .plancia-calendar__event {
+  position: absolute;
+  z-index: 1;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  padding: 1px 4px;
+  border: 1px solid var(--pc-surface);
+  border-left: 3px solid var(--pc-accent);
+  line-height: 1.25;
+  white-space: normal;
+}
+.plancia-calendar__column .plancia-calendar__event--changed {
+  border-left-color: var(--pc-warning);
+}
+
+/* The list: the days with times, one after the other. */
+.plancia-calendar__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.plancia-calendar__list-date {
+  margin: 0 0 0.25rem;
+  padding-bottom: 0.15rem;
+  border-bottom: 1px solid var(--pc-border);
+  font-size: 1em;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+.plancia-calendar__list-day--today .plancia-calendar__list-date {
+  color: var(--pc-accent);
+}
+.plancia-calendar__list ul {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.plancia-calendar__list-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.6rem;
+}
+.plancia-calendar__list-hours {
+  flex: 0 0 7.5em;
+  color: var(--pc-muted);
+  font-variant-numeric: tabular-nums;
+}
+.plancia-calendar__list-title {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--pc-text);
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.plancia-calendar__list-title:hover {
+  color: var(--pc-accent);
+  text-decoration: underline;
+}
+.plancia-calendar__tag {
+  padding: 0 0.4em;
+  border-radius: 999px;
+  background: var(--pc-changed);
+  font-size: 11px;
+}
+.plancia-calendar__link {
+  color: var(--pc-accent);
+  font-size: 12px;
+}
+
+/* The form and the choice of the times, over the calendar. */
+.plancia-calendar__overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 1rem;
+  background: color-mix(in srgb, var(--pc-text) 22%, transparent);
+  overflow-y: auto;
+}
+.plancia-calendar__dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  width: min(36rem, 100%);
+  padding: 1rem;
+  border: 1px solid var(--pc-border);
+  border-radius: 6px;
+  background: var(--pc-surface);
+  color: var(--pc-text);
+  box-shadow: 0 8px 28px rgb(0 0 0 / 0.2);
+}
+.plancia-calendar__dialog--small {
+  width: min(24rem, 100%);
+  margin-top: 3rem;
+}
+.plancia-calendar__dialog-title {
+  margin: 0;
+  font-size: 1.1em;
+}
+.plancia-calendar__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+.plancia-calendar__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+.plancia-calendar__row > .plancia-calendar__field,
+.plancia-calendar__field > .plancia-calendar__row > input[type='text'] {
+  flex: 1 1 10rem;
+}
+.plancia-calendar__label,
+.plancia-calendar__field > label {
+  color: var(--pc-muted);
+  font-size: 12px;
+}
+.plancia-calendar__dialog input:not([type='checkbox']):not([type='radio']),
+.plancia-calendar__dialog select,
+.plancia-calendar__dialog textarea {
+  min-height: 28px;
+  padding: 0.2rem 0.4rem;
+  border: 1px solid var(--pc-border);
+  border-radius: var(--pc-radius);
+  background: var(--pc-surface);
+  color: var(--pc-text);
+  font: inherit;
+}
+.plancia-calendar__dialog [aria-invalid='true'] {
+  border-color: var(--pc-danger);
+}
+.plancia-calendar__small {
+  width: 5em;
+}
+.plancia-calendar__check,
+.plancia-calendar__weekday-choice,
+.plancia-calendar__scope {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.plancia-calendar__weekdays {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.6rem;
+  text-transform: capitalize;
+}
+.plancia-calendar__group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--pc-border);
+  border-radius: var(--pc-radius);
+}
+.plancia-calendar__group legend {
+  padding: 0 0.25rem;
+  color: var(--pc-muted);
+  font-size: 12px;
+}
+.plancia-calendar__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.plancia-calendar__chips li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0 0.2rem 0 0.5rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--pc-text) 7%, var(--pc-surface));
+  font-variant-numeric: tabular-nums;
+}
+.plancia-calendar__x {
+  padding: 0 0.3rem;
+  border: 0;
+  background: none;
+  color: var(--pc-muted);
+  font: inherit;
+  cursor: pointer;
+}
+.plancia-calendar__error {
+  color: var(--pc-danger);
+}
+.plancia-calendar__help {
+  color: var(--pc-muted);
+}
+.plancia-calendar__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.plancia-calendar__spacer {
+  flex: 1 1 auto;
+}
+.plancia-calendar__scopes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.plancia-calendar__scope {
+  flex-wrap: wrap;
+}
+.plancia-calendar__scope small {
+  flex-basis: 100%;
+  padding-left: 1.5rem;
+  color: var(--pc-muted);
+}
+.plancia-calendar__scope--off {
+  color: var(--pc-muted);
+}
+
+/* On a phone: the bar on two lines, the list by default (CalendarView). */
+.plancia-calendar--narrow .plancia-calendar__title {
+  flex-basis: 100%;
+  order: -1;
+}
+.plancia-calendar--narrow .plancia-calendar__day {
+  --lane-height: 16px;
+}
+.plancia-calendar--narrow .plancia-calendar__week .plancia-calendar__event .plancia-calendar__time {
+  display: none;
+}

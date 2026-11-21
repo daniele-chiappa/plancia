@@ -1,0 +1,11 @@
+calendar: 1
+timezone: Europe/Rome
+events:
+  - title: Catalogue due
+    id: due
+    date: 2026-12-03
+  - title: Festival
+    from: 2026-12-03
+    to: 2026-12-06
+    place: Old town
+    tags: [festival]

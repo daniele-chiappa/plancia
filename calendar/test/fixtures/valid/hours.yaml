@@ -1,0 +1,15 @@
+calendar: 1
+timezone: Europe/Rome
+events:
+  - title: Editorial meeting
+    date: 2026-11-24
+    time: 10:00-11:30
+  - title: Alarm
+    date: 2026-11-25
+    time: "07:00"
+  - title: Night shift
+    from: 2026-11-27 22:00
+    to: 2026-11-28 06:00
+  - title: Late show
+    date: 2026-11-28
+    time: 23:00-01:00

@@ -20,6 +20,10 @@ Pinia, which your app already has.
 > **Diagrams**: [`diagrams/`](diagrams/README.md) holds **plancia-diagrams**, a
 > package of its own: flows, trees, mind maps and fishbones drawn from a YAML
 > source. plancia does not depend on it.
+>
+> **Calendars**: [`calendar/`](calendar/README.md) holds **plancia-calendar**,
+> another package of its own: month, week, day and list views of a calendar
+> written in YAML, and its editor. plancia does not depend on it.
 
 ## Why
 

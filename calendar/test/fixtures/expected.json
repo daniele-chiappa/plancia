@@ -1,0 +1,2010 @@
+{
+  "invalid/bad-every.yaml": {
+    "problems": [
+      {
+        "line": 4,
+        "message": "every \"fortnightly\" is day, week, month or year, with a number before for more (2 weeks)"
+      }
+    ],
+    "text": "calendar of 1 event, times in Europe/Rome\n- Lesson — 2026-11-23 (all day)",
+    "times": [
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2026-11-23",
+        "all_day": true
+      }
+    ]
+  },
+  "invalid/change.yaml": {
+    "problems": [
+      {
+        "line": 6,
+        "message": "the change of 2026-11-24: the rule has no time on 2026-11-24"
+      },
+      {
+        "line": 7,
+        "message": "a change that cancels a time changes nothing else"
+      }
+    ],
+    "text": "calendar of 1 event, times in Europe/Rome\n- Lesson — every week, from 2026-11-23 (all day); on 2026-11-24 cancelled; on 2026-11-30 cancelled",
+    "times": [
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2026-11-23",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2026-12-07",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2026-12-14",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2026-12-21",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2026-12-28",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2027-01-04",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2027-01-11",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2027-01-18",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2027-01-25",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2027-02-01",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2027-02-08",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2027-02-15",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2027-02-22",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2027-03-01",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2027-03-08",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2027-03-15",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2027-03-22",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2027-03-29",
+        "all_day": true,
+        "repeats": true
+      }
+    ]
+  },
+  "invalid/cycle.yaml": {
+    "problems": [
+      {
+        "line": 4,
+        "message": "cycle counts the weeks one by one: it goes with every: week, not every: 2 weeks"
+      },
+      {
+        "line": 7,
+        "message": "a cycle has 2 to 104 periods, one of them on (1)"
+      }
+    ],
+    "text": "calendar of 2 events, times in Europe/Rome\n- Training — every 2 weeks, from 2026-11-23 (all day)\n- Shift — every day, from 2026-11-23 (all day)",
+    "times": [
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2026-11-23",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Training",
+        "start": "2026-11-23",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2026-11-24",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2026-11-25",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2026-11-26",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2026-11-27",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2026-11-28",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2026-11-29",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2026-11-30",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2026-12-01",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2026-12-02",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2026-12-03",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2026-12-04",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2026-12-05",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2026-12-06",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2026-12-07",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Training",
+        "start": "2026-12-07",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2026-12-08",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2026-12-09",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2026-12-10",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2026-12-11",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2026-12-12",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2026-12-13",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2026-12-14",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2026-12-15",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2026-12-16",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2026-12-17",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2026-12-18",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2026-12-19",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2026-12-20",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2026-12-21",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Training",
+        "start": "2026-12-21",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2026-12-22",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2026-12-23",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2026-12-24",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2026-12-25",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2026-12-26",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2026-12-27",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2026-12-28",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2026-12-29",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2026-12-30",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2026-12-31",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-01-01",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-01-02",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-01-03",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-01-04",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Training",
+        "start": "2027-01-04",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-01-05",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-01-06",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-01-07",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-01-08",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-01-09",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-01-10",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-01-11",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-01-12",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-01-13",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-01-14",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-01-15",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-01-16",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-01-17",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-01-18",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Training",
+        "start": "2027-01-18",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-01-19",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-01-20",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-01-21",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-01-22",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-01-23",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-01-24",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-01-25",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-01-26",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-01-27",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-01-28",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-01-29",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-01-30",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-01-31",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-02-01",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Training",
+        "start": "2027-02-01",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-02-02",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-02-03",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-02-04",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-02-05",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-02-06",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-02-07",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-02-08",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-02-09",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-02-10",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-02-11",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-02-12",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-02-13",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-02-14",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-02-15",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Training",
+        "start": "2027-02-15",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-02-16",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-02-17",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-02-18",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-02-19",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-02-20",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-02-21",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-02-22",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-02-23",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-02-24",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-02-25",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-02-26",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-02-27",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-02-28",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-03-01",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Training",
+        "start": "2027-03-01",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-03-02",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-03-03",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-03-04",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-03-05",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-03-06",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-03-07",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-03-08",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-03-09",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-03-10",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-03-11",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-03-12",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-03-13",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-03-14",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-03-15",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Training",
+        "start": "2027-03-15",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-03-16",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-03-17",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-03-18",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-03-19",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-03-20",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-03-21",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-03-22",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-03-23",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-03-24",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-03-25",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-03-26",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-03-27",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-03-28",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-03-29",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Training",
+        "start": "2027-03-29",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-03-30",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2027-03-31",
+        "all_day": true,
+        "repeats": true
+      }
+    ]
+  },
+  "invalid/fields.yaml": {
+    "problems": [
+      {
+        "line": 4,
+        "message": "an event has no field \"colour\" (it has id, title, date, time, from, to, repeat, skip, pause, changes, place, note, tags, text)"
+      },
+      {
+        "line": 5,
+        "message": "an event has a title"
+      },
+      {
+        "line": 6,
+        "message": "an event has a date (YYYY-MM-DD), or from and to"
+      }
+    ],
+    "text": "calendar of 2 events, times in Europe/Rome\n- Lesson — 2026-11-23 (all day)\n-  — 2026-11-24 (all day)",
+    "times": [
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2026-11-23",
+        "all_day": true
+      },
+      {
+        "event": 1,
+        "title": "",
+        "start": "2026-11-24",
+        "all_day": true
+      }
+    ]
+  },
+  "invalid/first-date.yaml": {
+    "problems": [
+      {
+        "line": 4,
+        "message": "the first date, 2026-11-25 (Wed), is not a date of the rule: the first time is 2026-11-26; make the event's date 2026-11-26"
+      }
+    ],
+    "text": "calendar of 1 event, times in Europe/Rome\n- Lesson — every week on Mon, Thu, from 2026-11-25 (all day)",
+    "times": [
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2026-11-26",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2026-11-30",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2026-12-03",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2026-12-07",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2026-12-10",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2026-12-14",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2026-12-17",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2026-12-21",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2026-12-24",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2026-12-28",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2026-12-31",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2027-01-04",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2027-01-07",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2027-01-11",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2027-01-14",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2027-01-18",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2027-01-21",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2027-01-25",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2027-01-28",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2027-02-01",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2027-02-04",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2027-02-08",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2027-02-11",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2027-02-15",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2027-02-18",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2027-02-22",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2027-02-25",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2027-03-01",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2027-03-04",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2027-03-08",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2027-03-11",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2027-03-15",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2027-03-18",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2027-03-22",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2027-03-25",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Lesson",
+        "start": "2027-03-29",
+        "all_day": true,
+        "repeats": true
+      }
+    ]
+  },
+  "invalid/hours.yaml": {
+    "problems": [
+      {
+        "line": 1,
+        "message": "timezone \"Mars/Olympus\" is not a zone of the IANA database, as Europe/Rome"
+      },
+      {
+        "line": 5,
+        "message": "time \"25:00\" is HH:MM-HH:MM, or HH:MM for a moment"
+      },
+      {
+        "line": 8,
+        "message": "to (2026-11-26 06:00) is before from (2026-11-27 22:00)"
+      }
+    ],
+    "text": "calendar of 2 events, times in Europe/Rome\n- Meeting — 2026-11-24 (all day)\n- Back to front — 2026-11-27 22:00",
+    "times": [
+      {
+        "event": 0,
+        "title": "Meeting",
+        "start": "2026-11-24",
+        "all_day": true
+      },
+      {
+        "event": 1,
+        "title": "Back to front",
+        "start": "2026-11-27T22:00:00+01:00"
+      }
+    ]
+  },
+  "valid/cycles.yaml": {
+    "problems": [],
+    "text": "calendar of 2 events, times in Europe/Rome\n- Training — every week on Mon, Wed, 3 weeks on and 1 off, from 2026-11-23 07:00–08:00\n- Shift — every day, 2 days on and 1 off until 2026-11-15, from 2026-11-01 (all day)",
+    "times": [
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2026-11-01",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2026-11-02",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2026-11-04",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2026-11-05",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2026-11-07",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2026-11-08",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2026-11-10",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2026-11-11",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2026-11-13",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Shift",
+        "start": "2026-11-14",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Training",
+        "start": "2026-11-23T07:00:00+01:00",
+        "end": "2026-11-23T08:00:00+01:00",
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Training",
+        "start": "2026-11-25T07:00:00+01:00",
+        "end": "2026-11-25T08:00:00+01:00",
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Training",
+        "start": "2026-11-30T07:00:00+01:00",
+        "end": "2026-11-30T08:00:00+01:00",
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Training",
+        "start": "2026-12-02T07:00:00+01:00",
+        "end": "2026-12-02T08:00:00+01:00",
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Training",
+        "start": "2026-12-07T07:00:00+01:00",
+        "end": "2026-12-07T08:00:00+01:00",
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Training",
+        "start": "2026-12-09T07:00:00+01:00",
+        "end": "2026-12-09T08:00:00+01:00",
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Training",
+        "start": "2026-12-21T07:00:00+01:00",
+        "end": "2026-12-21T08:00:00+01:00",
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Training",
+        "start": "2026-12-23T07:00:00+01:00",
+        "end": "2026-12-23T08:00:00+01:00",
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Training",
+        "start": "2026-12-28T07:00:00+01:00",
+        "end": "2026-12-28T08:00:00+01:00",
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Training",
+        "start": "2026-12-30T07:00:00+01:00",
+        "end": "2026-12-30T08:00:00+01:00",
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Training",
+        "start": "2027-01-04T07:00:00+01:00",
+        "end": "2027-01-04T08:00:00+01:00",
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Training",
+        "start": "2027-01-06T07:00:00+01:00",
+        "end": "2027-01-06T08:00:00+01:00",
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Training",
+        "start": "2027-01-18T07:00:00+01:00",
+        "end": "2027-01-18T08:00:00+01:00",
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Training",
+        "start": "2027-01-20T07:00:00+01:00",
+        "end": "2027-01-20T08:00:00+01:00",
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Training",
+        "start": "2027-01-25T07:00:00+01:00",
+        "end": "2027-01-25T08:00:00+01:00",
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Training",
+        "start": "2027-01-27T07:00:00+01:00",
+        "end": "2027-01-27T08:00:00+01:00",
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Training",
+        "start": "2027-02-01T07:00:00+01:00",
+        "end": "2027-02-01T08:00:00+01:00",
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Training",
+        "start": "2027-02-03T07:00:00+01:00",
+        "end": "2027-02-03T08:00:00+01:00",
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Training",
+        "start": "2027-02-15T07:00:00+01:00",
+        "end": "2027-02-15T08:00:00+01:00",
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Training",
+        "start": "2027-02-17T07:00:00+01:00",
+        "end": "2027-02-17T08:00:00+01:00",
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Training",
+        "start": "2027-02-22T07:00:00+01:00",
+        "end": "2027-02-22T08:00:00+01:00",
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Training",
+        "start": "2027-02-24T07:00:00+01:00",
+        "end": "2027-02-24T08:00:00+01:00",
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Training",
+        "start": "2027-03-01T07:00:00+01:00",
+        "end": "2027-03-01T08:00:00+01:00",
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Training",
+        "start": "2027-03-03T07:00:00+01:00",
+        "end": "2027-03-03T08:00:00+01:00",
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Training",
+        "start": "2027-03-15T07:00:00+01:00",
+        "end": "2027-03-15T08:00:00+01:00",
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Training",
+        "start": "2027-03-17T07:00:00+01:00",
+        "end": "2027-03-17T08:00:00+01:00",
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Training",
+        "start": "2027-03-22T07:00:00+01:00",
+        "end": "2027-03-22T08:00:00+01:00",
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Training",
+        "start": "2027-03-24T07:00:00+01:00",
+        "end": "2027-03-24T08:00:00+01:00",
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Training",
+        "start": "2027-03-29T07:00:00+02:00",
+        "end": "2027-03-29T08:00:00+02:00",
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Training",
+        "start": "2027-03-31T07:00:00+02:00",
+        "end": "2027-03-31T08:00:00+02:00",
+        "repeats": true
+      }
+    ]
+  },
+  "valid/days.yaml": {
+    "problems": [],
+    "text": "calendar of 2 events, times in Europe/Rome\n- Catalogue due [due] — 2026-12-03 (all day)\n- Festival — 2026-12-03 to 2026-12-06 (all day); at Old town; tags festival",
+    "times": [
+      {
+        "event": 0,
+        "id": "due",
+        "title": "Catalogue due",
+        "start": "2026-12-03",
+        "all_day": true
+      },
+      {
+        "event": 1,
+        "title": "Festival",
+        "start": "2026-12-03",
+        "end": "2026-12-06",
+        "all_day": true,
+        "place": "Old town",
+        "tags": [
+          "festival"
+        ]
+      }
+    ]
+  },
+  "valid/empty.yaml": {
+    "problems": [],
+    "text": "calendar of 0 events, times in Europe/Rome"
+  },
+  "valid/hours.yaml": {
+    "problems": [],
+    "text": "calendar of 4 events, times in Europe/Rome\n- Editorial meeting — 2026-11-24 10:00–11:30\n- Alarm — 2026-11-25 07:00\n- Night shift — 2026-11-27 22:00 to 2026-11-28 06:00\n- Late show — 2026-11-28 23:00 to 2026-11-29 01:00",
+    "times": [
+      {
+        "event": 0,
+        "title": "Editorial meeting",
+        "start": "2026-11-24T10:00:00+01:00",
+        "end": "2026-11-24T11:30:00+01:00"
+      },
+      {
+        "event": 1,
+        "title": "Alarm",
+        "start": "2026-11-25T07:00:00+01:00"
+      },
+      {
+        "event": 2,
+        "title": "Night shift",
+        "start": "2026-11-27T22:00:00+01:00",
+        "end": "2026-11-28T06:00:00+01:00"
+      },
+      {
+        "event": 3,
+        "title": "Late show",
+        "start": "2026-11-28T23:00:00+01:00",
+        "end": "2026-11-29T01:00:00+01:00"
+      }
+    ]
+  },
+  "valid/monthly.yaml": {
+    "problems": [],
+    "text": "calendar of 4 events, times in Europe/Rome\n- Board — every month on the 2nd Tue, from 2026-11-10 09:00–10:00\n- Payroll — every month on the last day, from 2026-11-30 (all day)\n- Newsletter — every 2 months, 3 times, from 2026-11-15 (all day)\n- Leap day — every year, from 2028-02-29 (all day)",
+    "times": [
+      {
+        "event": 0,
+        "title": "Board",
+        "start": "2026-11-10T09:00:00+01:00",
+        "end": "2026-11-10T10:00:00+01:00",
+        "repeats": true
+      },
+      {
+        "event": 2,
+        "title": "Newsletter",
+        "start": "2026-11-15",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Payroll",
+        "start": "2026-11-30",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Board",
+        "start": "2026-12-08T09:00:00+01:00",
+        "end": "2026-12-08T10:00:00+01:00",
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Payroll",
+        "start": "2026-12-31",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Board",
+        "start": "2027-01-12T09:00:00+01:00",
+        "end": "2027-01-12T10:00:00+01:00",
+        "repeats": true
+      },
+      {
+        "event": 2,
+        "title": "Newsletter",
+        "start": "2027-01-15",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Payroll",
+        "start": "2027-01-31",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Board",
+        "start": "2027-02-09T09:00:00+01:00",
+        "end": "2027-02-09T10:00:00+01:00",
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Payroll",
+        "start": "2027-02-28",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "title": "Board",
+        "start": "2027-03-09T09:00:00+01:00",
+        "end": "2027-03-09T10:00:00+01:00",
+        "repeats": true
+      },
+      {
+        "event": 2,
+        "title": "Newsletter",
+        "start": "2027-03-15",
+        "all_day": true,
+        "repeats": true
+      },
+      {
+        "event": 1,
+        "title": "Payroll",
+        "start": "2027-03-31",
+        "all_day": true,
+        "repeats": true
+      }
+    ]
+  },
+  "valid/weekly.yaml": {
+    "problems": [],
+    "text": "Courses — calendar of 1 event, times in Europe/Rome\n- Lesson [lesson] — every 2 weeks on Mon, Thu until 2027-02-28, from 2026-11-23 18:00–19:30; skips 2026-12-10; paused 2026-12-21 to 2027-01-06; on 2027-01-18 at 19:00–20:30; on 2027-01-21 moved to 2027-01-22, at Room 2; on 2027-02-01 cancelled; at Main hall; note [[courses/programme]]",
+    "times": [
+      {
+        "event": 0,
+        "id": "lesson",
+        "title": "Lesson",
+        "start": "2026-11-23T18:00:00+01:00",
+        "end": "2026-11-23T19:30:00+01:00",
+        "place": "Main hall",
+        "link": "[[courses/programme]]",
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "id": "lesson",
+        "title": "Lesson",
+        "start": "2026-11-26T18:00:00+01:00",
+        "end": "2026-11-26T19:30:00+01:00",
+        "place": "Main hall",
+        "link": "[[courses/programme]]",
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "id": "lesson",
+        "title": "Lesson",
+        "start": "2026-12-07T18:00:00+01:00",
+        "end": "2026-12-07T19:30:00+01:00",
+        "place": "Main hall",
+        "link": "[[courses/programme]]",
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "id": "lesson",
+        "title": "Lesson",
+        "start": "2027-01-07T18:00:00+01:00",
+        "end": "2027-01-07T19:30:00+01:00",
+        "place": "Main hall",
+        "link": "[[courses/programme]]",
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "id": "lesson",
+        "title": "Lesson",
+        "start": "2027-01-18T19:00:00+01:00",
+        "end": "2027-01-18T20:30:00+01:00",
+        "place": "Main hall",
+        "link": "[[courses/programme]]",
+        "repeats": true,
+        "changed_from": "2027-01-18"
+      },
+      {
+        "event": 0,
+        "id": "lesson",
+        "title": "Lesson",
+        "start": "2027-01-22T18:00:00+01:00",
+        "end": "2027-01-22T19:30:00+01:00",
+        "place": "Room 2",
+        "link": "[[courses/programme]]",
+        "repeats": true,
+        "changed_from": "2027-01-21"
+      },
+      {
+        "event": 0,
+        "id": "lesson",
+        "title": "Lesson",
+        "start": "2027-02-04T18:00:00+01:00",
+        "end": "2027-02-04T19:30:00+01:00",
+        "place": "Main hall",
+        "link": "[[courses/programme]]",
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "id": "lesson",
+        "title": "Lesson",
+        "start": "2027-02-15T18:00:00+01:00",
+        "end": "2027-02-15T19:30:00+01:00",
+        "place": "Main hall",
+        "link": "[[courses/programme]]",
+        "repeats": true
+      },
+      {
+        "event": 0,
+        "id": "lesson",
+        "title": "Lesson",
+        "start": "2027-02-18T18:00:00+01:00",
+        "end": "2027-02-18T19:30:00+01:00",
+        "place": "Main hall",
+        "link": "[[courses/programme]]",
+        "repeats": true
+      }
+    ]
+  }
+}
