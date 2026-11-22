@@ -1,0 +1,18 @@
+# The plans' deadlines and the bugs found, beside a weekly meeting: the
+# rows of two databases, on the days of their date fields.
+calendar: 1
+timezone: Europe/Rome
+events:
+  - title: Review
+    id: review
+    date: 2026-11-23
+    time: 10:00-11:00
+    repeat: week
+sources:
+  - from: p/plans
+    date: due
+    end: due_end
+    title: name
+    where: ["status in [draft, in-progress]", due exists]
+  - from: p/docs/bugs
+    date: found

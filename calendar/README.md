@@ -38,7 +38,7 @@ The format is gosidian's `calendar: 1`, described in its
 ## Install
 
 ```bash
-npm install https://github.com/daniele-chiappa/plancia/releases/download/calendar-v0.1.0/plancia-calendar-0.1.0.tgz
+npm install https://github.com/daniele-chiappa/plancia/releases/download/calendar-v0.2.0/plancia-calendar-0.2.0.tgz
 # peer: vue ^3.5
 ```
 
@@ -80,7 +80,7 @@ async function load(range: CalendarRange): Promise<CalendarLoad> {
 | Prop | |
 |---|---|
 | `modelValue` | The YAML. Every change from the editor comes back as `update:modelValue`, the calendar written in its full form. |
-| `load(range)` | The times of the days `{from, to}` shown, as `{times, problems?, truncated?}`: a time is `{event, title, start, end?, all_day?, place?, link?, tags?, repeats?, changed_from?}`, its `start` and `end` a day (`2026-11-24`) or a time with the calendar's offset (`2026-11-24T10:00:00+01:00`). Called again when the days shown or the YAML change. |
+| `load(range)` | The times of the days `{from, to}` shown, as `{times, problems?, truncated?}`: a time is `{event, title, start, end?, all_day?, place?, link?, tags?, repeats?, changed_from?}`, or a row of the host's with `row` and `movable?`, its `start` and `end` a day (`2026-11-24`) or a time with the calendar's offset (`2026-11-24T10:00:00+01:00`). Called again when the days shown or the YAML change. |
 | `view`, `date` | The view (`month`, `week`, `day`, `list`) and a day it shows, with `v-model`. Without a view, the list below `compactWidth` (600 px), the month above. |
 | `readonly` | Draws without editing. |
 | `labels` | The words, English by default (`DEFAULT_CALENDAR_LABELS`). |
@@ -89,6 +89,16 @@ async function load(range: CalendarRange): Promise<CalendarLoad> {
 
 It emits `link` with `{target}`, the `note` of an event: a `[[note]]` or an
 address, which the host opens.
+
+**The host's rows.** A calendar's `sources` name rows of the host's (in
+gosidian, the rows of a database on the days of a date field). The host
+reads them and sends them with the times, each with `row` (its name for
+it), and `movable` when it may be moved. The views draw them in outline,
+apart from the events, with `labels.row`. A click on one emits `open-row`
+with `{time}`; a drag to another day, for a `movable` row of a calendar not
+read only, emits `move-row` with `{time, start, end}`, its length kept. The
+host changes the row and calls `reload()`: the YAML, and the editor, never
+change a row.
 
 **Editing.** A click on a day, or on an hour of the week and day views, makes
 an event there; a click on a time opens it in the form. A time can be dragged
@@ -116,7 +126,7 @@ checks that need the rule's days worked out stay with the host).
 
 The functions under the component are exported too:
 
-- `parseCalendar(yaml)` → `{calendar, problems}`: a port of gosidian's Go reader, with the same messages on the same lines, but for the checks that need the days of a rule (`isRuleProblem`);
+- `parseCalendar(yaml)` → `{calendar, problems}`: a port of gosidian's Go reader, with the same messages on the same lines, but for the checks that need the days of a rule (`isRuleProblem`); its `sources` too, kept as written;
 - `writeCalendar(calendar)` → the YAML in its full form;
 - `calendarText(calendar, zone)`: the calendar in words, as gosidian says it to its agents;
 - `addEvent`, `applyEdit`, `deleteTime`, `splitEvent`, `shiftEvent`, `scopesFor`…: the editor's changes, as pure functions; an event is named by its index in `calendar.events`, and one outside the list throws a `RangeError` (`eventIn`);

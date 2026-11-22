@@ -26,6 +26,8 @@ export interface CalendarLabels {
   line: string
   repeats: string
   changed: string
+  /** Marks a row a source brings, which the host changes. */
+  row: string
   // The form.
   editEvent: string
   /** Said in the form of one time of a repeated event. */
@@ -109,6 +111,7 @@ export const DEFAULT_CALENDAR_LABELS: CalendarLabels = {
   line: 'line',
   repeats: 'repeats',
   changed: 'changed',
+  row: 'row',
   editEvent: 'Event',
   oneTime: "One time of an event that repeats: the days and hours shown are this time's.",
   title: 'Title',

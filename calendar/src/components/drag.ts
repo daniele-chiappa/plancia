@@ -9,6 +9,8 @@ export interface DropTarget {
 
 export interface DragOptions {
   enabled: () => boolean
+  /** Says this item may be dragged; all, without it. */
+  can?: (item: Placed) => boolean
   /** The target under the pointer, from the element there and the pointer's event. */
   target: (el: Element | null, ev: PointerEvent, grab: number) => DropTarget | null
   drop: (item: Placed, to: DropTarget) => void
@@ -33,7 +35,7 @@ export function useDrag(opts: DragOptions): Drag {
   let dropped = 0
 
   function start(ev: PointerEvent, item: Placed) {
-    if (!opts.enabled() || ev.button !== 0) return
+    if (!opts.enabled() || (opts.can && !opts.can(item)) || ev.button !== 0) return
     const el = ev.currentTarget as HTMLElement
     const x0 = ev.clientX
     const y0 = ev.clientY

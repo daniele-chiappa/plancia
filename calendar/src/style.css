@@ -162,6 +162,13 @@
   border-left-color: var(--pc-warning);
   background: var(--pc-changed);
 }
+/* A row a source brings: drawn in outline, not filled, so that it reads
+   apart from the events by its shape and not only by its colour. */
+.plancia-calendar__event--row {
+  border: 1px dashed var(--pc-muted);
+  border-left: 3px solid var(--pc-muted);
+  background: var(--pc-surface);
+}
 .plancia-calendar__event--dragging {
   opacity: 0.45;
   pointer-events: none;
@@ -484,6 +491,10 @@
   border-radius: 999px;
   background: var(--pc-changed);
   font-size: 11px;
+}
+.plancia-calendar__tag--row {
+  border: 1px dashed var(--pc-muted);
+  background: transparent;
 }
 .plancia-calendar__link {
   color: var(--pc-accent);

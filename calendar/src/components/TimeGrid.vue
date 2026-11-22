@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { addDays, daysOf, type CalendarDate } from '../model/dates'
-import type { Placed } from '../model/times'
+import { canDrag, isRow, placedKey, type Placed } from '../model/times'
 import type { CalendarRange } from '../model/types'
 import { isBar, layoutDay, layoutRow, type Bar, type Slot } from '../layout'
 import { dayHeading, hourText, longDate } from '../format'
@@ -116,6 +116,7 @@ function minuteAt(el: HTMLElement, clientY: number, grab = 0, snap = STEP): numb
 
 const drag = useDrag({
   enabled: () => props.editable,
+  can: canDrag,
   target: (el, ev, grab) => {
     const col = el?.closest<HTMLElement>('[data-day]')
     if (!col) return null
@@ -158,6 +159,7 @@ function itemLabel(p: Placed): string {
     parts.push(p.hasEnd ? `${hourText(p.from, props.locale, props.hour12)}–${hourText(p.to, props.locale, props.hour12)}` : hourText(p.from, props.locale, props.hour12))
   }
   if (p.time.place) parts.push(p.time.place)
+  if (isRow(p)) parts.push(props.labels.row)
   return parts.join(', ')
 }
 
@@ -197,13 +199,14 @@ const gridStyle = computed(() => ({ '--days': String(days.value.length), '--hour
       >
         <button
           v-for="b in barsAt(i)"
-          :key="`${b.item.time.event}:${b.item.start}`"
+          :key="placedKey(b.item)"
           type="button"
           class="plancia-calendar__event plancia-calendar__event--bar"
           :class="{
             'plancia-calendar__event--before': b.before,
             'plancia-calendar__event--after': b.after,
             'plancia-calendar__event--changed': !!b.item.time.changed_from,
+            'plancia-calendar__event--row': isRow(b.item),
             'plancia-calendar__event--dragging': drag.dragging.value === b.item,
           }"
           :style="{ '--span': String(b.last - b.first + 1), '--lane': String(b.lane) }"
@@ -253,7 +256,7 @@ const gridStyle = computed(() => ({ '--days': String(days.value.length), '--hour
           </span>
           <button
             v-for="s in columns.get(d) ?? []"
-            :key="`${s.item.time.event}:${s.item.start}:${s.item.from}`"
+            :key="placedKey(s.item)"
             type="button"
             class="plancia-calendar__event plancia-calendar__event--timed"
             :class="{

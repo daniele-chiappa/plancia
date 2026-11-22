@@ -1,6 +1,6 @@
 {
   "name": "plancia-calendar",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Calendars for Vue 3 from a YAML source: month, week, day and list views, an editor of events and of their repeats, the format read and written as gosidian's server reads it. The days of the repeats come from the host.",
   "type": "module",
   "license": "MIT",

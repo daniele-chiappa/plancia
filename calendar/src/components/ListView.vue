@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { addDays, type CalendarDate } from '../model/dates'
-import type { Placed } from '../model/times'
+import { isRow, placedKey, type Placed } from '../model/times'
 import type { CalendarRange } from '../model/types'
 import { hourText, longDate } from '../format'
 import type { CalendarLabels } from '../labels'
@@ -55,13 +55,14 @@ function hours(p: Placed, day: CalendarDate): string {
     >
       <h3 class="plancia-calendar__list-date">{{ longDate(day, locale) }}</h3>
       <ul>
-        <li v-for="p in list" :key="`${p.time.event}:${p.start}:${p.from}`" class="plancia-calendar__list-item">
+        <li v-for="p in list" :key="placedKey(p)" class="plancia-calendar__list-item" :class="{ 'plancia-calendar__list-item--row': isRow(p) }">
           <span class="plancia-calendar__list-hours">{{ hours(p, day) }}</span>
           <button type="button" class="plancia-calendar__list-title" @click="emit('open', p)">
             {{ p.time.title }}
           </button>
           <span v-if="p.time.place" class="plancia-calendar__place">{{ p.time.place }}</span>
           <span v-if="p.time.changed_from" class="plancia-calendar__tag">{{ labels.changed }}</span>
+          <span v-if="isRow(p)" class="plancia-calendar__tag plancia-calendar__tag--row">{{ labels.row }}</span>
           <a
             v-if="p.time.link"
             class="plancia-calendar__link"

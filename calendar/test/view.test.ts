@@ -216,3 +216,68 @@ describe('the state in an address', () => {
     expect(decodeCalendarState('month.2026-02-30')).toBeNull()
   })
 })
+
+describe('the rows of a source', () => {
+  const rows: CalendarTime[] = [
+    { event: -1, title: 'Piano A', start: '2026-11-25', all_day: true, row: 'p/plans/a.md', source: 0, field: 'due', movable: true },
+    { event: -1, title: 'Piano B', start: '2026-11-25', end: '2026-11-26', all_day: true, row: 'p/plans/b.md', source: 0, field: 'due', end_field: 'until' },
+  ]
+
+  /** Drags el to the day cell, as a pointer does. */
+  async function dragTo(el: Element, day: string) {
+    const target = document.querySelector(`[data-day="${day}"]`)!
+    // jsdom has no elementFromPoint: the pointer is over the cell.
+    const doc = document as unknown as { elementFromPoint?: () => Element }
+    doc.elementFromPoint = () => target
+    el.dispatchEvent(new MouseEvent('pointerdown', { button: 0, clientX: 10, clientY: 10, bubbles: true }))
+    window.dispatchEvent(new MouseEvent('pointermove', { clientX: 80, clientY: 40 }))
+    window.dispatchEvent(new MouseEvent('pointerup', { clientX: 80, clientY: 40 }))
+    delete doc.elementFromPoint
+    await flushPromises()
+  }
+
+  it('draws them apart from the events, each one', async () => {
+    const { w } = setup({}, rows)
+    await flushPromises()
+    const drawn = w.findAll('[data-day="2026-11-25"] .plancia-calendar__event--row')
+    // The bar of two days first, as for the events.
+    expect(drawn.map((b) => b.attributes('aria-label'))).toEqual(['Piano B, row', 'Piano A, row'])
+    expect(w.findAll('.plancia-calendar__event:not(.plancia-calendar__event--row)').length).toBeGreaterThan(0)
+  })
+
+  it('open on the host, never in the form', async () => {
+    const { w } = setup({}, rows)
+    await flushPromises()
+    await w.find('[data-day="2026-11-25"] [aria-label="Piano A, row"]').trigger('click')
+    expect(w.emitted('open-row')?.[0]).toEqual([{ time: rows[0] }])
+    expect(w.find('form').exists()).toBe(false)
+  })
+
+  it('move on the host when it lets them, their length kept', async () => {
+    const { w } = setup({}, rows)
+    await flushPromises()
+    const a = w.find('[data-day="2026-11-25"] [aria-label="Piano A, row"]')
+    const b = w.find('[data-day="2026-11-25"] [aria-label="Piano B, row"]')
+    await dragTo(a.element, '2026-11-27')
+    expect(w.emitted('move-row')).toEqual([[{ time: rows[0], start: '2026-11-27', end: '2026-11-27' }]])
+    // Piano B is not movable: it stays, and the YAML is never written.
+    await dragTo(b.element, '2026-11-27')
+    expect(w.emitted('move-row')).toHaveLength(1)
+    expect(w.emitted('update:modelValue')).toBeUndefined()
+  })
+
+  it('stay where they are when read only', async () => {
+    const { w } = setup({ readonly: true }, rows)
+    await flushPromises()
+    await dragTo(w.find('[data-day="2026-11-25"] [aria-label="Piano A, row"]').element, '2026-11-27')
+    expect(w.emitted('move-row')).toBeUndefined()
+  })
+
+  it('are marked in the list', async () => {
+    const { w } = setup({ view: 'list' }, rows)
+    await flushPromises()
+    const items = w.findAll('.plancia-calendar__list-item--row')
+    expect(items.length).toBe(3) // Piano B is on two days
+    expect(items[0]!.text()).toContain('row')
+  })
+})
