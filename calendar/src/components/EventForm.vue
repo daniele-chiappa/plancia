@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, reactive, ref, useId, watch } from 'vue'
 import { monthEnd, WEEKDAYS, weekdayOf, type Weekday } from '../model/dates'
 import { isLink } from '../model/parse'
 import { UNITS, type CalendarEvent } from '../model/types'
@@ -27,7 +27,7 @@ const emit = defineEmits<{
 const f = reactive<EventFields>(fieldsOf(props.draft))
 const errors = ref<Partial<Record<keyof EventFields, FieldError>>>({})
 const box = ref<HTMLElement | null>(null)
-const uid = `plancia-calendar-form-${Math.random().toString(36).slice(2, 8)}`
+const uid = `plancia-calendar-form-${useId()}`
 const fid = (name: string) => `${uid}-${name}`
 
 watch(

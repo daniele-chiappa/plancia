@@ -31,7 +31,31 @@ const clockRe = /^(\d{1,2}):(\d{2})(?::00)?$/ // seconds, when written, are 00
 const everyRe = /^(?:(\d+)\s*)?([a-z]+)$/
 const nthRe = /^(1st|2nd|3rd|4th|5th|last)\s+([a-z]+)$/
 const intRe = /^[+-]?\d+$/
-const wikiLinkRe = /\[\[([^\]]+)\]\]/g
+
+/**
+ * The [[links]] in s, as gosidian's \[\[([^\]]+)\]\] finds them, one after
+ * the other. Go's regexp runs in linear time; a JS regexp would take a
+ * time growing with the square of a long "[[[[…" with no closing "]]", so
+ * the search is written out: the first "]" after a "[[" ends a link when a
+ * second "]" follows it and something is between, and no link starts
+ * before that "]" otherwise.
+ */
+function countWikiLinks(s: string): number {
+  let n = 0
+  let i = 0
+  for (;;) {
+    const open = s.indexOf('[[', i)
+    if (open < 0) return n
+    const close = s.indexOf(']', open + 2)
+    if (close < 0) return n
+    if (close > open + 2 && s[close + 1] === ']') {
+      n++
+      i = close + 2
+    } else {
+      i = close + 1
+    }
+  }
+}
 
 const topFields = ['calendar', 'title', 'description', 'timezone', 'events']
 const eventFields = ['id', 'title', 'date', 'time', 'from', 'to', 'repeat', 'skip', 'pause', 'changes', 'place', 'note', 'tags', 'text']
@@ -171,7 +195,7 @@ export function isLink(link: string): boolean {
     link === '' ||
     link.startsWith('http://') ||
     link.startsWith('https://') ||
-    (link.startsWith('[[') && link.endsWith(']]') && (link.match(wikiLinkRe)?.length ?? 0) === 1)
+    (link.startsWith('[[') && link.endsWith(']]') && countWikiLinks(link) === 1)
   )
 }
 

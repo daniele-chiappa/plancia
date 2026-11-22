@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref, useId } from 'vue'
 import type { EditScope } from '../edit/edit'
 import type { CalendarLabels } from '../labels'
 
@@ -14,7 +14,7 @@ const emit = defineEmits<{ choose: [scope: EditScope | null] }>()
 const order: EditScope[] = ['this', 'following', 'all']
 const choice = ref<EditScope>(order.find((s) => props.allowed[s]) ?? 'all')
 const box = ref<HTMLElement | null>(null)
-const id = `plancia-calendar-scope-${Math.random().toString(36).slice(2, 8)}`
+const id = `plancia-calendar-scope-${useId()}`
 
 const heading = computed(() =>
   props.action === 'delete' ? props.labels.scopeDelete : props.action === 'move' ? props.labels.scopeMove : props.labels.scopeSave,

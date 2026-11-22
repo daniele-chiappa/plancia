@@ -119,7 +119,7 @@ The functions under the component are exported too:
 - `parseCalendar(yaml)` → `{calendar, problems}`: a port of gosidian's Go reader, with the same messages on the same lines, but for the checks that need the days of a rule (`isRuleProblem`);
 - `writeCalendar(calendar)` → the YAML in its full form;
 - `calendarText(calendar, zone)`: the calendar in words, as gosidian says it to its agents;
-- `addEvent`, `applyEdit`, `deleteTime`, `splitEvent`, `shiftEvent`, `scopesFor`…: the editor's changes, as pure functions;
+- `addEvent`, `applyEdit`, `deleteTime`, `splitEvent`, `shiftEvent`, `scopesFor`…: the editor's changes, as pure functions; an event is named by its index in `calendar.events`, and one outside the list throws a `RangeError` (`eventIn`);
 - `encodeCalendarState` and `decodeCalendarState`: the view and the day as a token for a window's address (`week.2026-11-23`).
 
 gosidian's examples (`docs/calendars/examples`) are the contract of the two

@@ -19,6 +19,7 @@ export {
   deleteScopes,
   deleteTime,
   eventAt,
+  eventIn,
   makeId,
   newEvent,
   removeEvent,

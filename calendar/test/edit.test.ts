@@ -5,6 +5,7 @@ import {
   deleteScopes,
   deleteTime,
   eventAt,
+  eventIn,
   eventOf,
   fieldsOf,
   makeId,
@@ -36,6 +37,23 @@ describe('the ids', () => {
     expect(makeId(c, 'Così è (se vi pare)')).toBe('cosi-e-se-vi-pare')
     expect(makeId(c, '日本')).toBe('event')
     expect(makeId(c, '-'.repeat(80) + 'x')).toBe('x')
+    expect(makeId(c, '  a -- b  ')).toBe('a-b')
+    expect(makeId(c, 'a'.repeat(39) + ' bc')).toBe('a'.repeat(39))
+    // A run of dashes takes a time in step with its length.
+    const t = performance.now()
+    expect(makeId(c, '-'.repeat(200_000) + 'x' + '-'.repeat(200_000))).toBe('x')
+    expect(performance.now() - t).toBeLessThan(500)
+  })
+
+  it('name only the events of the list', () => {
+    const c = must('events:\n  - {title: Lesson, date: 2026-11-23}\n')
+    expect(eventIn(c, 0).title).toBe('Lesson')
+    for (const bad of [1, -1, 0.5, NaN, '__proto__' as unknown as number, 'constructor' as unknown as number]) {
+      expect(() => eventIn(c, bad)).toThrow(RangeError)
+      expect(() => eventAt(c, { event: bad, date: '2026-11-23' })).toThrow(RangeError)
+      expect(() => applyEdit(c, { event: bad, date: '2026-11-23' }, newEvent('2026-11-23'), 'all')).toThrow(RangeError)
+    }
+    expect(({} as Record<string, unknown>).title).toBeUndefined()
   })
 
   it('are written for an event added', () => {

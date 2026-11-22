@@ -5,6 +5,7 @@ import {
   calendarText,
   daysBetween,
   eventText,
+  isLink,
   isRuleProblem,
   monthEnd,
   monthsBetween,
@@ -49,6 +50,17 @@ describe('the days', () => {
 })
 
 describe('the reader', () => {
+  it('finds the [[links]] as gosidian does', () => {
+    // One link from the first "[[" to the last "]]", as \[\[([^\]]+)\]\] finds them.
+    for (const ok of ['[[a]]', '[[p/a|A]]', '[[[a]]', '[[a]]b]]', 'https://x.org', '']) expect(isLink(ok), ok).toBe(true)
+    for (const bad of ['[[]]', '[[a]] [[b]]', '[[a]b]]', '[a]]', 'x[[a]]', 'ftp://x.org']) expect(isLink(bad), bad).toBe(false)
+    // A long "[[[[…" with no link in it takes a time in step with its length.
+    const t = performance.now()
+    expect(isLink('[['.repeat(200_000) + ']x]]')).toBe(false)
+    expect(isLink('[['.repeat(200_000) + ']]')).toBe(true)
+    expect(performance.now() - t).toBeLessThan(500)
+  })
+
   it('reads the short forms and the full ones', () => {
     const c = must(`calendar: 1
 title: Redazione

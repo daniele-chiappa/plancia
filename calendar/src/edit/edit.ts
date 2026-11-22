@@ -41,12 +41,16 @@ function stripDiacritics(s: string): string {
 /** An id for a new event, from its title, unique in the calendar. */
 export function makeId(c: Calendar, title: string, taken: Set<string> = new Set()): string {
   for (const e of c.events) if (e.id) taken.add(e.id)
+  // The words of the title joined by dashes. A split, not a regexp that
+  // trims dashes at the ends, which takes a time growing with the square
+  // of a long run of them.
   let base = stripDiacritics(title)
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
+    .split(/[^a-z0-9]+/)
+    .filter(Boolean)
+    .join('-')
     .slice(0, 40)
-    .replace(/-+$/, '')
+  if (base.endsWith('-')) base = base.slice(0, -1)
   if (!idRe.test(base)) base = 'event'
   let id = base
   for (let n = 2; taken.has(id); n++) id = `${base}-${n}`
@@ -73,6 +77,17 @@ export function newEvent(day: CalendarDate, from?: number): CalendarEvent {
   }
 }
 
+/**
+ * The event at index, which must be one of the list's: what a page passes
+ * as an index, a string such as "__proto__" among them, never reads
+ * another property of the list.
+ */
+export function eventIn(c: Calendar, index: number): CalendarEvent {
+  const e = Number.isInteger(index) && index >= 0 ? c.events.at(index) : undefined
+  if (!e) throw new RangeError(`no event at ${String(index)}`)
+  return e
+}
+
 function withId(c: Calendar, e: CalendarEvent, index: number): CalendarEvent {
   if (e.id) return e
   const others: Calendar = { ...c, events: c.events.filter((_, i) => i !== index) }
@@ -89,13 +104,15 @@ export function addEvent(c: Calendar, e: CalendarEvent): { calendar: Calendar; i
 
 /** Replaces an event, giving it an id when it has none. */
 export function replaceEvent(c: Calendar, index: number, e: CalendarEvent): Calendar {
+  eventIn(c, index)
   const out = clone(c)
-  out.events[index] = withId(out, clone(e), index)
+  out.events.splice(index, 1, withId(out, clone(e), index))
   return out
 }
 
 /** Takes an event out. */
 export function removeEvent(c: Calendar, index: number): Calendar {
+  eventIn(c, index)
   const out = clone(c)
   out.events.splice(index, 1)
   return out
@@ -116,7 +133,7 @@ export function changeAt(e: CalendarEvent, date: CalendarDate): Change | undefin
  * this, and the scope of a save is worked out against it.
  */
 export function eventAt(c: Calendar, ref: OccurrenceRef): CalendarEvent {
-  const e = clone(c.events[ref.event]!)
+  const e = clone(eventIn(c, ref.event))
   if (!e.repeat) return e
   const ch = changeAt(e, ref.date)
   const start = ch?.move ?? ref.date
@@ -249,7 +266,7 @@ function periodsBetween(rp: Repeat, from: CalendarDate, to: CalendarDate): numbe
 
 /** Which scopes can say the change from shown (the time as eventAt gives it) to draft. */
 export function scopesFor(c: Calendar, ref: OccurrenceRef, draft: CalendarEvent): Record<EditScope, boolean> {
-  const e = c.events[ref.event]!
+  const e = eventIn(c, ref.event)
   const shown = eventAt(c, ref)
   if (!e.repeat) return { this: false, following: false, all: true }
   const delta = daysBetween(shown.start, draft.start)
@@ -264,7 +281,7 @@ export function scopesFor(c: Calendar, ref: OccurrenceRef, draft: CalendarEvent)
 
 /** Applies to the whole event what the draft changes of the time shown. */
 function applyAll(c: Calendar, ref: OccurrenceRef, draft: CalendarEvent): Calendar {
-  const e = c.events[ref.event]!
+  const e = eventIn(c, ref.event)
   const shown = eventAt(c, ref)
   const delta = daysBetween(shown.start, draft.start)
   const rule = ruleChanged(shown, draft)
@@ -309,7 +326,7 @@ function applyAll(c: Calendar, ref: OccurrenceRef, draft: CalendarEvent): Calend
 /** Writes in the event's changes what the draft changes of one time. */
 function applyThis(c: Calendar, ref: OccurrenceRef, draft: CalendarEvent): Calendar {
   const out = clone(c)
-  const e = out.events[ref.event]!
+  const e = eventIn(out, ref.event)
   const shown = eventAt(c, ref)
   const ch: Change = { ...(changeAt(e, ref.date) ?? { date: ref.date, line: 0 }) }
   delete ch.cancel
@@ -343,7 +360,7 @@ function applyThis(c: Calendar, ref: OccurrenceRef, draft: CalendarEvent): Calen
  * cycle in the same phase. Gives the calendar and the new event's index.
  */
 export function splitEvent(c: Calendar, index: number, date: CalendarDate): { calendar: Calendar; index: number } {
-  const e = c.events[index]!
+  const e = eventIn(c, index)
   const rp = e.repeat
   if (!rp || date <= e.start) throw new Error('only a repeated event, after its first time, is cut')
   if (rp.times) throw new Error('a rule of a number of times is not cut: its times before are not counted here')
@@ -381,7 +398,7 @@ export function splitEvent(c: Calendar, index: number, date: CalendarDate): { ca
  * a rule). scopesFor says which can say the draft.
  */
 export function applyEdit(c: Calendar, ref: OccurrenceRef, draft: CalendarEvent, scope: EditScope): Calendar {
-  const e = c.events[ref.event]!
+  const e = eventIn(c, ref.event)
   if (!e.repeat) {
     const next = clone(draft)
     next.changes = []
@@ -395,7 +412,7 @@ export function applyEdit(c: Calendar, ref: OccurrenceRef, draft: CalendarEvent,
   if (scope === 'following' && ref.date > e.start) {
     const rule = ruleChanged(eventAt(c, ref), draft)
     const cut = splitEvent(c, ref.event, ref.date)
-    const tail = cut.calendar.events[cut.index]!
+    const tail = eventIn(cut.calendar, cut.index)
     const d = clone(draft)
     if (!rule) {
       // The rule as the cut left it: the cycle in its phase, the skips and pauses from the day on.
@@ -413,14 +430,14 @@ export function applyEdit(c: Calendar, ref: OccurrenceRef, draft: CalendarEvent,
 
 /** Deletes one time (a change that cancels it), the times from it on, or the event. */
 export function deleteTime(c: Calendar, ref: OccurrenceRef, scope: EditScope): Calendar {
-  const e = c.events[ref.event]!
+  const e = eventIn(c, ref.event)
   if (!e.repeat || scope === 'all' || (scope === 'following' && ref.date <= e.start)) return removeEvent(c, ref.event)
   if (scope === 'following') {
     const cut = splitEvent(c, ref.event, ref.date)
     return removeEvent(cut.calendar, cut.index)
   }
   const out = clone(c)
-  const ev = out.events[ref.event]!
+  const ev = eventIn(out, ref.event)
   ev.changes = [...ev.changes.filter((ch) => ch.date !== ref.date), { date: ref.date, cancel: true, line: 0 }].sort((a, b) =>
     a.date < b.date ? -1 : a.date > b.date ? 1 : 0,
   )
@@ -429,7 +446,7 @@ export function deleteTime(c: Calendar, ref: OccurrenceRef, scope: EditScope): C
 
 /** Which scopes a delete of the time ref names can take. */
 export function deleteScopes(c: Calendar, ref: OccurrenceRef): Record<EditScope, boolean> {
-  const e = c.events[ref.event]!
+  const e = eventIn(c, ref.event)
   if (!e.repeat) return { this: false, following: false, all: true }
   return { this: true, following: ref.date > e.start && !e.repeat.times, all: true }
 }
