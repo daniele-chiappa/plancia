@@ -1,6 +1,6 @@
 import { addDays, clock } from './dates'
 import { isZone } from './parse'
-import type { Calendar, CalendarEvent, Change, Repeat } from './types'
+import type { Calendar, CalendarEvent, CalendarSource, Change, Repeat } from './types'
 
 // A calendar said in words, as gosidian's internal/calendar/text.go says
 // it: the text alternative of the views, in English, the same on both
@@ -98,6 +98,15 @@ export function eventText(e: CalendarEvent): string {
   return out
 }
 
+/** A source in words: rows of p/plans on due to due_end, title name, where status = open; due exists. */
+export function sourceText(s: CalendarSource): string {
+  let out = `rows of ${s.from} on ${s.date}`
+  if (s.end) out += ` to ${s.end}`
+  if (s.title) out += `, title ${s.title}`
+  if (s.where.length > 0) out += `, where ${s.where.join('; ')}`
+  return out
+}
+
 /** The zone of a calendar's hours: its own, or the host's. */
 export function calendarZone(c: Calendar | null, hostZone: string): string {
   return c?.timezone && isZone(c.timezone) ? c.timezone : hostZone
@@ -109,6 +118,7 @@ export function calendarText(c: Calendar | null, hostZone = 'UTC'): string {
   let out = c.title ? `${c.title} — ` : ''
   out += `calendar of ${count(c.events.length, 'event')}, times in ${calendarZone(c, hostZone)}`
   for (const e of c.events) out += `\n- ${eventText(e)}`
+  for (const s of c.sources ?? []) out += `\n- ${sourceText(s)}`
   const bytes = new TextEncoder().encode(out)
   if (bytes.length > MAX_TEXT) {
     // Go cuts at a byte and drops a broken last character.

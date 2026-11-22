@@ -55,6 +55,21 @@ export function placeTime(t: CalendarTime): Placed | null {
   return out
 }
 
+/** A key for a view's list: an event's time, or a row by its source and name. */
+export function placedKey(p: Placed): string {
+  return p.time.row !== undefined ? `r${p.time.source ?? 0}:${p.time.row}:${p.start}` : `${p.time.event}:${p.start}:${p.from}`
+}
+
+/** Says a time is a row a source brings, the host's to change. */
+export function isRow(p: Placed): boolean {
+  return p.time.row !== undefined
+}
+
+/** Says a time can be dragged: an event of an editable calendar, or a row the host lets move. */
+export function canDrag(p: Placed): boolean {
+  return !isRow(p) || p.time.movable === true
+}
+
 /** The order of the views: by day, the days without hours first, then by hour and title. */
 export function comparePlaced(a: Placed, b: Placed): number {
   if (a.start !== b.start) return a.start < b.start ? -1 : 1

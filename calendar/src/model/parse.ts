@@ -5,7 +5,9 @@ import {
   MAX_BYTES,
   MAX_EVENTS,
   MAX_PATTERN,
+  MAX_SOURCES,
   type Calendar,
+  type CalendarSource,
   type CalendarEvent,
   type CalendarProblem,
   type Change,
@@ -57,7 +59,9 @@ function countWikiLinks(s: string): number {
   }
 }
 
-const topFields = ['calendar', 'title', 'description', 'timezone', 'events']
+const topFields = ['calendar', 'title', 'description', 'timezone', 'events', 'sources']
+const sourceFields = ['from', 'date', 'end', 'title', 'where']
+const fieldRe = /^[A-Za-z_][\w.-]*$/
 const eventFields = ['id', 'title', 'date', 'time', 'from', 'to', 'repeat', 'skip', 'pause', 'changes', 'place', 'note', 'tags', 'text']
 const repeatFields = ['every', 'on', 'until', 'times', 'cycle']
 const changeFields = ['date', 'cancel', 'move', 'time', 'title', 'place', 'note', 'text']
@@ -262,6 +266,34 @@ class Reader {
     if (isLink(link)) return link
     this.bad(n, `${what} ${q(link)} is a [[note]] or an http(s) address`)
     return ''
+  }
+
+  /** Reads a source, kept as written even when wrong, so that a save does not lose it; null when it is not a mapping. */
+  source(n: YNode): CalendarSource | null {
+    const f = this.fields(n, 'a source', sourceFields)
+    if (n.kind !== 'map') return null
+    const s: CalendarSource = { from: this.str(f.get('from'), 'from').replace(/^\/+|\/+$/g, ''), date: '', where: [], line: n.line }
+    if (s.from === '') this.bad(n, "a source has from: the folder of its rows, as a view's")
+    else if (s.from.split('/').includes('..')) this.bad(f.get('from'), `from ${q(s.from)} is a folder of the vault, without ..`)
+    const field = (k: string): string => {
+      const v = this.str(f.get(k), k)
+      if (v !== '' && !fieldRe.test(v)) this.bad(f.get(k), `${k} ${q(v)} is the name of a field: letters, digits, _, - and .`)
+      return v
+    }
+    s.date = field('date')
+    const end = field('end')
+    const title = field('title')
+    if (end) s.end = end
+    if (title) s.title = title
+    if (s.date === '') this.bad(n, "a source has date: the field of its rows' first day")
+    for (const w of this.seq(f.get('where'), 'where')) {
+      if (w.kind !== 'scalar' || w.isNull || w.text.trim() === '') {
+        this.bad(w, 'a condition of where is a text: "field op value", as "status in [open, in-progress]"')
+        continue
+      }
+      s.where.push(w.text.trim())
+    }
+    return s
   }
 
   event(n: YNode): CalendarEvent | null {
@@ -665,6 +697,15 @@ export function parseCalendar(src: string): ParseResult {
     if (e) c.events.push(e)
   }
   for (const e of c.events) r.checkChanges(e)
+  let sources = r.seq(top.get('sources'), 'sources')
+  if (sources.length > MAX_SOURCES) {
+    r.bad(top.get('sources'), `the calendar has ${sources.length} sources, at most ${MAX_SOURCES}`)
+    sources = sources.slice(0, MAX_SOURCES)
+  }
+  for (const sn of sources) {
+    const s = r.source(sn)
+    if (s) (c.sources ??= []).push(s)
+  }
   // In the order of the lines, the whole block's first.
   const problems = r.problems.map((p, i) => ({ p, i }))
   problems.sort((a, b) => a.p.line - b.p.line || a.i - b.i)

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue'
 import { addDays, monthEnd, monthStart, weekStart, type CalendarDate, type Weekday } from '../model/dates'
-import type { Placed } from '../model/times'
+import { canDrag, isRow, placedKey, type Placed } from '../model/times'
 import type { CalendarRange } from '../model/types'
 import { layoutRow, weeksOf, type Bar } from '../layout'
 import { hourText, longDate, weekdayNames } from '../format'
@@ -113,6 +113,7 @@ function onKey(ev: KeyboardEvent) {
 
 const drag = useDrag({
   enabled: () => props.editable,
+  can: canDrag,
   target: (el) => {
     const cell = el?.closest<HTMLElement>('[data-day]')
     return cell ? { day: cell.dataset.day! } : null
@@ -135,6 +136,7 @@ function itemLabel(p: Placed): string {
   const parts = [p.time.title]
   if (!p.allDay) parts.push(hourText(p.from, props.locale, props.hour12))
   if (p.time.place) parts.push(p.time.place)
+  if (isRow(p)) parts.push(props.labels.row)
   return parts.join(', ')
 }
 
@@ -172,7 +174,7 @@ const weekStyle = computed(() => ({ '--lanes': String(props.maxPerDay) }))
         <span class="plancia-calendar__num" aria-hidden="true" @click="clickDay(day)">{{ Number(day.slice(8)) }}</span>
         <button
           v-for="b in barsAt(w, i)"
-          :key="`${b.item.time.event}:${b.item.start}:${b.item.from}`"
+          :key="placedKey(b.item)"
           type="button"
           class="plancia-calendar__event"
           :class="{
@@ -180,6 +182,7 @@ const weekStyle = computed(() => ({ '--lanes': String(props.maxPerDay) }))
             'plancia-calendar__event--before': b.before,
             'plancia-calendar__event--after': b.after,
             'plancia-calendar__event--changed': !!b.item.time.changed_from,
+            'plancia-calendar__event--row': isRow(b.item),
             'plancia-calendar__event--dragging': drag.dragging.value === b.item,
           }"
           :style="barStyle(b)"

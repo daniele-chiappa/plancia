@@ -3,6 +3,27 @@
 All notable changes to this package. It follows [Semantic Versioning](https://semver.org);
 its tags are `calendar-vX.Y.Z`.
 
+## [0.2.0] - unreleased
+
+### Added
+
+- **Sources**: the format's `sources`, the rows of a database a host
+  brings to a calendar on the days of a date field (`{from, date, end,
+  title, where}`, as gosidian's IMP-240 F4 reads them). `parseCalendar`
+  reads them with the Go reader's checks and messages, keeps a source
+  with a problem as written so that a save does not lose it,
+  `writeCalendar` writes them back, `calendarText` and `sourceText` say
+  them. The host reads the rows: the package never does.
+- **The host's rows among the times**: a time with `row` is the host's,
+  not an event of the YAML. The views draw it in outline, apart from the
+  events, with the label `row` (`labels.row`). A click on it emits
+  `open-row` and never opens the form; a drag to another day, when the
+  time says `movable` and the calendar is not read only, emits
+  `move-row` with the days it would start and end on, its length kept.
+  The host changes it and calls `reload()`: the YAML never changes.
+- `placedKey`, `isRow` and `canDrag`: the keys of the views' lists, two
+  rows on one day included, and the tests the views use.
+
 ## [0.1.0] - 2026-11-22
 
 ### Added

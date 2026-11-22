@@ -10,6 +10,8 @@ export const MAX_BYTES = 256 << 10
 export const MAX_EVENTS = 2000
 /** A cycle has at most this many periods. */
 export const MAX_PATTERN = 104
+/** The sources of a calendar, at most. */
+export const MAX_SOURCES = 10
 
 /** What a rule counts in. */
 export type Unit = 'day' | 'week' | 'month' | 'year'
@@ -95,6 +97,23 @@ export interface CalendarEvent {
   line: number
 }
 
+/**
+ * A source of a calendar: the rows of a database the host brings to it,
+ * on the days of their date fields. The host reads them and sends them
+ * with the times; this package reads and writes the source only.
+ */
+export interface CalendarSource {
+  /** The folder of the rows, as a view's. */
+  from: string
+  /** The field of a row's first day; end the field of its last, title of its title. */
+  date: string
+  end?: string
+  title?: string
+  /** The conditions on the rows, each "field op value". */
+  where: string[]
+  line: number
+}
+
 /** A calendar as read. */
 export interface Calendar {
   version: number
@@ -103,6 +122,8 @@ export interface Calendar {
   /** An IANA zone; without it, the host's. */
   timezone?: string
   events: CalendarEvent[]
+  /** The sources, kept as written even when wrong, so that a save does not lose them. */
+  sources?: CalendarSource[]
 }
 
 /** Something wrong with a calendar; line is 1-based in the block, 0 for the whole block. */
@@ -124,7 +145,7 @@ export interface ParseResult {
  * a moment.
  */
 export interface CalendarTime {
-  /** The index of the event in the block. */
+  /** The index of the event in the block; not read for a row. */
   event: number
   id?: string
   title: string
@@ -138,6 +159,19 @@ export interface CalendarTime {
   repeats?: boolean
   /** The day the rule gave a time changed or moved. */
   changed_from?: string
+  /**
+   * A row a source brings, not an event of the YAML: the host's name for
+   * it (in gosidian, its note). A click on it emits open-row and a drag
+   * move-row: the host changes it, and the editor never does.
+   */
+  row?: string
+  /** The index of its source in the calendar's sources. */
+  source?: number
+  /** The fields of its days, for the host. */
+  field?: string
+  end_field?: string
+  /** The host lets it be dragged to other days. */
+  movable?: boolean
 }
 
 /** The times of the days shown, as the host gives them. */

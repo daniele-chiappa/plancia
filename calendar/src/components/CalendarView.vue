@@ -4,8 +4,8 @@ import { addDays, daysBetween, today as todayIn, type CalendarDate, type Weekday
 import { emptyCalendar, parseCalendar } from '../model/parse'
 import { writeCalendar } from '../model/write'
 import { calendarText } from '../model/text'
-import { comparePlaced, placeTime, type Placed } from '../model/times'
-import type { Calendar, CalendarEvent, CalendarLoad, CalendarProblem, CalendarRange } from '../model/types'
+import { canDrag, comparePlaced, isRow, placeTime, type Placed } from '../model/times'
+import type { Calendar, CalendarEvent, CalendarLoad, CalendarProblem, CalendarRange, CalendarTime } from '../model/types'
 import {
   addEvent,
   applyEdit,
@@ -73,6 +73,10 @@ const emit = defineEmits<{
   'update:date': [date: CalendarDate]
   /** The note or address of an event, to open. */
   link: [payload: { target: string }]
+  /** A row a source brings, clicked: the host opens it. */
+  'open-row': [payload: { time: CalendarTime }]
+  /** A row dragged to other days, its length kept: the host changes it, then reloads. */
+  'move-row': [payload: { time: CalendarTime; start: CalendarDate; end: CalendarDate }]
 }>()
 
 const words = computed<CalendarLabels>(() => ({ ...DEFAULT_CALENDAR_LABELS, ...props.labels }))
@@ -225,6 +229,10 @@ function refOf(p: Placed): OccurrenceRef {
 }
 
 function open(p: Placed) {
+  if (isRow(p)) {
+    emit('open-row', { time: p.time })
+    return
+  }
   const c = calendar.value
   if (!c || !c.events[p.time.event]) return
   remember()
@@ -280,6 +288,12 @@ function remove() {
 
 /** A time dragged to another day, or another hour: its length kept. */
 function move(p: Placed, day: CalendarDate, minute?: number) {
+  if (isRow(p)) {
+    if (editable.value && canDrag(p) && day !== p.start) {
+      emit('move-row', { time: p.time, start: day, end: addDays(day, daysBetween(p.start, p.end)) })
+    }
+    return
+  }
   const c = calendar.value
   if (!editable.value || !c || !c.events[p.time.event]) return
   const r = refOf(p)

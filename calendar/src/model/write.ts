@@ -1,6 +1,6 @@
 import { Document, isMap, isPair, isScalar, isSeq, type Node as YamlNode } from 'yaml'
 import { addDays, clock } from './dates'
-import { CALENDAR_VERSION, type Calendar, type CalendarEvent, type Change, type Hours, type Repeat } from './types'
+import { CALENDAR_VERSION, type Calendar, type CalendarEvent, type CalendarSource, type Change, type Hours, type Repeat } from './types'
 
 // The writer of the format: a calendar in its full form, as the editor
 // saves it. Its fields come in a fixed order, the small mappings and lists
@@ -80,8 +80,17 @@ function eventOf(e: CalendarEvent): Record<string, Plain> {
   return out
 }
 
+function sourceOf(s: CalendarSource): Record<string, Plain> {
+  const out: Record<string, Plain> = { from: s.from }
+  if (s.date) out.date = s.date
+  if (s.end) out.end = s.end
+  if (s.title) out.title = s.title
+  if (s.where.length > 0) out.where = [...s.where]
+  return out
+}
+
 /** The keys whose value goes on one line. */
-const flowKeys = new Set(['repeat', 'skip', 'tags', 'on', 'cycle'])
+const flowKeys = new Set(['repeat', 'skip', 'tags', 'on', 'cycle', 'where'])
 /** The lists whose items each go on one line. */
 const flowItems = new Set(['pause', 'changes'])
 
@@ -108,6 +117,7 @@ export function writeCalendar(c: Calendar): string {
   if (c.description) top.description = c.description
   if (c.timezone) top.timezone = c.timezone
   top.events = c.events.map(eventOf)
+  if (c.sources && c.sources.length > 0) top.sources = c.sources.map(sourceOf)
   const doc = new Document(top)
   setFlow(doc.contents as YamlNode)
   return doc.toString({ lineWidth: 0, flowCollectionPadding: false })

@@ -1,0 +1,10 @@
+events: []
+sources:
+  - date: due
+  - from: p/plans
+  - from: p/../secret
+    date: due
+  - from: p/plans
+    date: due date
+    sort: due
+    where: [{field: status, op: eq, value: open}]
