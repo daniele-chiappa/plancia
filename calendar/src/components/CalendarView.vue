@@ -121,6 +121,16 @@ onBeforeUnmount(() => observer?.disconnect())
 
 // The times, from the host, for the days shown and the YAML as it is.
 const loaded = shallowRef<CalendarLoad | null>(null)
+// The YAML the times shown were worked out for: a time names its event by
+// its index in the block, so until the times of the YAML as it is come in
+// (an event added before others shifts them) a click or a drag on one
+// would take another event.
+const loadedFor = ref<string | null>(null)
+const fresh = computed(() => loadedFor.value === props.modelValue)
+/** Says a time is one of those drawn now, of the YAML as it is: one taken before (a drag begun on the previous times) would take another event. */
+function current(p: Placed): boolean {
+  return fresh.value && placed.value.includes(p)
+}
 const loading = ref(false)
 const failure = ref('')
 let asked = 0
@@ -133,11 +143,13 @@ async function reload(force = false) {
   if (!force && key === lastAsked) return
   lastAsked = key
   const n = ++asked
+  const yaml = props.modelValue
   loading.value = true
   try {
     const res = await props.load({ ...range.value })
     if (n !== asked) return
     loaded.value = res
+    loadedFor.value = yaml
     failure.value = ''
   } catch (err) {
     if (n !== asked) return
@@ -234,7 +246,7 @@ function open(p: Placed) {
     return
   }
   const c = calendar.value
-  if (!c || !c.events[p.time.event]) return
+  if (!c || !current(p) || !c.events[p.time.event]) return
   remember()
   form.value = { ref: refOf(p), draft: eventAt(c, refOf(p)) }
 }
@@ -295,7 +307,7 @@ function move(p: Placed, day: CalendarDate, minute?: number) {
     return
   }
   const c = calendar.value
-  if (!editable.value || !c || !c.events[p.time.event]) return
+  if (!editable.value || !c || !current(p) || !c.events[p.time.event]) return
   const r = refOf(p)
   const draft = eventAt(c, r)
   const days = daysBetween(draft.start, day)
@@ -391,7 +403,7 @@ defineExpose({ reload: () => reload(true), create })
     <p v-if="failure" class="plancia-calendar__problems" role="alert">{{ words.failed }} {{ failure }}</p>
     <p v-if="loaded?.truncated" class="plancia-calendar__note">{{ words.truncated }}</p>
 
-    <div class="plancia-calendar__body" :aria-busy="loading">
+    <div class="plancia-calendar__body" :aria-busy="loading || (loaded !== null && !fresh)">
       <MonthView
         v-if="view === 'month'"
         :range="range"

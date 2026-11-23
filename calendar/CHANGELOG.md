@@ -24,6 +24,19 @@ its tags are `calendar-vX.Y.Z`.
 - New labels: `remind`, `remindCalendar`, `remindNone`, `remindOwn`,
   `remindHelp`, `badRemind`, `remindInDays`, `tooManyReminders`.
 
+### Fixed
+
+- **A click or a drag on a time right after a change of the YAML**: a
+  time names its event by its index in the block, and until the host's
+  times of the YAML as it is came in, those shown were the previous
+  YAML's. Right after a save that adds an event before others (a cut
+  from one time on, a new event), a click opened another event's form
+  and a drag moved another event. The view now takes no click or drag on
+  an event's time until its times are those of the YAML shown, and says
+  it is busy meanwhile (`aria-busy`); nor a drag begun on the previous
+  times, the new ones come in while the pointer was down. A row of the
+  host's, named by its note, still does.
+
 ## [0.2.0] - 2026-11-22
 
 ### Added

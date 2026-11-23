@@ -281,3 +281,66 @@ describe('the rows of a source', () => {
     expect(items[0]!.text()).toContain('row')
   })
 })
+
+describe('the times of an older YAML', () => {
+  // An event added before the others shifts the indexes the times name;
+  // the host's times of the new YAML wait for release.
+  function shifting() {
+    const st = { shift: 0, release: () => {} }
+    const load = vi.fn(async (range: CalendarRange): Promise<CalendarLoad> => {
+      const now = st.shift
+      if (now > 0) await new Promise<void>((r) => (st.release = r))
+      return {
+        times: times
+          .filter((t) => t.start.slice(0, 10) >= range.from && t.start.slice(0, 10) <= range.to)
+          .map((t) => ({ ...t, event: t.event + now })),
+      }
+    })
+    wrapper = mount(CalendarView, {
+      props: { modelValue: lessons, load, date: '2026-11-23', today: '2026-11-21', view: 'month' },
+      attachTo: document.body,
+    })
+    const change = async () => {
+      st.shift = 1
+      await wrapper!.setProps({ modelValue: lessons.replace('events:\n', 'events:\n  - {title: Nuovo, id: nuovo, date: 2026-11-30}\n') })
+      await new Promise((r) => setTimeout(r, 200)) // the reload waits for the typing to stop
+    }
+    return { w: wrapper, st, change }
+  }
+
+  it('take no click until the times of the YAML as it is come in', async () => {
+    const { w, st, change } = shifting()
+    await flushPromises()
+    await change()
+    expect(w.find('.plancia-calendar__body').attributes('aria-busy')).toBe('true')
+    await w.find('[data-day="2026-11-26"] .plancia-calendar__event').trigger('click')
+    expect(w.find('form.plancia-calendar__dialog').exists()).toBe(false)
+    st.release()
+    await flushPromises()
+    expect(w.find('.plancia-calendar__body').attributes('aria-busy')).toBe('false')
+    await w.find('[data-day="2026-11-26"] .plancia-calendar__event').trigger('click')
+    expect(w.find('form.plancia-calendar__dialog').exists()).toBe(true)
+    expect((w.find('form.plancia-calendar__dialog input[type="text"]').element as HTMLInputElement).value).toBe('Lezione')
+  })
+
+  it('take no drag begun on the times before them', async () => {
+    const { w, st, change } = shifting()
+    await flushPromises()
+    const target = document.querySelector('[data-day="2026-11-27"]')!
+    const doc = document as unknown as { elementFromPoint?: () => Element }
+    doc.elementFromPoint = () => target
+    w.find('[data-day="2026-11-26"] .plancia-calendar__event').element.dispatchEvent(
+      new MouseEvent('pointerdown', { button: 0, clientX: 10, clientY: 10, bubbles: true }),
+    )
+    window.dispatchEvent(new MouseEvent('pointermove', { clientX: 80, clientY: 40 }))
+    // The YAML changes, and its times come in, while the pointer is down.
+    await change()
+    st.release()
+    await flushPromises()
+    window.dispatchEvent(new MouseEvent('pointerup', { clientX: 80, clientY: 40 }))
+    delete doc.elementFromPoint
+    await flushPromises()
+    expect(w.findAll('.plancia-calendar__dialog')).toHaveLength(0)
+    expect(w.emitted('update:modelValue')).toBeUndefined()
+  })
+})
