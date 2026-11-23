@@ -3,6 +3,40 @@
 All notable changes to this package. It follows [Semantic Versioning](https://semver.org);
 its tags are `calendar-vX.Y.Z`.
 
+## [0.3.0] - 2026-11-23
+
+### Added
+
+- **Reminders**: the format's `remind`, of the calendar (for every
+  event that writes none) and of an event (`remind: []` for none), a lead
+  or a list of up to 4: `0` at the start, or a number with `m`, `h`, `d`
+  or `w`, at most 4 weeks before; and the calendar's `remind_at`, the hour
+  of an all-day event's reminders, in days only. `parseCalendar` reads
+  them with the Go reader's checks and messages (an event with reminders
+  needs an id), `writeCalendar` writes them back as the server does,
+  `calendarText` says them. A time the host sends may carry `reminders`,
+  when they go. The package never works them out.
+- **The form's Reminders field**: the calendar's (it lists them), none,
+  or the event's own, written as leads separated by commas; it says what
+  is wrong with them. A change of the reminders is for the event: not for
+  one time alone (`scopeNoThis` says so), and from one time on it goes to
+  the event the cut makes. Moving or cutting an event keeps them.
+- New labels: `remind`, `remindCalendar`, `remindNone`, `remindOwn`,
+  `remindHelp`, `badRemind`, `remindInDays`, `tooManyReminders`.
+
+### Fixed
+
+- **A click or a drag on a time right after a change of the YAML**: a
+  time names its event by its index in the block, and until the host's
+  times of the YAML as it is came in, those shown were the previous
+  YAML's. Right after a save that adds an event before others (a cut
+  from one time on, a new event), a click opened another event's form
+  and a drag moved another event. The view now takes no click or drag on
+  an event's time until its times are those of the YAML shown, and says
+  it is busy meanwhile (`aria-busy`); nor a drag begun on the previous
+  times, the new ones come in while the pointer was down. A row of the
+  host's, named by its note, still does.
+
 ## [0.2.0] - 2026-11-22
 
 ### Added

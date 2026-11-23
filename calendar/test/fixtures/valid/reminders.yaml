@@ -1,0 +1,32 @@
+calendar: 1
+title: Editorial office
+timezone: Europe/Rome
+remind: 30m
+remind_at: "08:00"
+events:
+  - title: Editorial meeting
+    id: meeting
+    date: 2026-11-24
+    time: 10:00-11:30
+    repeat: {every: week, until: 2026-12-15}
+    changes:
+      - {date: 2026-12-01, move: 2026-12-02}
+      - {date: 2026-12-08, cancel: true}
+    remind: [1d, 15m]
+  - title: Catalogue due
+    id: catalogue
+    date: 2026-12-03
+    remind: [1w, 1d, 0]
+  - title: Coffee break
+    id: coffee
+    date: 2026-11-25
+    time: "16:00"
+    remind: []
+  - title: Call with the printer
+    id: printer
+    date: 2026-11-26
+    time: 09:30-10:00
+  - title: Fair
+    id: fair
+    from: 2026-12-05
+    to: 2026-12-06

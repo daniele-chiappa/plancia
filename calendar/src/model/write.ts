@@ -73,11 +73,18 @@ function eventOf(e: CalendarEvent): Record<string, Plain> {
     if (e.pause.length > 0) out.pause = e.pause.map((p) => ({ from: p.from, to: p.to }))
     if (e.changes.length > 0) out.changes = e.changes.map(changeOf)
   }
+  if (e.remind) out.remind = remindOf(e.remind)
   if (e.place) out.place = e.place
   if (e.note) out.note = e.note
   if (e.tags.length > 0) out.tags = [...e.tags]
   if (e.text) out.text = e.text
   return out
+}
+
+/** Leads as the writer writes them: one alone, or a list; 0 a number, as written by hand. */
+function remindOf(leads: string[]): Plain {
+  const value = (l: string): Plain => (l === '0' ? 0 : l)
+  return leads.length === 1 ? value(leads[0]!) : leads.map(value)
 }
 
 function sourceOf(s: CalendarSource): Record<string, Plain> {
@@ -90,7 +97,7 @@ function sourceOf(s: CalendarSource): Record<string, Plain> {
 }
 
 /** The keys whose value goes on one line. */
-const flowKeys = new Set(['repeat', 'skip', 'tags', 'on', 'cycle', 'where'])
+const flowKeys = new Set(['repeat', 'skip', 'tags', 'on', 'cycle', 'where', 'remind'])
 /** The lists whose items each go on one line. */
 const flowItems = new Set(['pause', 'changes'])
 
@@ -116,6 +123,8 @@ export function writeCalendar(c: Calendar): string {
   if (c.title) top.title = c.title
   if (c.description) top.description = c.description
   if (c.timezone) top.timezone = c.timezone
+  if (c.remind && c.remind.length > 0) top.remind = remindOf(c.remind)
+  if (c.remindAt) top.remind_at = c.remindAt
   top.events = c.events.map(eventOf)
   if (c.sources && c.sources.length > 0) top.sources = c.sources.map(sourceOf)
   const doc = new Document(top)

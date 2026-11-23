@@ -196,6 +196,11 @@ function samePauses(a: CalendarEvent, b: CalendarEvent): boolean {
   )
 }
 
+/** Says two events have the same reminders: the calendar's, none, or the same own ones. */
+function sameRemind(a: CalendarEvent, b: CalendarEvent): boolean {
+  return JSON.stringify(a.remind ?? null) === JSON.stringify(b.remind ?? null)
+}
+
 /** Says the rule of the draft is not the shown one's: its repeat, skips or pauses. */
 function ruleChanged(shown: CalendarEvent, draft: CalendarEvent): boolean {
   return !sameRepeat(shown.repeat, draft.repeat) || !sameList(shown.skip, draft.skip) || !samePauses(shown, draft)
@@ -273,7 +278,8 @@ export function scopesFor(c: Calendar, ref: OccurrenceRef, draft: CalendarEvent)
   const onlyThis =
     !ruleChanged(shown, draft) &&
     sameLength(shown, draft) &&
-    sameList(shown.tags, draft.tags)
+    sameList(shown.tags, draft.tags) &&
+    sameRemind(shown, draft)
   const all = delta === 0 || ruleChanged(shown, draft) || shiftEvent(e, delta) !== null
   const following = ref.date > e.start && !e.repeat.times && (delta === 0 || ruleChanged(shown, draft) || shiftEvent(e, delta) !== null)
   return { this: onlyThis, following, all }
@@ -320,6 +326,10 @@ function applyAll(c: Calendar, ref: OccurrenceRef, draft: CalendarEvent): Calend
     }
   }
   next.tags = [...draft.tags]
+  if (!sameRemind(shown, draft)) {
+    if (draft.remind) next.remind = [...draft.remind]
+    else delete next.remind
+  }
   return replaceEvent(c, ref.event, next)
 }
 

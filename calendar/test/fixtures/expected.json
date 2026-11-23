@@ -1149,7 +1149,7 @@
     "problems": [
       {
         "line": 4,
-        "message": "an event has no field \"colour\" (it has id, title, date, time, from, to, repeat, skip, pause, changes, place, note, tags, text)"
+        "message": "an event has no field \"colour\" (it has id, title, date, time, from, to, repeat, skip, pause, changes, remind, place, note, tags, text)"
       },
       {
         "line": 5,
@@ -1466,6 +1466,59 @@
         "event": 1,
         "title": "Back to front",
         "start": "2026-11-27T22:00:00+01:00"
+      }
+    ]
+  },
+  "invalid/reminders.yaml": {
+    "problems": [
+      {
+        "line": 2,
+        "message": "remind \"15\" is a time before: 0 (at the start), or a number with m, h, d or w, as 15m, 2h, 1d, 1w"
+      },
+      {
+        "line": 2,
+        "message": "remind 5w is more than 4 weeks before"
+      },
+      {
+        "line": 3,
+        "message": "remind_at \"25:00\" is an hour, HH:MM"
+      },
+      {
+        "line": 8,
+        "message": "the event is all day: its reminders are in days (0, 1d, 1w), at remind_at; 2h is not"
+      },
+      {
+        "line": 9,
+        "message": "the event \"Meeting\" has reminders and no id, which they need: id: letters, digits, - and _"
+      },
+      {
+        "line": 12,
+        "message": "remind has 5 reminders, at most 4"
+      }
+    ],
+    "text": "calendar of 2 events, times in Europe/Rome\n- Deadline [deadline] — 2026-12-03 (all day); reminders 1d before\n- Meeting — 2026-12-04 10:00–11:00; reminders 1m before, 2m before, 3m before, 4m before",
+    "times": [
+      {
+        "event": 0,
+        "id": "deadline",
+        "title": "Deadline",
+        "start": "2026-12-03",
+        "all_day": true,
+        "reminders": [
+          "2026-12-02T09:00:00+01:00"
+        ]
+      },
+      {
+        "event": 1,
+        "title": "Meeting",
+        "start": "2026-12-04T10:00:00+01:00",
+        "end": "2026-12-04T11:00:00+01:00",
+        "reminders": [
+          "2026-12-04T09:56:00+01:00",
+          "2026-12-04T09:57:00+01:00",
+          "2026-12-04T09:58:00+01:00",
+          "2026-12-04T09:59:00+01:00"
+        ]
       }
     ]
   },
@@ -1935,6 +1988,85 @@
         "start": "2027-03-31",
         "all_day": true,
         "repeats": true
+      }
+    ]
+  },
+  "valid/reminders.yaml": {
+    "problems": [],
+    "text": "Editorial office — calendar of 5 events, times in Europe/Rome; reminders 30m before, unless an event says otherwise; all-day reminders at 08:00\n- Editorial meeting [meeting] — every week until 2026-12-15, from 2026-11-24 10:00–11:30; on 2026-12-01 moved to 2026-12-02; on 2026-12-08 cancelled; reminders 1d before, 15m before\n- Catalogue due [catalogue] — 2026-12-03 (all day); reminders 1w before, 1d before, at the start\n- Coffee break [coffee] — 2026-11-25 16:00; no reminders\n- Call with the printer [printer] — 2026-11-26 09:30–10:00\n- Fair [fair] — 2026-12-05 to 2026-12-06 (all day)",
+    "times": [
+      {
+        "event": 0,
+        "id": "meeting",
+        "title": "Editorial meeting",
+        "start": "2026-11-24T10:00:00+01:00",
+        "end": "2026-11-24T11:30:00+01:00",
+        "repeats": true,
+        "reminders": [
+          "2026-11-23T10:00:00+01:00",
+          "2026-11-24T09:45:00+01:00"
+        ]
+      },
+      {
+        "event": 2,
+        "id": "coffee",
+        "title": "Coffee break",
+        "start": "2026-11-25T16:00:00+01:00"
+      },
+      {
+        "event": 3,
+        "id": "printer",
+        "title": "Call with the printer",
+        "start": "2026-11-26T09:30:00+01:00",
+        "end": "2026-11-26T10:00:00+01:00",
+        "reminders": [
+          "2026-11-26T09:00:00+01:00"
+        ]
+      },
+      {
+        "event": 0,
+        "id": "meeting",
+        "title": "Editorial meeting",
+        "start": "2026-12-02T10:00:00+01:00",
+        "end": "2026-12-02T11:30:00+01:00",
+        "repeats": true,
+        "changed_from": "2026-12-01",
+        "reminders": [
+          "2026-12-01T10:00:00+01:00",
+          "2026-12-02T09:45:00+01:00"
+        ]
+      },
+      {
+        "event": 1,
+        "id": "catalogue",
+        "title": "Catalogue due",
+        "start": "2026-12-03",
+        "all_day": true,
+        "reminders": [
+          "2026-11-26T08:00:00+01:00",
+          "2026-12-02T08:00:00+01:00",
+          "2026-12-03T08:00:00+01:00"
+        ]
+      },
+      {
+        "event": 4,
+        "id": "fair",
+        "title": "Fair",
+        "start": "2026-12-05",
+        "end": "2026-12-06",
+        "all_day": true
+      },
+      {
+        "event": 0,
+        "id": "meeting",
+        "title": "Editorial meeting",
+        "start": "2026-12-15T10:00:00+01:00",
+        "end": "2026-12-15T11:30:00+01:00",
+        "repeats": true,
+        "reminders": [
+          "2026-12-14T10:00:00+01:00",
+          "2026-12-15T09:45:00+01:00"
+        ]
       }
     ]
   },

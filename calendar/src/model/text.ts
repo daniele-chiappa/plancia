@@ -1,5 +1,6 @@
 import { addDays, clock } from './dates'
 import { isZone } from './parse'
+import { leadsText } from './remind'
 import type { Calendar, CalendarEvent, CalendarSource, Change, Repeat } from './types'
 
 // A calendar said in words, as gosidian's internal/calendar/text.go says
@@ -92,6 +93,7 @@ export function eventText(e: CalendarEvent): string {
     for (const p of e.pause) out += `; paused ${p.from} to ${p.to}`
     for (const ch of e.changes) out += `; on ${ch.date} ${changeText(ch)}`
   }
+  if (e.remind) out += e.remind.length === 0 ? '; no reminders' : `; reminders ${leadsText(e.remind)}`
   if (e.place) out += `; at ${e.place}`
   if (e.note) out += `; note ${e.note}`
   if (e.tags.length > 0) out += `; tags ${e.tags.join(', ')}`
@@ -117,6 +119,8 @@ export function calendarText(c: Calendar | null, hostZone = 'UTC'): string {
   if (!c) return ''
   let out = c.title ? `${c.title} — ` : ''
   out += `calendar of ${count(c.events.length, 'event')}, times in ${calendarZone(c, hostZone)}`
+  if (c.remind && c.remind.length > 0) out += `; reminders ${leadsText(c.remind)}, unless an event says otherwise`
+  if (c.remindAt) out += `; all-day reminders at ${c.remindAt}`
   for (const e of c.events) out += `\n- ${eventText(e)}`
   for (const s of c.sources ?? []) out += `\n- ${sourceText(s)}`
   const bytes = new TextEncoder().encode(out)

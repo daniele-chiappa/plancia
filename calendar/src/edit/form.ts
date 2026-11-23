@@ -1,5 +1,6 @@
 import { addDays, clock, monthEnd, parseDate, weekdayOf, weekdayIndex, type CalendarDate, type Weekday } from '../model/dates'
 import { isLink, parseClock } from '../model/parse'
+import { MAX_REMINDERS, leadInDays, leadKey, leadTooLong, parseLead } from '../model/remind'
 import type { CalendarEvent, Nth, Repeat, Unit } from '../model/types'
 import { clone } from './edit'
 
@@ -29,6 +30,10 @@ export interface EventFields {
   cycleOff: number
   skip: string[]
   pause: { from: string; to: string }[]
+  /** The calendar's reminders, none, or the event's own in remind. */
+  remindMode: 'calendar' | 'none' | 'own'
+  /** The event's own leads, separated by commas or spaces: "1d, 15m". */
+  remind: string
   place: string
   note: string
   tags: string
@@ -36,7 +41,16 @@ export interface EventFields {
 }
 
 /** The keys of the labels that say what is wrong with a field. */
-export type FieldError = 'needTitle' | 'needDate' | 'needTime' | 'endBeforeStart' | 'badNote' | 'needTimes'
+export type FieldError =
+  | 'needTitle'
+  | 'needDate'
+  | 'needTime'
+  | 'endBeforeStart'
+  | 'badNote'
+  | 'needTimes'
+  | 'badRemind'
+  | 'remindInDays'
+  | 'tooManyReminders'
 
 /** The week of the month of a day: 1 to 5. */
 export function nthOf(d: CalendarDate): number {
@@ -95,6 +109,8 @@ export function fieldsOf(e: CalendarEvent): EventFields {
     cycleOff: cycle.off,
     skip: [...e.skip],
     pause: e.pause.map((p) => ({ from: p.from, to: p.to })),
+    remindMode: e.remind === undefined ? 'calendar' : e.remind.length === 0 ? 'none' : 'own',
+    remind: (e.remind ?? []).join(', '),
     place: e.place ?? '',
     note: e.note ?? '',
     tags: e.tags.join(', '),
@@ -138,6 +154,23 @@ export function eventOf(f: EventFields, base: CalendarEvent): { event: CalendarE
   }
   const note = f.note.trim()
   if (!isLink(note)) errors.note = 'badNote'
+  let remind: string[] | undefined
+  if (f.remindMode === 'none') remind = []
+  else if (f.remindMode === 'own') {
+    remind = []
+    const seen = new Set<number>()
+    for (const part of f.remind.split(/[,\s]+/).filter((s) => s !== '')) {
+      const l = parseLead(part)
+      if (l === null || leadTooLong(l)) errors.remind = 'badRemind'
+      else if (f.allDay && !leadInDays(l)) errors.remind = 'remindInDays'
+      else if (!seen.has(leadKey(l))) {
+        seen.add(leadKey(l))
+        remind.push(l)
+      }
+      if (errors.remind) break
+    }
+    if (!errors.remind && remind.length > MAX_REMINDERS) errors.remind = 'tooManyReminders'
+  }
 
   let repeat: Repeat | undefined
   if (f.repeat !== 'none' && start) {
@@ -203,6 +236,8 @@ export function eventOf(f: EventFields, base: CalendarEvent): { event: CalendarE
   }
   if (repeat) event.repeat = repeat
   else delete event.repeat
+  if (remind) event.remind = remind
+  else delete event.remind
   for (const [k, v] of [
     ['place', f.place.trim()],
     ['note', note],

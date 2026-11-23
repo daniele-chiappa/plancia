@@ -1,0 +1,12 @@
+calendar: 1
+remind: [15, 5w]
+remind_at: "25:00"
+events:
+  - title: Deadline
+    id: deadline
+    date: 2026-12-03
+    remind: [1d, 2h]
+  - title: Meeting
+    date: 2026-12-04
+    time: 10:00-11:00
+    remind: [1m, 2m, 3m, 4m, 5m]
