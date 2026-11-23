@@ -63,6 +63,14 @@ export interface CalendarLabels {
   remove: string
   from: string
   to: string
+  /** The field of the reminders. */
+  remind: string
+  /** The choice of the calendar's reminders, which it lists ("0" is at the start); none when empty. */
+  remindCalendar: (leads: string[]) => string
+  remindNone: string
+  remindOwn: string
+  /** How the own reminders are written: in days for an all-day event, at the hour at. */
+  remindHelp: (allDay: boolean, at: string) => string
   place: string
   note: string
   noteHelp: string
@@ -80,6 +88,9 @@ export interface CalendarLabels {
   needTimes: string
   endBeforeStart: string
   badNote: string
+  badRemind: string
+  remindInDays: string
+  tooManyReminders: string
   // The choice of the times a change is for.
   scopeSave: string
   scopeDelete: string
@@ -145,6 +156,13 @@ export const DEFAULT_CALENDAR_LABELS: CalendarLabels = {
   remove: 'Remove',
   from: 'From',
   to: 'to',
+  remind: 'Reminders',
+  remindCalendar: (leads) =>
+    leads.length === 0 ? "The calendar's (none)" : `The calendar's (${leads.map((l) => (l === '0' ? 'at the start' : l)).join(', ')})`,
+  remindNone: 'None',
+  remindOwn: 'These',
+  remindHelp: (allDay, at) =>
+    allDay ? `in days before, at ${at}: 0 (on the day), 1d, 1w` : 'before the start: 0, 15m, 2h, 1d, 1w; separated by commas',
   place: 'Place',
   note: 'Note',
   noteHelp: '[[note]] or an http(s) address',
@@ -161,11 +179,14 @@ export const DEFAULT_CALENDAR_LABELS: CalendarLabels = {
   needTimes: 'At least once.',
   endBeforeStart: 'The end is before the start.',
   badNote: 'A note is a [[note]] or an http(s) address.',
+  badRemind: 'A reminder is 0, or a number with m, h, d or w, at most 4 weeks.',
+  remindInDays: 'An all-day event is reminded in days: 0, 1d, 1w.',
+  tooManyReminders: 'At most 4 reminders.',
   scopeSave: 'Save the change for',
   scopeDelete: 'Delete',
   scopeMove: 'Move',
   scopes: { this: 'This time only', following: 'This time and the following', all: 'All the times' },
-  scopeNoThis: 'A single time keeps the rule, the days and the tags of its event.',
+  scopeNoThis: 'A single time keeps the rule, the days, the tags and the reminders of its event.',
   scopeNoFollowing: 'Not for a rule of a number of times, or its first time.',
   scopeNoAll: 'The rule cannot move by these days.',
   ok: 'OK',

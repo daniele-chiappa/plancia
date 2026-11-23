@@ -10,6 +10,7 @@ export * from './model/dates'
 export * from './model/types'
 export { parseCalendar, emptyCalendar, isRuleProblem, isZone, isLink, parseClock, parseHours, idRe } from './model/parse'
 export { writeCalendar } from './model/write'
+export { parseLead, leadsOf, leadsText, leadInDays, MAX_REMINDERS, MAX_LEAD_DAYS, DEFAULT_REMIND_AT } from './model/remind'
 export { calendarText, eventText, ruleText, whenText, calendarZone, sourceText } from './model/text'
 export { placeTime, comparePlaced, placedKey, isRow, canDrag, type Placed } from './model/times'
 export {

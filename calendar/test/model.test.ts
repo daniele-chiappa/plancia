@@ -140,7 +140,7 @@ events:
   it('gives the line of each problem', () => {
     const { problems } = parseCalendar('events:\n  - title: a\n    date: 2026-11-01\n    colour: red\n  - date: 2026-11-02\n')
     expect(problems).toEqual([
-      { line: 4, message: 'an event has no field "colour" (it has id, title, date, time, from, to, repeat, skip, pause, changes, place, note, tags, text)' },
+      { line: 4, message: 'an event has no field "colour" (it has id, title, date, time, from, to, repeat, skip, pause, changes, remind, place, note, tags, text)' },
       { line: 5, message: 'an event has a title' },
     ])
   })

@@ -2,6 +2,7 @@
 import { computed, nextTick, onMounted, reactive, ref, useId, watch } from 'vue'
 import { monthEnd, WEEKDAYS, weekdayOf, type Weekday } from '../model/dates'
 import { isLink } from '../model/parse'
+import { DEFAULT_REMIND_AT, leadsOf } from '../model/remind'
 import { UNITS, type CalendarEvent } from '../model/types'
 import { eventOf, fieldsOf, inLastWeek, nthOf, type EventFields, type FieldError } from '../edit/form'
 import { nthText, weekdayName } from '../format'
@@ -15,6 +16,9 @@ const props = defineProps<{
   repeats: boolean
   labels: CalendarLabels
   locale: string
+  /** The calendar's reminders, which an event without its own takes, and the hour of an all-day one's. */
+  calendarRemind?: string[]
+  remindAt?: string
 }>()
 
 const emit = defineEmits<{
@@ -57,6 +61,9 @@ const monthChoices = computed(() => {
   if (f.monthMode === 'written') out.push({ value: 'written', label: props.labels.monthAsWritten })
   return out
 })
+
+// The calendar's reminders this event would take: in days only, all day.
+const calendarLeads = computed(() => leadsOf({ remind: props.calendarRemind ?? [] }, { allDay: f.allDay }))
 
 const noteTarget = computed(() => {
   const n = f.note.trim()
@@ -303,6 +310,28 @@ function onKey(ev: KeyboardEvent) {
         </template>
       </fieldset>
 
+      <div class="plancia-calendar__field">
+        <label :for="fid('remind')">{{ labels.remind }}</label>
+        <div class="plancia-calendar__row">
+          <select :id="fid('remind')" v-model="f.remindMode">
+            <option value="calendar">{{ labels.remindCalendar(calendarLeads) }}</option>
+            <option value="none">{{ labels.remindNone }}</option>
+            <option value="own">{{ labels.remindOwn }}</option>
+          </select>
+          <input
+            v-if="f.remindMode === 'own'"
+            v-model="f.remind"
+            type="text"
+            :placeholder="f.allDay ? '1d' : '1d, 15m'"
+            :aria-label="labels.remind"
+            :aria-invalid="!!errors.remind"
+            :aria-describedby="fid('remind-help')"
+          />
+        </div>
+        <small v-if="f.remindMode === 'own'" :id="fid('remind-help')" :class="errors.remind ? 'plancia-calendar__error' : 'plancia-calendar__help'">
+          {{ errors.remind ? message('remind') : labels.remindHelp(f.allDay, remindAt ?? DEFAULT_REMIND_AT) }}
+        </small>
+      </div>
       <div class="plancia-calendar__field">
         <label :for="fid('place')">{{ labels.place }}</label>
         <input :id="fid('place')" v-model="f.place" type="text" />

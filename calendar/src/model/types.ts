@@ -93,6 +93,11 @@ export interface CalendarEvent {
   skip: CalendarDate[]
   pause: Period[]
   changes: Change[]
+  /**
+   * The event's own reminders, leads before each time ("1d", "15m", "0" at
+   * the start); [] for none; absent, it takes the calendar's.
+   */
+  remind?: string[]
   /** The line of the event in the block, 0 for one made by the editor. */
   line: number
 }
@@ -121,6 +126,10 @@ export interface Calendar {
   description?: string
   /** An IANA zone; without it, the host's. */
   timezone?: string
+  /** The reminders of the events that write none. */
+  remind?: string[]
+  /** The hour of an all-day event's reminders (HH:MM); without it 09:00. */
+  remindAt?: string
   events: CalendarEvent[]
   /** The sources, kept as written even when wrong, so that a save does not lose them. */
   sources?: CalendarSource[]
@@ -159,6 +168,8 @@ export interface CalendarTime {
   repeats?: boolean
   /** The day the rule gave a time changed or moved. */
   changed_from?: string
+  /** When its reminders go (RFC 3339), the first first. */
+  reminders?: string[]
   /**
    * A row a source brings, not an event of the YAML: the host's name for
    * it (in gosidian, its note). A click on it emits open-row and a drag

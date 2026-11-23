@@ -270,3 +270,68 @@ describe('the form', () => {
     expect(eventOf(f, e).event!.repeat!.cycle).toEqual([true, true, false])
   })
 })
+
+describe('the reminders', () => {
+  const src =
+    'remind: 30m\nevents:\n' +
+    '  - {title: Lesson, id: lesson, date: 2026-11-23, time: 18:00-19:30, repeat: {every: week}, remind: [1d, 15m]}\n' +
+    '  - {title: Call, id: call, date: 2026-11-24, time: "10:00"}\n' +
+    '  - {title: Due, id: due, date: 2026-11-25}\n'
+
+  it('stay as they are when a time moves, or the event is cut', () => {
+    const c = must(src)
+    const ref = { event: 0, date: '2026-11-30' }
+    const moved = applyEdit(c, ref, { ...eventAt(c, ref), start: '2026-12-01', end: '2026-12-01' }, 'all')
+    expect(moved.events[0]!.remind).toEqual(['1d', '15m'])
+    const cut = splitEvent(c, 0, '2026-12-07')
+    expect(cut.calendar.events.map((e) => e.remind)).toEqual([['1d', '15m'], ['1d', '15m'], undefined, undefined])
+    expect(writeCalendar(cut.calendar)).toContain('repeat: {every: week, until: 2026-12-06}\n    remind: [1d, 15m]\n')
+  })
+
+  it('are the event\'s, not one time\'s', () => {
+    const c = must(src)
+    const ref = { event: 0, date: '2026-11-30' }
+    const shown = eventAt(c, ref)
+    expect(scopesFor(c, ref, { ...shown, remind: ['1h'] }).this).toBe(false)
+    const next = applyEdit(c, ref, { ...shown, remind: ['1h'] }, 'following')
+    expect(next.events.map((e) => e.remind)).toEqual([['1d', '15m'], ['1h'], undefined, undefined])
+  })
+
+  it('come from the form: the calendar\'s, none, or the event\'s own', () => {
+    const c = must(src)
+    const call = c.events[1]!
+    const f = fieldsOf(call)
+    expect([f.remindMode, f.remind]).toEqual(['calendar', ''])
+    expect(eventOf(f, call).event!.remind).toBeUndefined()
+    f.remindMode = 'own'
+    f.remind = '1d, 60m 1h, 0'
+    expect(eventOf(f, call).event!.remind).toEqual(['1d', '60m', '0'])
+    f.remindMode = 'none'
+    expect(eventOf(f, call).event!.remind).toEqual([])
+    expect(writeCalendar({ ...c, events: [eventOf(f, call).event!] })).toContain('    remind: []\n')
+    const lesson = c.events[0]!
+    expect(eventOf(fieldsOf(lesson), lesson).event).toEqual(lesson)
+  })
+
+  it('say what is wrong in the form', () => {
+    const c = must(src)
+    const due = c.events[2]!
+    const f = fieldsOf(due)
+    f.remindMode = 'own'
+    for (const [text, error] of [
+      ['15', 'badRemind'],
+      ['5w', 'badRemind'],
+      ['2h', 'remindInDays'],
+      ['1m 2d 3d 4d 5d', 'remindInDays'],
+      ['1d 2d 3d 4d 5d', 'tooManyReminders'],
+    ] as const) {
+      f.remind = text
+      expect(eventOf(f, due).errors.remind).toBe(error)
+    }
+  })
+
+  it('are written as the server writes them', () => {
+    const c = must('remind: [1d, 0]\nremind_at: "8:00"\nevents:\n  - {title: a, id: a, date: 2026-11-24, remind: 0}\n')
+    expect(writeCalendar(c)).toBe('calendar: 1\nremind: [1d, 0]\nremind_at: 08:00\nevents:\n  - title: a\n    id: a\n    date: 2026-11-24\n    remind: 0\n')
+  })
+})

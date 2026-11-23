@@ -1,5 +1,6 @@
 import { LineCounter, parseAllDocuments, isAlias, isMap, isPair, isScalar, isSeq, type Node as YamlNode } from 'yaml'
-import { addDays, parseDate, weekdayIndex, type CalendarDate, type Weekday } from './dates'
+import { addDays, clock, parseDate, weekdayIndex, type CalendarDate, type Weekday } from './dates'
+import { MAX_REMINDERS, leadInDays, leadKey, leadTooLong, leadsOf, parseLead } from './remind'
 import {
   CALENDAR_VERSION,
   MAX_BYTES,
@@ -59,10 +60,10 @@ function countWikiLinks(s: string): number {
   }
 }
 
-const topFields = ['calendar', 'title', 'description', 'timezone', 'events', 'sources']
+const topFields = ['calendar', 'title', 'description', 'timezone', 'remind', 'remind_at', 'events', 'sources']
 const sourceFields = ['from', 'date', 'end', 'title', 'where']
 const fieldRe = /^[A-Za-z_][\w.-]*$/
-const eventFields = ['id', 'title', 'date', 'time', 'from', 'to', 'repeat', 'skip', 'pause', 'changes', 'place', 'note', 'tags', 'text']
+const eventFields = ['id', 'title', 'date', 'time', 'from', 'to', 'repeat', 'skip', 'pause', 'changes', 'remind', 'place', 'note', 'tags', 'text']
 const repeatFields = ['every', 'on', 'until', 'times', 'cycle']
 const changeFields = ['date', 'cancel', 'move', 'time', 'title', 'place', 'note', 'text']
 
@@ -352,7 +353,41 @@ class Reader {
       e.pause = []
       e.changes = []
     }
+    const remind = f.get('remind')
+    if (remind && !(remind.kind === 'scalar' && remind.isNull)) {
+      let leads = this.reminders(remind)
+      if (e.allDay) {
+        for (const l of leads) {
+          if (!leadInDays(l)) this.bad(remind, `the event is all day: its reminders are in days (0, 1d, 1w), at remind_at; ${l} is not`)
+        }
+        leads = leads.filter(leadInDays)
+      }
+      e.remind = leads
+    }
     return e
+  }
+
+  /** Reads remind: a lead, or a list of them; the same one twice counts once. */
+  reminders(n: YNode): string[] {
+    const out: string[] = []
+    const seen = new Set<number>()
+    for (const it of this.list(n)) {
+      const v = this.str(it, 'remind')
+      const l = parseLead(v)
+      if (l === null) {
+        if (it.kind === 'scalar') this.bad(it, `remind ${q(v)} is a time before: 0 (at the start), or a number with m, h, d or w, as 15m, 2h, 1d, 1w`)
+      } else if (leadTooLong(l)) {
+        this.bad(it, `remind ${l} is more than 4 weeks before`)
+      } else if (!seen.has(leadKey(l))) {
+        seen.add(leadKey(l))
+        out.push(l)
+      }
+    }
+    if (out.length > MAX_REMINDERS) {
+      this.bad(n, `remind has ${out.length} reminders, at most ${MAX_REMINDERS}`)
+      out.length = MAX_REMINDERS
+    }
+    return out
   }
 
   /** Reads the days and hours of an event: date with time, or from and to. */
@@ -687,6 +722,15 @@ export function parseCalendar(src: string): ParseResult {
       if (!isZone(zone)) r.bad(tz, `timezone ${q(zone)} is not a zone of the IANA database, as Europe/Rome`)
     }
   }
+  const remind = top.get('remind')
+  if (remind && !(remind.kind === 'scalar' && remind.isNull)) c.remind = r.reminders(remind)
+  const remindAt = top.get('remind_at')
+  if (remindAt && !(remindAt.kind === 'scalar' && remindAt.isNull)) {
+    const v = r.str(remindAt, 'remind_at')
+    const m = parseClock(v)
+    if (m === null || m === 1440) r.bad(remindAt, `remind_at ${q(v)} is an hour, HH:MM`)
+    else c.remindAt = clock(m)
+  }
   let events = r.seq(top.get('events'), 'events')
   if (events.length > MAX_EVENTS) {
     r.bad(top.get('events'), `the calendar has ${events.length} events, at most ${MAX_EVENTS}`)
@@ -696,7 +740,12 @@ export function parseCalendar(src: string): ParseResult {
     const e = r.event(en)
     if (e) c.events.push(e)
   }
-  for (const e of c.events) r.checkChanges(e)
+  for (const e of c.events) {
+    r.checkChanges(e)
+    if (!e.id && leadsOf(c, e).length > 0) {
+      r.problems.push({ line: e.line, message: `the event ${q(e.title)} has reminders and no id, which they need: id: letters, digits, - and _` })
+    }
+  }
   let sources = r.seq(top.get('sources'), 'sources')
   if (sources.length > MAX_SOURCES) {
     r.bad(top.get('sources'), `the calendar has ${sources.length} sources, at most ${MAX_SOURCES}`)

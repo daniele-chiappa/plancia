@@ -446,6 +446,8 @@ defineExpose({ reload: () => reload(true), create })
       :repeats="form.ref !== null && !!calendar?.events[form.ref.event]?.repeat"
       :labels="words"
       :locale="locale"
+      :calendar-remind="calendar?.remind"
+      :remind-at="calendar?.remindAt"
       @save="submit"
       @delete="remove"
       @cancel="closeForm"
