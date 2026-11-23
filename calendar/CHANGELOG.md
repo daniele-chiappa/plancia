@@ -3,7 +3,7 @@
 All notable changes to this package. It follows [Semantic Versioning](https://semver.org);
 its tags are `calendar-vX.Y.Z`.
 
-## [0.3.0] - unreleased
+## [0.3.0] - 2026-11-23
 
 ### Added
 
